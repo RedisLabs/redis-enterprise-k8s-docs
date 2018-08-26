@@ -7,8 +7,3 @@ spec:
   persistentSpec:
     enabled: true
     storageClassName: "gp2"
-  serviceBrokerSpec:
-    enabled: true
-    persistentSpec:
-      volumeSize: "2Gi"
-      storageClassName: "gp2"
