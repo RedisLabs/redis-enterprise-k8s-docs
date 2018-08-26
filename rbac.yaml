@@ -1,0 +1,31 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: redis-enterprise-operator
+rules:
+- apiGroups: ["", "extensions", "apps", "rbac.authorization.k8s.io", "policy"]
+  resources: ["*"]
+  verbs: ["*"]
+- apiGroups:
+  - app.redislabs.com
+  resources:
+  - "*"
+  verbs:
+  - "*"
+---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: redis-enterprise-operator
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: redis-enterprise-operator
+subjects:
+- kind: ServiceAccount
+  name: redis-enterprise-operator
+roleRef:
+  kind: Role
+  name: redis-enterprise-operator
+  apiGroup: rbac.authorization.k8s.io
