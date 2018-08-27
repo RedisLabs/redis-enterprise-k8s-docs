@@ -1,0 +1,27 @@
+apiVersion: "app.redislabs.com/v1alpha1"
+kind: "RedisEnterpriseCluster"
+metadata:
+  name: "redis-enterprise-cluster"
+spec:
+  nodes: 3
+  persistentSpec:
+    enabled: true
+    storageClassName: "gp2"
+  uiServiceType: LoadBalancer
+  serviceBrokerSpec:
+    enabled: true
+    persistentSpec:
+      storageClassName: "gp2"
+  username: "admin@acme.com"
+  redisEnterpriseNodeResources:
+    limits:
+      cpu: "8000m"
+      memory: 16Gi
+    requests:
+      cpu: "8000m"
+      memory: 16Gi
+  redisEnterpriseImageSpec:
+    imagePullPolicy:  IfNotPresent
+    Repository:       redislabs/redis
+    versionTag:       5.0.2-20
+
