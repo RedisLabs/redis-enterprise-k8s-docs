@@ -19,5 +19,9 @@ spec:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     Repository:       redislabs/redis
-    versionTag:       5.2.2-22
+    versionTag:       5.2.2-22.rhel7-openshift
+  redisEnterpriseControllerImageSpec:
+    imagePullPolicy:  IfNotPresent
+    Repository:       redislabs/k8s-controller
+    versionTag:       65_7e696a1.rhel7
 

@@ -5,6 +5,8 @@
 * A kubernetes version of 1.8 or higher
 * For service broker - a k8s distribution that supports service catalog (see also: https://kubernetes.io/docs/concepts/extend-kubernetes/service-catalog/) 
 
+#### Note: For REHL based images and/or deployments on OpenShift, please use redis-enterprise-cluster_rhel.yaml and operator_rhel.yaml. For Service Broker, please see examples/with_service_broker_rhel.yaml. 
+
 #### Deployment:
 
 Clone this repository, which contains the deployment files:
@@ -96,7 +98,7 @@ A typical response may look like this:
 ```
 
 Create A Redis Enterprise Cluster:
-Choose the configuration relevant for you - you may find additional examples in the examples folder.
+Choose the configuration relevant for you - you may find additional examples in the examples folder. Note that you will need to specify an image tag if you'd like to pull a RHEL image.
 
 ```kubectl apply -f redis-enterprise-cluster.yaml```
 

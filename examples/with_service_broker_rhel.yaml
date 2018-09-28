@@ -1,0 +1,23 @@
+apiVersion: "app.redislabs.com/v1alpha1"
+kind: "RedisEnterpriseCluster"
+metadata:
+  name: "redis-enterprise-cluster"
+spec:
+  nodes: 3
+  persistentSpec:
+    enabled: true
+    storageClassName: "gp2"
+  serviceBrokerSpec:
+    enabled: true
+    persistentSpec:
+    storageClassName: "gp2"
+    imageSpec:
+     imagePullPolicy:  Always
+     repository:       redislabs/service-broker-internal
+     versionTag:       39_5bfe271.rhel7
+    redisEnterpriseImageSpec:
+     imagePullPolicy:  IfNotPresent
+     repository:       redislabs/redis
+     versionTag:       5.2.2-22.rhel7-openshift
+    
+     
