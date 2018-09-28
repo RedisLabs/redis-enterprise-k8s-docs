@@ -5,7 +5,7 @@
 * A kubernetes version of 1.8 or higher
 * For service broker - a k8s distribution that supports service catalog (see also: https://kubernetes.io/docs/concepts/extend-kubernetes/service-catalog/) 
 
-#### Note: For REHL based images and/or deployments on OpenShift, please use redis-enterprise-cluster_rhel_.yaml and operator_rehl_.yaml 
+#### Note: For REHL based images and/or deployments on OpenShift, please use redis-enterprise-cluster_rhel.yaml and operator_rehl_.yaml 
 
 #### Deployment:
 
