@@ -13,7 +13,7 @@ spec:
     storageClassName: "gp2"
     imageSpec:
      imagePullPolicy:  Always
-     repository:       redislabs/service-broker-internal
+     repository:       redislabs/service-broker
      versionTag:       39_5bfe271.rhel7
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
