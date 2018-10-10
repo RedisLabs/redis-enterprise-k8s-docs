@@ -10,7 +10,7 @@ spec:
   serviceBrokerSpec:
     enabled: true
     persistentSpec:
-    storageClassName: "gp2"
+      storageClassName: "gp2"
     imageSpec:
      imagePullPolicy:  Always
      repository:       redislabs/service-broker
