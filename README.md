@@ -22,15 +22,18 @@ Clone (or download) this repository, which contains the deployment files:
 git clone git@github.com:RedisLabs/redis-enterprise-k8s-docs.git
 ```
 
-1) For non-OpenShift deployment - create a new namespace:
+1) Create a namespace / project:
+    > For OpenShift deployment create a new project:
+    ```
+    oc new-project my-project
+    ```
+    
+    > For non-OpenShift deployment - create a new namespace:
     ```
     kubectl create namespace demo
     ```
 
-    > For OpenShift deployment create a new project instead:
-    ```
-    oc new-project my-project
-    ```
+
 
 2) If you run OpenShift perform the following (you need admin permissions for your cluster)
 (this provides the operator permissions for pods):
