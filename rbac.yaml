@@ -8,10 +8,12 @@ rules:
   verbs: ["*"]
 - apiGroups:
   - app.redislabs.com
-  resources:
-  - "*"
-  verbs:
-  - "*"
+  resources: ["*"]
+  verbs: ["*"]
+- apiGroups:
+  - route.openshift.io
+  resources: ["routes", "routes/custom-host"]
+  verbs: ["*"]
 ---
 kind: ServiceAccount
 apiVersion: v1
