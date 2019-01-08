@@ -19,7 +19,7 @@ For Service Broker, please see examples/with_service_broker_rhel.yaml. RedHat ce
 #### Deployment:
 Clone (or download) this repository, which contains the deployment files:
 ```
-git clone git@github.com:RedisLabs/redis-enterprise-k8s-docs.git
+git clone https://github.com/RedisLabs/redis-enterprise-k8s-docs.git
 ```
 
 1) Create a namespace / project:
