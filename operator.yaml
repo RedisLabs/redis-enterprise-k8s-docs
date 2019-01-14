@@ -15,7 +15,7 @@ spec:
       serviceAccount: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:267_32628ce
+          image: redislabs/operator:343_49aa9ac
           command:
           - redis-enterprise-operator
           imagePullPolicy: Always
