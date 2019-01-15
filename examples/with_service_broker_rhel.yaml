@@ -12,13 +12,13 @@ spec:
     persistentSpec:
       storageClassName: "gp2"
     imageSpec:
-     imagePullPolicy:  Always
-     repository:       redislabs/service-broker
-     versionTag:       39_5bfe271.rhel7
+     imagePullPolicy: Always
+     repository:      redislabs/service-broker
+     versionTag:      39_5bfe271.rhel7
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       redislabs/redis
-    versionTag:       5.2.2-22.rhel7-openshift
+    versionTag:       5.4.0-17.rhel7-openshift
   redisEnterpriseControllerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       redislabs/k8s-controller
