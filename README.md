@@ -48,13 +48,23 @@ git clone https://github.com/RedisLabs/redis-enterprise-k8s-docs.git
     ```
     oc adm policy add-scc-to-group redis-enterprise-scc system:serviceaccounts:my-project
     ```
-    If you're deploying a service broker also apply the sb_rbac.yaml file. First, edit sb_rbac.yaml namespace field to reflect the namespace you've created or switched to in the previous steps.
+    If you're deploying a service broker also apply the sb_rbac.yaml file.
     ```
     kubectl apply -f sb_rbac.yaml
     ```
     > You should receive the following response:
     ```
-    clusterrolebinding.rbac.authorization.k8s.io/redis-enterprise-operator configured
+    clusterrole "redis-enterprise-operator-sb" configured
+    ```
+    
+    Bind the sb role to the operator service account:
+     ```
+    oc adm policy add-cluster-role-to-user redis-enterprise-operator-sb --serviceaccount redis-enterprise-operator --rolebinding-name=redis-enterprise-operator-sb
+     ```
+    
+     > You should receive the following response:
+    ```
+    cluster role "redis-enterprise-operator-sb" added: "redis-enterprise-operator"
     ```
 
 3) The next step applies rbac.yaml, creating a service account, role, and role-binding to allow resources access control (provides permissions to create and manage resources):
