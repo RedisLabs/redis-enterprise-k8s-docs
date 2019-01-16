@@ -57,7 +57,7 @@ git clone https://github.com/RedisLabs/redis-enterprise-k8s-docs.git
     clusterrole "redis-enterprise-operator-sb" configured
     ```
     
-    Bind the sb role to the operator service account:
+    Bind the Cluster Service Broker role to the operator service account (in the current namespace):
      ```
     oc adm policy add-cluster-role-to-user redis-enterprise-operator-sb --serviceaccount redis-enterprise-operator --rolebinding-name=redis-enterprise-operator-sb
      ```
