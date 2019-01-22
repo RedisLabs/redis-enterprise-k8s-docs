@@ -4,9 +4,6 @@ metadata:
   name: "redis-enterprise"
 spec:
   nodes: 3
-  persistentSpec:
-    enabled: true
-    storageClassName: "gp2"
   serviceBrokerSpec:
     enabled: true
     persistentSpec:

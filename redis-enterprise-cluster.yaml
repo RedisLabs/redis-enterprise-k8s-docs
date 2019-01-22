@@ -1,7 +1,7 @@
 apiVersion: "app.redislabs.com/v1alpha1"
 kind: "RedisEnterpriseCluster"
 metadata:
-  name: "redis-enterprise-cluster"
+  name: "redis-enterprise"
 spec:
   nodes: 3
   persistentSpec:
@@ -18,6 +18,6 @@ spec:
       memory: 4Gi
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
-    Repository:       redislabs/redis
-    versionTag:       5.2.2-22
+    repository:       redislabs/redis
+    versionTag:       5.4.0-19
 

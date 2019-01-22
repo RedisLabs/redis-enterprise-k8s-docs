@@ -6,4 +6,4 @@ spec:
   nodes: 3
   persistentSpec:
     enabled: true
-    storageClassName: "gp2"
+    storageClassName: "gp2" # edit according to infrastructure
