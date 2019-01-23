@@ -172,6 +172,15 @@ UI annotations - add custom annotation to the UI service
     uiAnnotation2: 'UI-Annotation2'
 ```
 
+
+SideCar containers- images that will run along side the redis enterprise containers
+```yaml
+  sideContainersSpec:
+    - name: sidecar
+      image: dockerhub_repo/repo:tag
+      imagePullPolicy: IfNotPresent
+```
+
 Service Broker (only for supported clusters)
 ```yaml 
   serviceBrokerSpec:
@@ -180,12 +189,31 @@ Service Broker (only for supported clusters)
       storageClassName: "gp2" #adjust according to infrastructure 
 ```
 
-SideCar containers- images that will run along side the redis enterprise containers
+CRDB (Active Active):
+*Currently supported for OpenShift
+
+```yaml 
+activeActive: # edit values according to your cluster
+  apiIngressUrl:  my-cluster1-api.myopenshiftcluster1.com 
+  dbIngressSuffix: -dbsuffix1.myopenshiftcluster1.com
+  method: openShiftRoute
+```
+
+With Service Broker support (add this in addition to serviceBrokerSpec section):
 ```yaml
-  sideContainersSpec:
-    - name: sidecar
-      image: dockerhub_repo/repo:tag
-      imagePullPolicy: IfNotPresent
+activeActive: # edit values according to your cluster
+  apiIngressUrl:  my-cluster1-api.myopenshiftcluster1.com
+  dbIngressSuffix: -dbsuffix1.myopenshiftcluster1.com
+  method: openShiftRoute
+    peerClusters:
+      - apiIngressUrl: my-cluster2-api.myopenshiftcluster2.com
+        authSecret: cluster2_secret
+        dbIngressSuffix: -dbsuffix2.myopenshiftcluster2.com
+        fqdn: <cluster2_name>.<cluster2_namespace>.svc.cluster.local
+      - apiIngressUrl: my-cluster3-api.myopenshiftcluster3.com
+        authSecret: cluster3_secret
+        dbIngressSuffix: -dbsuffix3.myopenshiftcluster3.com
+        fqdn: <cluster3_name>.<cluster3_namespace>.svc.cluster.local
 ```
 
 [requirements]: https://redislabs.com/redis-enterprise-documentation/administering/designing-production/hardware-requirements/
