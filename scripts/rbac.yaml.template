@@ -1,0 +1,46 @@
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  # "namespace" omitted since ClusterRoles are not namespaced
+  name: redis-enterprise-operator-sb
+rules:
+- apiGroups: ["servicecatalog.k8s.io"]
+  resources: ["clusterservicebrokers"]
+  verbs: ["*"]
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: redis-enterprise-operator
+  namespace: $NAMESPACE
+rules:
+- apiGroups: ["", "extensions", "apps", "rbac.authorization.k8s.io", "policy"]
+  resources: ["*"]
+  verbs: ["*"]
+- apiGroups:
+  - app.redislabs.com
+  resources: ["*"]
+  verbs: ["*"]
+- apiGroups:
+  - route.openshift.io
+  resources: ["routes", "routes/custom-host"]
+  verbs: ["*"]
+---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: $SERVICE_ACCOUNT
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: redis-enterprise-operator
+  namespace: $NAMESPACE
+subjects:
+- kind: ServiceAccount
+  name: redis-enterprise-operator
+  namespace: $NAMESPACE
+roleRef:
+  kind: Role
+  name: redis-enterprise-operator
+  apiGroup: rbac.authorization.k8s.io

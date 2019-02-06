@@ -1,0 +1,58 @@
+application_api_version: v1beta1
+properties:
+  APP_INSTANCE_NAME:
+    type: string
+    x-google-marketplace:
+      type: NAME
+  NAMESPACE:
+    type: string
+    x-google-marketplace:
+      type: NAMESPACE
+  IMAGE_REDIS:
+    type: string
+    default: $REGISTRY:$TAG
+    x-google-marketplace:
+      type: IMAGE
+  SERVICE_ACCOUNT:
+    title: Cluster Admin Service Account
+    description: >-
+      Name of a service account in the target namespace that
+      has cluster-admin permissions. This is needed for the operator
+      to create REDIS CRD and resources.
+    type: string
+    x-google-marketplace:
+      type: SERVICE_ACCOUNT
+      serviceAccount:
+        roles:
+        - type: ClusterRole
+          rulesType: PREDEFINED
+          rulesFromRoleName: cluster-admin
+  REPLICAS:
+    type: integer
+    title: Replicas
+    description: The number of Pods in the solution
+    default: 3
+    minimum: 3
+    maximum: 11
+  REDIS_ADMIN:
+    type: string
+    title: Redis admin username
+    description: Username to be used for connecting to Redis
+    default: admin@example.com
+  IMAGE_UBBAGENT:
+    type: string
+    default: $REGISTRY/ubbagent:$TAG
+    x-google-marketplace:
+    type: IMAGE
+  REPORTING_SECRET:
+    type: string
+    x-google-marketplace:
+    type: REPORTING_SECRET
+required:
+- APP_INSTANCE_NAME
+- NAMESPACE
+- IMAGE_REDIS
+- SERVICE_ACCOUNT
+- REPLICAS
+- REDIS_ADMIN
+- REPORTING_SECRET
