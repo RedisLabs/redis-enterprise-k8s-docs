@@ -161,13 +161,15 @@ the [Kubernetes Engine documentation](https://cloud.google.com/kubernetes-engine
 Use `envsubst` to expand the template. We recommend that you save the
 expanded manifest file for future updates to the application.
 
-1. Expand `RBAC` YAML file. You must configure RBAC related stuff to support access nodes information successfully by `rabbitmq_peer_discovery_k8s` plugin.
+1. Expand `RBAC` YAML file. You must configure RBAC related stuff .
 
     ```shell
     # Define name of service account
     export SERVICE_ACCOUNT=redis-enterprise-operator
     # Expand rbac.yaml.template
-    envsubst '$APP_INSTANCE_NAME' < scripts/rbac.yaml.template > "${APP_INSTANCE_NAME}_rbac.yaml"
+    envsubst '$APP_INSTANCE_NAME $NAMESPACE $SERVICE_ACCOUNT' < scripts/rbac.yaml.template > "${APP_INSTANCE_NAME}_rbac.yaml"
+    # Create UBBAgent Config map
+    kubectl create configmap ubbagent-config --from-file=./agent-config.yaml
     ```
 
 1. Expand `Application`/`crd`/`operator`/`ConfigMap` YAML files.
