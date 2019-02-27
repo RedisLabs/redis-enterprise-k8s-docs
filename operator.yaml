@@ -12,9 +12,6 @@ spec:
       labels:
         name: redis-enterprise-operator
     spec:
-      securityContext:
-        runAsUser: 1001
-        fsGroup: 1001
       serviceAccount: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
