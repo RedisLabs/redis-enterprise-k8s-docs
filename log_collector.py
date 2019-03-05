@@ -224,7 +224,7 @@ def get_namespace_from_config():
     if rc:
         return
 
-    config = yaml.loads(out)
+    config = yaml.load(out)
     current_context = config.get('current-context')
     if not current_context:
         return
