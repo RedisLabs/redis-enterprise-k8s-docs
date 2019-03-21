@@ -1,0 +1,45 @@
+apiVersion: "app.redislabs.com/v1alpha1"
+kind: "RedisEnterpriseCluster"
+metadata:
+  name: "redis-enterprise"
+spec:
+  nodes: 3
+  persistentSpec:
+    enabled: true
+    storageClassName: "standard"
+  uiServiceType: LoadBalancer
+  username: $REDIS_ADMIN
+  redisEnterpriseNodeResources:
+    limits:
+      cpu: "4000m"
+      memory: 4Gi
+    requests:
+      cpu: "4000m"
+      memory: 4Gi
+  redisEnterpriseImageSpec:
+    imagePullPolicy:  IfNotPresent
+    repository:       redislabs/redis
+    versionTag:       5.4.0-19
+  sideContainersSpec:
+    - name: ubbagent
+      image: $IMAGE_UBBAGENT
+      imagePullPolicy: IfNotPresent
+      env:
+      - name: AGENT_CONFIG_FILE
+        value: /etc/ubbagent/config.yaml
+      - name: AGENT_LOCAL_PORT
+        value: "6080"
+      - name: AGENT_STATE_DIR
+        value: /opt/persistent/ubbagent
+      - name: AGENT_REPORT_DIR
+        value: /opt/persistent/ubbagent/reports
+      - name: AGENT_ENCODED_KEY
+        valueFrom:
+          secretKeyRef:
+            name: "$reportingSecret"
+            key: reporting-key
+      - name: AGENT_CONSUMER_ID
+        valueFrom:
+          secretKeyRef:
+            name: "$reportingSecret"
+            key: consumer-id

@@ -1,0 +1,26 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: redis-enterprise-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: redis-enterprise-operator
+  template:
+    metadata:
+      labels:
+        name: redis-enterprise-operator
+    spec:
+      serviceAccount: redis-enterprise-operator
+      containers:
+        - name: redis-enterprise-operator
+          image: redislabs/operator:498_f987b08
+          command:
+          - redis-enterprise-operator
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
