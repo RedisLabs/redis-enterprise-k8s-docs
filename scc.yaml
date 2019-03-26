@@ -6,6 +6,10 @@ allowPrivilegedContainer: false
 allowedCapabilities:
   - SYS_RESOURCE
 runAsUser:
-  type: RunAsAny
+  type: MustRunAs
+  uid: 1001
+FSGroup:
+  type: MustRunAs
+  ranges: 1001,1001
 seLinuxContext:
   type: RunAsAny
