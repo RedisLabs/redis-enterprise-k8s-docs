@@ -16,6 +16,8 @@ spec:
       containers:
         - name: redis-enterprise-operator
           image: redislabs/operator:498_f987b08.rhel7
+          securityContext:
+            runAsUser: 1001
           command:
           - redis-enterprise-operator
           imagePullPolicy: Always
