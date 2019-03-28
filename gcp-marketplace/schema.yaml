@@ -43,11 +43,11 @@ properties:
     type: string
     default: $REGISTRY/ubbagent:$TAG
     x-google-marketplace:
-    type: IMAGE
+      type: IMAGE
   REPORTING_SECRET:
     type: string
     x-google-marketplace:
-    type: REPORTING_SECRET
+      type: REPORTING_SECRET
 required:
 - APP_INSTANCE_NAME
 - NAMESPACE
