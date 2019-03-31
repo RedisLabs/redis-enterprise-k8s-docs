@@ -1,13 +1,63 @@
-kubectl apply -f "https://raw.githubusercontent.com/GoogleCloudPlatform/marketplace-k8s-app-tools/master/crd/app-crd.yaml"
-export APP_INSTANCE_NAME=redis-1
-export NAMESPACE=default
-export IMAGE_REDIS=redislabs/operator:498_f987b08
-export SERVICE_ACCOUNT=redis-enterprise-operator
-export REPLICAS=3
-export REDIS_ADMIN=admin@acme.com
-export IMAGE_UBBAGENT=launcher.gcr.io/google/ubbagent
+include helper/app.Makefile
+include helper/crd.Makefile
+include helper/gcloud.Makefile
+include helper/var.Makefile
 
 
-awk 'FNR==1 {print "---"}{print}' manifest/* \
-  | envsubst '$APP_INSTANCE_NAME $NAMESPACE $IMAGE_REDIS $REPLICAS $REDIS_ADMIN $SERVICE_ACCOUNT' \
-  > "${APP_INSTANCE_NAME}_manifest.yaml"
+TAG ?= 1.7
+METRICS_EXPORTER_TAG ?= v0.7.1
+
+$(info ---- TAG = $(TAG))
+
+APP_DEPLOYER_IMAGE ?= $(REGISTRY)/redislabs/deployer:$(TAG)
+NAME ?= redislabs-1
+
+ifdef METRICS_EXPORTER_ENABLED
+  METRICS_EXPORTER_ENABLED_FIELD = , "metrics.enabled": "$(METRICS_EXPORTER_ENABLED)"
+endif
+
+APP_PARAMETERS ?= { \
+  "name": "$(NAME)", \
+  "namespace": "$(NAMESPACE)" \
+  $(METRICS_EXPORTER_ENABLED_FIELD) \
+}
+
+TESTER_IMAGE ?= $(REGISTRY)/redislabs/tester:$(TAG)
+
+
+app/build:: .build/redislabs/deployer \
+            .build/redislabs/redislabs \
+
+
+.build/redislabs: | .build
+	mkdir -p "$@"
+
+
+.build/redislabs/deployer: deployer/* \
+                           schema.yaml \
+                           .build/var/APP_DEPLOYER_IMAGE \
+                           .build/var/MARKETPLACE_TOOLS_TAG \
+                           .build/var/REGISTRY \
+                           .build/var/TAG \
+                           | .build/redislabs
+	docker build \
+	    --build-arg REGISTRY="$(REGISTRY)/redislabs" \
+	    --build-arg TAG="$(TAG)" \
+	    --build-arg MARKETPLACE_TOOLS_TAG="$(MARKETPLACE_TOOLS_TAG)" \
+	    --tag "$(APP_DEPLOYER_IMAGE)" \
+	    -f deployer/Dockerfile \
+	    .
+	docker push "$(APP_DEPLOYER_IMAGE)"
+	@touch "$@"
+
+
+.build/redislabs/redislabs: .build/var/REGISTRY \
+                            .build/var/TAG \
+                            | .build/redislabs
+	docker pull redislabs/operator:498_f987b08
+	docker tag  redislabs/operator:498_f987b08 \
+	    "$(REGISTRY)/redislabs:$(TAG)"
+	docker push "$(REGISTRY)/redislabs:$(TAG)"
+	@touch "$@"
+
+
