@@ -20,7 +20,7 @@ rules:
   verbs: ["*"]
 - apiGroups: [""]
   resources: ["endpoints"]
-  verbs: ["get"]
+  verbs: ["get", "list", "watch"]
 - apiGroups: [""]
   resources: ["events"]
   verbs: ["create"]
