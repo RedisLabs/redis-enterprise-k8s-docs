@@ -51,6 +51,9 @@ rules:
   - redis-enterprise-psp
   verbs:
   - use
+- apiGroups: ["extensions"]
+  resources: ["ingresses"]
+  verbs: ["*"]
 ---
 kind: ServiceAccount
 apiVersion: v1
