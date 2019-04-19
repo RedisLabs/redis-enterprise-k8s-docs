@@ -22,50 +22,51 @@ Clone (or download) this repository, which contains the deployment files:
 git clone https://github.com/RedisLabs/redis-enterprise-k8s-docs.git
 ```
 
-1) Create a namespace / project:
-    > For OpenShift deployment create a new project:
-    ```
-    oc new-project my-project
-    ```
+1) Create a namespace / project.
 
-    > For non-OpenShift deployment - create a new namespace:
+    For non-OpenShift deployments, create a new namespace:
+    
     ```
     kubectl create namespace demo
     ```
 
+    For OpenShift deployments, create a new project (you can substitute `oc` for `kubectl` in the rest of these instructions):
+    
+    ```
+    oc new-project my-project
+    ```
 
-
-2) If you run OpenShift perform the following (you need admin permissions for your cluster)
-(this provides the operator permissions for pods):
+2) If you are not running OpenShift, skip to the next step.  For OpenShift, perform the following commands (you need admin permissions for your cluster):
+     
     ```
     oc apply -f scc.yaml
     ```
-    > You should receive the following response:
-    ```
-    securitycontextconstraints.security.openshift.io "redis-enterprise-scc" configured*
-    ```
-    Followed by (change "my-project"):
+      > You should receive the following response:
+   
+    `securitycontextconstraints.security.openshift.io "redis-enterprise-scc" configured`
+       
+    Provide the operator permissions for pods (substitute your project for "my-project"):
     ```
     oc adm policy add-scc-to-group redis-enterprise-scc system:serviceaccounts:my-project
     ```
-    If you're deploying a service broker also apply the sb_rbac.yaml file.
+    
+    If you're deploying a service broker, also apply the sb_rbac.yaml file:
     ```
-    kubectl apply -f sb_rbac.yaml
+    oc apply -f sb_rbac.yaml
     ```
+    
     > You should receive the following response:
-    ```
-    clusterrole "redis-enterprise-operator-sb" configured
-    ```
+
+    `clusterrole "redis-enterprise-operator-sb" configured`
 
     Bind the Cluster Service Broker role to the operator service account (in the current namespace):
+    
      ```
     oc adm policy add-cluster-role-to-user redis-enterprise-operator-sb --serviceaccount redis-enterprise-operator --rolebinding-name=redis-enterprise-operator-sb
      ```
+    > You should receive the following response:
 
-     > You should receive the following response:
-    ```
-    cluster role "redis-enterprise-operator-sb" added: "redis-enterprise-operator"
-    ```
+    `cluster role "redis-enterprise-operator-sb" added: "redis-enterprise-operator"`
 
 3) You can optionally use pod security policy.
     ```
@@ -78,14 +79,14 @@ git clone https://github.com/RedisLabs/redis-enterprise-k8s-docs.git
 
 
 4) The next step applies rbac.yaml, creating a service account, role, and role-binding to allow resources access control (provides permissions to create and manage resources):
+
     ```
     kubectl apply -f rbac.yaml
     ```
 
     > You should receive the following response:
-    ```
-    clusterrolebinding.rbac.authorization.k8s.io/redis-enterprise-operator configured
-    ```
+
+    `clusterrolebinding.rbac.authorization.k8s.io/redis-enterprise-operator configured`
 
 5) The next step applies crd.yaml, creating a CustomResourceDefinition for redis enterprise cluster resource.
 This creates another API resource to be handled by the k8s API server and managed by the operator we will deploy next.
@@ -94,24 +95,22 @@ This creates another API resource to be handled by the k8s API server and manage
     ```
 
     > You should receive the following response:
-    ```
-    customresourcedefinition.apiextensions.k8s.io/redisenterpriseclusters.app.redislabs.com configured
-    ```
+    
+    `customresourcedefinition.apiextensions.k8s.io/redisenterpriseclusters.app.redislabs.com configured`
 
 6) Create the operator deployment: a deployment responsible for managing the k8s deployment and lifecycle of a redis-enterprise-cluster.
     Among many other responsibilities, it creates a stateful set that runs the redis enterprise nodes (as pods).
 
-    Before applying - edit the tag according to the relevant operator version: ```image: redislabs/operator:tag```
+    Before applying, edit the tag according to the relevant operator version: `image: redislabs/operator:tag`
     ```
     kubectl apply -f operator.yaml
     ```
 
     > You should receive the following response:
-    ```
-    deployment.apps/redis-enterprise-operator created
-    ```
+    
+    `deployment.apps/redis-enterprise-operator created`
 
-7) Run ```kubectl get Deployment``` and verify redis-enterprise-operator deployment is running
+7) Run `kubectl get Deployment` and verify redis-enterprise-operator deployment is running.
 
     A typical response may look like this:
     ```
@@ -120,12 +119,13 @@ This creates another API resource to be handled by the k8s API server and manage
     |redis-enterprise-operator|1	   | 1        |  1         | 1         | 2m |
     ```
 
-8)  Create A Redis Enterprise Cluster:
-    Choose the configuration relevant for you (see next section) - you may find additional examples in the examples folder. Note that you need to specify an image tag if you'd like to pull a RHEL image.
+8)  Create A Redis Enterprise Cluster.  Choose the configuration relevant for you (see next section).  There are additional examples in the examples folder. Note that you need to specify an image tag if you'd like to pull a RHEL image.
 
-    ```kubectl apply -f redis-enterprise-cluster.yaml```
+    ```
+    kubectl apply -f redis-enterprise-cluster.yaml
+    ```
 
-9) Run ```kubectl get rec``` and verify creation was successful. rec is a shortcut for RedisEnterpriseClusters.
+9) Run ```kubectl get rec``` and verify creation was successful. "rec" is a shortcut for RedisEnterpriseClusters.
 
 
 #### Configuration:
