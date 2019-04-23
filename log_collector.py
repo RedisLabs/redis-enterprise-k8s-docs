@@ -188,7 +188,7 @@ def archive_files():
     file_name = output_dir + ".tar.gz"
 
     with tarfile.open(file_name, "w|gz") as tar:
-        tar.add(output_dir, arcname=dir_name + ".tar.gz")
+        tar.add(output_dir, arcname=dir_name)
     logger.info("Archived files into {}".format(file_name))
 
     rc, out = run_shell_command("rm -rf {}".format(output_dir))
