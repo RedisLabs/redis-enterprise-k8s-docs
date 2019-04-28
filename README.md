@@ -73,7 +73,7 @@ git clone https://github.com/RedisLabs/redis-enterprise-k8s-docs.git
     ```
     If you use this option, you should add the policy name to REC configuration, in redis-enterprise-cluster.yaml.
     ```
-    PodSecurityPolicyName: "redis-enterprise-psp"
+    podSecurityPolicyName: "redis-enterprise-psp"
     ```
 
 
