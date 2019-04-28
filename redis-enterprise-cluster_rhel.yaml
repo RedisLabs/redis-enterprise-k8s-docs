@@ -20,8 +20,4 @@ spec:
     imagePullPolicy:  IfNotPresent
     repository:       redislabs/redis
     versionTag:       5.4.0-19.rhel7-openshift
-  redisEnterpriseServicesRiggerImageSpec:
-    imagePullPolicy:  IfNotPresent
-    repository:       redislabs/k8s-controller
-    versionTag:       109_5c9af60.rhel7
 
