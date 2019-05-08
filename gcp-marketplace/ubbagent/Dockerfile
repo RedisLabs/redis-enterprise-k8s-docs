@@ -1,3 +1,7 @@
 FROM gcr.io/ubbagent/metering/ubbagent
-COPY agent-config-small-node.yaml /etc/ubbagent/config.yaml
+RUN mkdir /runtime
+WORKDIR /runtime
+COPY . . 
+RUN  ./create-configs.sh
 
+CMD ["/runtime/init.sh"]
