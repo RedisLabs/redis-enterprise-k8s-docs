@@ -125,6 +125,14 @@ export REDIS_ADMIN=admin@acme.com
 ```
 
 
+Set the CPU and Memory for nodes:
+
+```shell
+export NODE_CPU=1000
+export NODE_MEM=1000
+```
+
+
 Configure the container images:
 
 ```shell
@@ -174,7 +182,7 @@ expanded manifest file for future updates to the application.
 
     ```shell
      awk 'FNR==1 {print "---"}{print}' manifest/* \
-     | envsubst '$APP_INSTANCE_NAME $NAMESPACE $IMAGE_REDIS $REPLICAS $REDIS_ADMIN $SERVICE_ACCOUNT' \
+     | envsubst '$APP_INSTANCE_NAME $NAMESPACE $IMAGE_REDIS $REPLICAS $REDIS_ADMIN $SERVICE_ACCOUNT $NODE_CPU $NODE_MEM' \
      > "${APP_INSTANCE_NAME}_manifest.yaml"
     ```
 

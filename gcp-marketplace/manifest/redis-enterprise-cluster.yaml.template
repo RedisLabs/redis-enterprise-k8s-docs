@@ -2,8 +2,9 @@ apiVersion: "app.redislabs.com/v1alpha1"
 kind: "RedisEnterpriseCluster"
 metadata:
   name: "redis-enterprise"
+  namespace: $NAMESPACE
 spec:
-  nodes: 3
+  nodes: $REPLICAS
   persistentSpec:
     enabled: true
     storageClassName: "standard"
@@ -11,11 +12,11 @@ spec:
   username: $REDIS_ADMIN
   redisEnterpriseNodeResources:
     limits:
-      cpu: "4000m"
-      memory: 4Gi
+      cpu: "${NODE_CPU}m"
+      memory: ${NODE_MEM}Gi
     requests:
-      cpu: "4000m"
-      memory: 4Gi
+      cpu: "${NODE_CPU}m"
+      memory: ${NODE_MEM}Gi
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       redislabs/redis
@@ -25,6 +26,10 @@ spec:
       image: $IMAGE_UBBAGENT
       imagePullPolicy: IfNotPresent
       env:
+      - name: NODE_CPU
+        value: $NODE_CPU
+      - name: NODE_MEM
+        value: $NODE_MEM
       - name: AGENT_CONFIG_FILE
         value: /etc/ubbagent/config.yaml
       - name: AGENT_LOCAL_PORT

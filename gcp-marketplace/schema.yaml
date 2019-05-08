@@ -29,7 +29,7 @@ properties:
           rulesFromRoleName: cluster-admin
   REPLICAS:
     type: integer
-    title: Replicas
+    title: Number of Cluster Nodes
     description: The number of Pods in the solution
     default: 3
     minimum: 3
@@ -41,19 +41,35 @@ properties:
     default: admin@example.com
   IMAGE_UBBAGENT:
     type: string
-    default: $REGISTRY/ubbagent:1.5.1
+    default: $REGISTRY/ubbagent:0.2.0
     x-google-marketplace:
       type: IMAGE
   REPORTING_SECRET:
     type: string
     x-google-marketplace:
       type: REPORTING_SECRET
+  NODE_CPU:
+    title: Node CPU
+    type: integer
+    description: Each node CPU in millicpu i.e. 1000 equals 1vCPU
+    default: 4000 
+    minimum: 100
+    maximum: 32000
+  NODE_MEM:
+    title: Node Memory
+    type: integer
+    description: Each node RAM in GB ie 1 equals 1GiB
+    default: 15
+    minimum: 1
+    maximum: 269
 required:
 - APP_INSTANCE_NAME
 - NAMESPACE
 - IMAGE_REDIS
-- SERVICE_ACCOUNT
+- SERVIC_ACCOUNT
 - REPLICAS
 - REDIS_ADMIN
 - REPORTING_SECRET
 - IMAGE_UBBAGENT
+- NODE_CPU
+- NODE_MEM

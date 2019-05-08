@@ -4,7 +4,8 @@ include helper/gcloud.Makefile
 include helper/var.Makefile
 
 
-TAG ?= 1.7
+TAG ?= 1.8
+REGISTRY ?= gcr.io/proven-reality-226706
 METRICS_EXPORTER_TAG ?= v0.7.1
 
 $(info ---- TAG = $(TAG))
