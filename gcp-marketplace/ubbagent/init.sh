@@ -57,11 +57,11 @@ max_tier () {
  echo $max
 }
 
-get_cpu_tier 4000
-get_mem_tier 15
+get_cpu_tier $NODE_CPU
+get_mem_tier $NODE_MEM
 max_tier $cpu_tier $mem_tier
 
-TIER=${TIERS[$max]}
+export TIER=${TIERS[$max]}
 echo **FOUND TIER=$TIER**
 #exit 234
 
@@ -75,7 +75,7 @@ fi
 ls -lh /runtime/agent-config-*
 
 
-/usr/local/bin/ubbagent-start --config /runtime/agent-config-${TIER}.yaml 
+/usr/local/bin/ubbagent-start --config /runtime/agent-config-${TIER}.yaml && reporter.sh
 
 
 
