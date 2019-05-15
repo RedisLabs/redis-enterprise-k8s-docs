@@ -41,7 +41,7 @@ properties:
     default: admin@example.com
   IMAGE_UBBAGENT:
     type: string
-    default: $REGISTRY/ubbagent:0.2.0
+    default: gcr.io/proven-reality-226706/redislabs/ubbagent:1.9
     x-google-marketplace:
       type: IMAGE
   REPORTING_SECRET:
