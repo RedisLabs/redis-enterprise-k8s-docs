@@ -15,7 +15,7 @@ spec:
       serviceAccount: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:689_47471742.rhel7
+          image: redislabs/operator:780_eab22a45.rhel7
           securityContext:
             runAsUser: 1001
           command:
