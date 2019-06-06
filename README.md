@@ -137,7 +137,7 @@ Redis Image
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       redislabs/redis
-    versionTag:       5.2.2-14
+    versionTag:       5.4.2-27
 ```
 
 Persistence 
@@ -148,7 +148,7 @@ Persistence
     storageClassName: "standard" #on AWS common storage class is gp2
 ```
 
-Redis Enterprise Nodes (podes)
+Redis Enterprise Nodes (pods)
 ```yaml
   redisEnterpriseNodeResources:
     limits:
@@ -233,6 +233,7 @@ In this case, you could enforce the use of IPV4, by adding the following attribu
 ```yaml
   enforceIPv4: true
 ```
+Note: Setting 'enforceIPv4' to 'true' is a requirement for running REC on PKS.
 
 [requirements]: https://redislabs.com/redis-enterprise-documentation/administering/designing-production/hardware-requirements/
 [service-catalog]: https://kubernetes.io/docs/concepts/extend-kubernetes/service-catalog/
