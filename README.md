@@ -5,6 +5,7 @@
 * [Prerequisites](#prerequisites)
 * [Deployment](#deployment)
 * [Configuration Options](#configuration)
+* [IPV4 enforcement](#ipv4-enforcement)
 
 
 
@@ -224,6 +225,13 @@ activeActive: # edit values according to your cluster
         authSecret: cluster3_secret
         dbIngressSuffix: -dbsuffix3.myopenshiftcluster3.com
         fqdn: <cluster3_name>.<cluster3_namespace>.svc.cluster.local
+```
+
+#### IPV4 enforcement
+You might not have IPV6 support in your K8S cluster.
+In this case, you could enforce the use of IPV4, by adding the following attribute to the REC spec:
+```yaml
+  enforceIPv4: true
 ```
 
 [requirements]: https://redislabs.com/redis-enterprise-documentation/administering/designing-production/hardware-requirements/
