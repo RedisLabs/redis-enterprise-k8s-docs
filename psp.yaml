@@ -1,0 +1,23 @@
+apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: redis-enterprise-psp
+spec:
+  privileged: false
+  allowPrivilegeEscalation: true
+  allowedCapabilities:
+    - SYS_RESOURCE
+    - NET_RAW
+  runAsUser:
+    rule: MustRunAsNonRoot
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+    - min: 1001
+      max: 1001
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  volumes:
+    - '*'
