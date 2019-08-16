@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Redis Enterprise Cluster log collector script.
 # Creates a directory with output of kubectl for several API objects and for pods logs
@@ -16,6 +16,7 @@ import time
 from collections import OrderedDict
 import shutil
 import json
+import pathlib
 
 logger = logging.getLogger("log collector")
 
@@ -41,7 +42,7 @@ def make_dir(directory):
             os.mkdir(directory)
         except:
             logger.exception("Could not create directory %s - exiting", directory)
-            sys.exit()
+            sys.exit(-1)
 
 
 def run(configured_namespace, configured_output_path):
@@ -152,7 +153,7 @@ def collect_api_resources():
             resources_out[resource] = run_kubectl_get(resource)
             logger.info("  + {}".format(resource))
 
-    for entry, out in resources_out.iteritems():
+    for entry, out in resources_out.items():
         with open(os.path.join(output_dir, "{}.yaml".format(entry)), "w+") as fp:
             fp.write(out)
 
@@ -174,7 +175,7 @@ def collect_pods_logs():
     for pod in pods:
         cmd = "kubectl logs {} {}".format(get_namespace_argument(), pod)
         with open(os.path.join(logs_dir, "{}.log".format(pod)), "w+") as fp:
-            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             while True:
                 # read one line a time - we do not want to read large files to memory
                 line = p.stdout.readline()
@@ -189,8 +190,10 @@ def archive_files():
     global dir_name
     file_name = output_dir + ".tar.gz"
 
+    out_dir = pathlib.PurePath(output_dir).parts[-1]
     with tarfile.open(file_name, "w|gz") as tar:
-        tar.add(output_dir, arcname=dir_name + ".tar.gz")
+#        tar.add(output_dir, arcname=dir_name + ".tar.gz")
+        tar.add(output_dir, arcname=out_dir)
     logger.info("Archived files into {}".format(file_name))
 
     try:
@@ -232,7 +235,7 @@ def get_namespace_from_config():
     if rc:
         return
 
-    config = yaml.load(out)
+    config = yaml.load(out, Loader=yaml.Loader)
     current_context = config.get('current-context')
     if not current_context:
         return
@@ -267,6 +270,7 @@ def run_shell_command(cmd):
         output = subprocess.check_output(
             cmd,
             shell=True,
+            text=True,
             stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as ex:
         logger.warning("Failed in shell command: {}, output: {}".format(cmd, ex.output))
