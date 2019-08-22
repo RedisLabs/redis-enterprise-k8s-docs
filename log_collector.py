@@ -139,7 +139,7 @@ def collect_api_resources(namespace, output_dir):
             resources_out[resource] = run_kubectl_get(namespace, resource)
             logger.info("  + {}".format(resource))
 
-    for entry, out in resources_out.iteritems():
+    for entry, out in resources_out.items():
         with open(os.path.join(output_dir, "{}.yaml".format(entry)), "w+") as fp:
             fp.write(out)
 
