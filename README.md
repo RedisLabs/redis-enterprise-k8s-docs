@@ -18,9 +18,13 @@
 For Service Broker, please see examples/with_service_broker_rhel.yaml. RedHat certified images are available on: https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d
 
 The following are the images and tags for this release:
+
 Redis Enterprise  	redislabs/redis:5.4.2-27 / 5.4.2-27.rhel7-openshift
+
 Operator 	 redislabs/operator:804_c4987427 / 804_c4987427.rhel7
+
 Services Rigger	redislabs/k8s-controller:122_469731a2c /122_469731a2c.rhel7
+
 Service Broker	redislabs/service-broker:78_4b9b17f / 78_4b9b17f.rhel7
 
 
