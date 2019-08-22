@@ -21,8 +21,8 @@ logger = logging.getLogger("log collector")
 
 output_dir = ""
 namespace = ""
-timestr = time.strftime("%Y%m%d-%H%M%S")
-dir_name = "redis_enterprise_k8s_debug_info_{}".format(timestr)
+TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
+dir_name = "redis_enterprise_k8s_debug_info_{}".format(TIME_FORMAT)
 
 api_resources = [
     "RedisEnterpriseCluster",
@@ -53,7 +53,7 @@ def run(configured_namespace, configured_output_path):
     else:
         namespace = get_namespace_from_config()
 
-    global timestr
+    global TIME_FORMAT
     global dir_name
 
     if configured_output_path:
