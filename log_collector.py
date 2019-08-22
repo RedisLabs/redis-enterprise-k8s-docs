@@ -232,7 +232,7 @@ def get_namespace_from_config():
     if rc:
         return
 
-    config = yaml.load(out)
+    config = yaml.safe_load(out)
     current_context = config.get('current-context')
     if not current_context:
         return
