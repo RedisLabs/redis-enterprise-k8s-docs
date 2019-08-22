@@ -14,6 +14,8 @@ import sys
 import tarfile
 import time
 from collections import OrderedDict
+import shutil
+import json
 
 logger = logging.getLogger("log collector")
 
@@ -33,6 +35,15 @@ api_resources = [
 ]
 
 
+def make_dir(directory):
+    if not os.path.exists(directory):
+        try:
+            os.mkdir(directory)
+        except:
+            logger.exception("Could not create directory %s - exiting", directory)
+            sys.exit()
+
+
 def run(configured_namespace, configured_output_path):
     global output_dir, namespace
 
@@ -46,14 +57,11 @@ def run(configured_namespace, configured_output_path):
     global dir_name
 
     if configured_output_path:
-        output_dir = "{}{}{}".format(configured_output_path, "/" if configured_output_path[-1] != "/" else "", dir_name)
+        output_dir = os.path.join(configured_output_path, dir_name)
     else:
-        output_dir = "{}/{}".format(os.path.dirname(os.path.abspath(__file__)), dir_name)
+        output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), dir_name)
 
-    rc, out = run_shell_command("mkdir -p {}".format(output_dir))
-    if rc:
-        logger.warning("Could not create output directory {} - exiting".format(out))
-        sys.exit()
+    make_dir(output_dir)
 
     get_redis_enterprise_debug_info()
     collect_cluster_info()
@@ -69,18 +77,15 @@ def get_redis_enterprise_debug_info():
     """
         Connects to an RS cluster node, creates and copies debug info package from the pod
     """
-    cmd = 'kubectl get pod {} --selector="redis.io/role=node" |tail -1 |cut -d " " -f1'.format(get_namespace_argument())
-    rc, out = run_shell_command(cmd)
-    if rc or out == "No resources found.\n":
-        logger.warning(
-            "Cannot find redis enterprise pod, Error: {} - Skipping collecting Redis Enterprise cluster debug info".format(
-                out))
+    pod_names = get_pod_names(selector='redis.io/role=node')
+    if not pod_names:
+        logger.warning("Cannot find redis enterprise pod")
         return
 
-    pod = out.strip("\n")
+    pod_name = pod_names[0]
 
     cmd = "kubectl {} exec {} /opt/redislabs/bin/rladmin cluster debug_info path /tmp".format(
-        get_namespace_argument(), pod)
+        get_namespace_argument(), pod_name)
     rc, out = run_shell_command(cmd)
     if "Downloading complete" not in out:
         logger.warning("Failed running rladmin command in pod: {}".format(out))
@@ -90,7 +95,7 @@ def get_redis_enterprise_debug_info():
     match = re.search('File (.*\.gz)', out)
     if match:
         debug_file = match.group(1)
-        logger.info("debug info created on pod {} in path {}".format(pod, debug_file))
+        logger.info("debug info created on pod {} in path {}".format(pod_name, debug_file))
     else:
         logger.warning(
             "Failed to extract debug info name from output - "
@@ -98,7 +103,7 @@ def get_redis_enterprise_debug_info():
         return
 
     # copy package from RS pod
-    cmd = "kubectl {} cp {}:{} {}".format(get_namespace_argument(), pod, debug_file, output_dir)
+    cmd = "kubectl {} cp {}:{} {}".format(get_namespace_argument(), pod_name, debug_file, output_dir)
     rc, out = run_shell_command(cmd)
     if rc:
         logger.warning(
@@ -148,7 +153,7 @@ def collect_api_resources():
             logger.info("  + {}".format(resource))
 
     for entry, out in resources_out.iteritems():
-        with open("{}/{}.yaml".format(output_dir, entry), "w+") as fp:
+        with open(os.path.join(output_dir, "{}.yaml".format(entry)), "w+") as fp:
             fp.write(out)
 
 
@@ -158,20 +163,17 @@ def collect_pods_logs():
     """
     global output_dir
     logger.info("Collecting pods' logs:")
-    logs_dir = "{}/pods".format(output_dir)
-    rc, out = run_shell_command("mkdir -p {}".format(logs_dir))
-    if rc:
-        logger.warning("Failed to create directory for pods' logs - Skipping. Output: {}".format(out))
-        return
+    logs_dir = os.path.join(output_dir, "pods")
+    make_dir(logs_dir)
 
-    pods = get_pods()
+    pods = get_pod_names()
     if not pods:
         logger.warning("Could not get pods list - skipping pods logs collection")
         return
 
     for pod in pods:
         cmd = "kubectl logs {} {}".format(get_namespace_argument(), pod)
-        with open("{}/{}.log".format(logs_dir, pod), "w+") as fp:
+        with open(os.path.join(logs_dir, "{}.log".format(pod)), "w+") as fp:
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             while True:
                 # read one line a time - we do not want to read large files to memory
@@ -191,20 +193,26 @@ def archive_files():
         tar.add(output_dir, arcname=dir_name + ".tar.gz")
     logger.info("Archived files into {}".format(file_name))
 
-    rc, out = run_shell_command("rm -rf {}".format(output_dir))
-    if rc:
-        logger.warning("Failed to delete directory after archiving: {}".format(out))
+    try:
+        shutil.rmtree(output_dir)
+    except OSError as e:
+        logger.warning("Failed to delete directory after archiving: %s", e)
 
 
-def get_pods():
+def get_pod_names(selector=""):
     """
         Returns list of pods names
     """
-    cmd = "kubectl get pod {} --no-headers|cut -d \" \" -f1".format(get_namespace_argument())
+    if selector:
+        selector = '--selector="{}"'.format(selector)
+    cmd = 'kubectl get pod {} {} -o json '.format(get_namespace_argument(), selector)
     rc, out = run_shell_command(cmd)
-    if rc == 0:
-        return out.split("\n")[:-1]
-    logger.warning("Failed to get pods: {}".format(out))
+    if rc:
+        logger.warning("Failed to get pod names: {}".format(out))
+        return
+    pods_json = json.loads(out)
+
+    return [pod['metadata']['name'] for pod in pods_json['items']]
 
 
 def get_namespace_argument():
@@ -245,7 +253,7 @@ def collect_helper(cmd, file_name, resource_name):
     if rc:
         logger.warning("Error when running {}: {}".format(cmd, out))
         return
-    path = "{}/{}".format(output_dir, file_name)
+    path = os.path.join(output_dir, file_name)
     with open(path, "w+") as fp:
         fp.write(out)
     logger.info("Collected {}".format(resource_name))
