@@ -92,7 +92,7 @@ def get_redis_enterprise_debug_info():
         return
 
     # get the debug file name
-    match = re.search('File (.*\.gz)', out)
+    match = re.search(r'File (.*\.gz)', out)
     if match:
         debug_file = match.group(1)
         logger.info("debug info created on pod {} in path {}".format(pod_name, debug_file))
