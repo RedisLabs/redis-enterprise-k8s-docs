@@ -16,6 +16,7 @@
 * Access to DockerHub, RedHat Container Catalog or a private repository that can serve the required images
 > Note: For RHEL based images and/or deployments on OpenShift, please use redis-enterprise-cluster_rhel.yaml and operator_rhel.yaml.
 For Service Broker, please see examples/with_service_broker_rhel.yaml. RedHat certified images are available on: https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d
+
 The following are the images and tags for this release:
 Redis Enterprise  	redislabs/redis:5.4.2-27 / 5.4.2-27.rhel7-openshift
 Operator 	 redislabs/operator:804_c4987427 / 804_c4987427.rhel7
