@@ -177,7 +177,7 @@ def collect_pods_logs():
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             while True:
                 # read one line a time - we do not want to read large files to memory
-                line = p.stdout.readline()
+                line = native_string(p.stdout.readline())
                 if line:
                     fp.write(line)
                 else:
@@ -259,6 +259,10 @@ def collect_helper(cmd, file_name, resource_name):
     logger.info("Collected {}".format(resource_name))
 
 
+def native_string(x):
+    return x if isinstance(x, str) else x.decode('utf-8', 'replace')
+
+
 def run_shell_command(cmd):
     """
         Returns a tuple of the shell exit code, output
@@ -272,7 +276,7 @@ def run_shell_command(cmd):
         logger.warning("Failed in shell command: {}, output: {}".format(cmd, ex.output))
         return ex.returncode, ex.output
 
-    return 0, output
+    return 0, native_string(output)
 
 
 def run_kubectl_get(resource_type):
