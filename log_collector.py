@@ -20,7 +20,6 @@ import json
 logger = logging.getLogger("log collector")
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
-dir_name = "redis_enterprise_k8s_debug_info_{}".format(TIME_FORMAT)
 
 api_resources = [
     "RedisEnterpriseCluster",
@@ -48,7 +47,8 @@ def run(namespace, output_dir):
         namespace = get_namespace_from_config()
 
     if not output_dir:
-        output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), dir_name)
+        output_dir_name = "redis_enterprise_k8s_debug_info_{}".format(TIME_FORMAT)
+        output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), output_dir_name)
 
     make_dir(output_dir)
 
@@ -91,7 +91,8 @@ def get_redis_enterprise_debug_info(namespace, output_dir):
         return
 
     # copy package from RS pod
-    cmd = "kubectl -n {} cp {}:{} {}".format(namespace, pod_name, debug_file, output_dir)
+    output_path = os.path.join(output_dir, debug_file)
+    cmd = "kubectl -n {} cp {}:{} {}".format(namespace, pod_name, debug_file, output_path)
     rc, out = run_shell_command(cmd)
     if rc:
         logger.warning(
@@ -175,7 +176,7 @@ def archive_files(output_dir):
     file_name = output_dir + ".tar.gz"
 
     with tarfile.open(file_name, "w|gz") as tar:
-        tar.add(output_dir, arcname=dir_name + ".tar.gz")
+        tar.add(output_dir, arcname=file_name + ".tar.gz")
     logger.info("Archived files into {}".format(file_name))
 
     try:
