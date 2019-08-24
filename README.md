@@ -13,8 +13,20 @@
 * A minimum of 3 nodes which support the following [requirements][]
 * A kubernetes version of 1.8 or higher
 * For service broker - a k8s distribution that supports service catalog (see also: [service-catalog][])
+* Access to DockerHub, RedHat Container Catalog or a private repository that can serve the required images
 > Note: For RHEL based images and/or deployments on OpenShift, please use redis-enterprise-cluster_rhel.yaml and operator_rhel.yaml.
 For Service Broker, please see examples/with_service_broker_rhel.yaml. RedHat certified images are available on: https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d
+
+The following are the images and tags for this release:
+
+Redis Enterprise -  	redislabs/redis:5.4.2-27 / 5.4.2-27.rhel7-openshift
+
+Operator -  	 redislabs/operator:804_c4987427 / 804_c4987427.rhel7
+
+Services Rigger - 	redislabs/k8s-controller:122_469731a2c /122_469731a2c.rhel7
+
+Service Broker - 	redislabs/service-broker:78_4b9b17f / 78_4b9b17f.rhel7
+
 
 
 #### Deployment:
@@ -26,42 +38,47 @@ git clone https://github.com/RedisLabs/redis-enterprise-k8s-docs.git
 1) Create a namespace / project.
 
     For non-OpenShift deployments, create a new namespace:
-    
+
     ```
     kubectl create namespace demo
     ```
 
     For OpenShift deployments, create a new project (you can substitute `oc` for `kubectl` in the rest of these instructions):
-    
+
     ```
     oc new-project my-project
     ```
 
+    > For either deployment, switch context to operate within the newly created namespace:
+    ```
+    kubectl config set-context --current --namespace=demo
+    ```
+
 2) If you are not running OpenShift, skip to the next step.  For OpenShift, perform the following commands (you need admin permissions for your cluster):
-     
+
     ```
     oc apply -f scc.yaml
     ```
       > You should receive the following response:
-   
+
     `securitycontextconstraints.security.openshift.io "redis-enterprise-scc" configured`
-       
+
     Provide the operator permissions for pods (substitute your project for "my-project"):
     ```
     oc adm policy add-scc-to-group redis-enterprise-scc system:serviceaccounts:my-project
     ```
-    
+
     If you're deploying a service broker, also apply the sb_rbac.yaml file:
     ```
     oc apply -f sb_rbac.yaml
     ```
-    
+
     > You should receive the following response:
 
     `clusterrole "redis-enterprise-operator-sb" configured`
 
     Bind the Cluster Service Broker role to the operator service account (in the current namespace):
-    
+
      ```
     oc adm policy add-cluster-role-to-user redis-enterprise-operator-sb --serviceaccount redis-enterprise-operator --rolebinding-name=redis-enterprise-operator-sb
      ```
@@ -96,7 +113,7 @@ This creates another API resource to be handled by the k8s API server and manage
     ```
 
     > You should receive the following response:
-    
+
     `customresourcedefinition.apiextensions.k8s.io/redisenterpriseclusters.app.redislabs.com configured`
 
 6) Create the operator deployment: a deployment responsible for managing the k8s deployment and lifecycle of a redis-enterprise-cluster.
@@ -108,7 +125,7 @@ This creates another API resource to be handled by the k8s API server and manage
     ```
 
     > You should receive the following response:
-    
+
     `deployment.apps/redis-enterprise-operator created`
 
 7) Run `kubectl get Deployment` and verify redis-enterprise-operator deployment is running.
@@ -140,7 +157,7 @@ Redis Image
     versionTag:       5.4.2-27
 ```
 
-Persistence 
+Persistence
 ```yaml
   persistentSpec:
     enabled: true
@@ -193,19 +210,19 @@ SideCar containers- images that will run along side the redis enterprise contain
 ```
 
 Service Broker (only for supported clusters)
-```yaml 
+```yaml
   serviceBrokerSpec:
     enabled: true
     persistentSpec:
-      storageClassName: "gp2" #adjust according to infrastructure 
+      storageClassName: "gp2" #adjust according to infrastructure
 ```
 
 CRDB (Active Active):
 *Currently supported for OpenShift
 
-```yaml 
+```yaml
 activeActive: # edit values according to your cluster
-  apiIngressUrl:  my-cluster1-api.myopenshiftcluster1.com 
+  apiIngressUrl:  my-cluster1-api.myopenshiftcluster1.com
   dbIngressSuffix: -dbsuffix1.myopenshiftcluster1.com
   method: openShiftRoute
 ```
