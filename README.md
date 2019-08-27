@@ -154,7 +154,7 @@ Redis Image
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       redislabs/redis
-    versionTag:       5.4.2-27
+    versionTag:       5.4.6-17
 ```
 
 Persistence
