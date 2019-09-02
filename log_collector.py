@@ -16,7 +16,6 @@ import time
 from collections import OrderedDict
 import shutil
 import json
-import pathlib
 
 logger = logging.getLogger("log collector")
 
@@ -190,7 +189,8 @@ def archive_files():
     global dir_name
     file_name = output_dir + ".tar.gz"
 
-    out_dir = pathlib.PurePath(output_dir).parts[-1]
+    # out_dir = pathlib.PurePath(output_dir).parts[-1]
+    out_dir = output_dir.split('/')[-1]
     with tarfile.open(file_name, "w|gz") as tar:
 #        tar.add(output_dir, arcname=dir_name + ".tar.gz")
         tar.add(output_dir, arcname=out_dir)
