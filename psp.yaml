@@ -4,10 +4,9 @@ metadata:
   name: redis-enterprise-psp
 spec:
   privileged: false
-  allowPrivilegeEscalation: true
+  allowPrivilegeEscalation: false
   allowedCapabilities:
     - SYS_RESOURCE
-    - NET_RAW
   runAsUser:
     rule: MustRunAsNonRoot
   fsGroup:
