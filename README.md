@@ -21,9 +21,9 @@ The following are the images and tags for this release:
 
 Redis Enterprise    -   `redislabs/redis:5.4.6-18` or `redislabs/redis:5.4.6-18.rhel7-openshift`
 
-Operator            -   `redislabs/operator:5.4.6-1086` or `redislabs/operator:5.4.6-1086.rhel7`
+Operator            -   `redislabs/operator:5.4.6-1182` or `redislabs/operator:5.4.6-1182.rhel7`
 
-Services Rigger     -   `redislabs/k8s-controller:5.4.6-1086` or `redislabs/k8s-controller:5.4.6-1086.rhel7`
+Services Rigger     -   `redislabs/k8s-controller:5.4.6-1182` or `redislabs/k8s-controller:5.4.6-1182.rhel7`
 
 Service Broker      -   `redislabs/service-broker:78_4b9b17f` or `redislabs/service-broker:78_4b9b17f.rhel7`
 
