@@ -19,7 +19,7 @@ For Service Broker, please see examples/with_service_broker_rhel.yaml. RedHat ce
 
 The following are the images and tags for this release:
 
-Redis Enterprise    -   `redislabs/redis:5.4.6-17` or `redislabs/redis:5.4.6-17.rhel7-openshift`
+Redis Enterprise    -   `redislabs/redis:5.4.6-18` or `redislabs/redis:5.4.6-18.rhel7-openshift`
 
 Operator            -   `redislabs/operator:5.4.6-1086` or `redislabs/operator:5.4.6-1086.rhel7`
 
@@ -154,7 +154,7 @@ Redis Image
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       redislabs/redis
-    versionTag:       5.4.6-17
+    versionTag:       5.4.6-18
 ```
 
 Persistence
