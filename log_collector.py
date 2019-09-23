@@ -152,7 +152,7 @@ def collect_api_resources():
             resources_out[resource] = run_kubectl_get(resource)
             logger.info("  + {}".format(resource))
 
-    for entry, out in resources_out.iteritems():
+    for entry, out in resources_out.items():
         with open(os.path.join(output_dir, "{}.yaml".format(entry)), "w+") as fp:
             fp.write(out)
 
@@ -177,7 +177,7 @@ def collect_pods_logs():
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             while True:
                 # read one line a time - we do not want to read large files to memory
-                line = p.stdout.readline()
+                line = p.stdout.readline().decode('utf-8')
                 if line:
                     fp.write(line)
                 else:
@@ -270,9 +270,9 @@ def run_shell_command(cmd):
             stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as ex:
         logger.warning("Failed in shell command: {}, output: {}".format(cmd, ex.output))
-        return ex.returncode, ex.output
+        return ex.returncode, ex.output.decode('utf-8')
 
-    return 0, output
+    return 0, output.decode('utf-8')
 
 
 def run_kubectl_get(resource_type):
