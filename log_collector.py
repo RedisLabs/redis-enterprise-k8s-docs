@@ -58,7 +58,7 @@ def run(namespace, output_dir):
     collect_events(namespace, output_dir)
     collect_api_resources(namespace, output_dir)
     collect_pods_logs(namespace, output_dir)
-    archive_files(output_dir)
+    archive_files(output_dir, output_dir_name)
     logger.info("Finished Redis Enterprise log collector")
 
 
@@ -172,11 +172,11 @@ def collect_pods_logs(namespace, output_dir):
         logger.info("  + {}".format(pod))
 
 
-def archive_files(output_dir):
+def archive_files(output_dir, output_dir_name):
     file_name = output_dir + ".tar.gz"
 
     with tarfile.open(file_name, "w|gz") as tar:
-        tar.add(output_dir, arcname=file_name + ".tar.gz")
+        tar.add(output_dir, arcname=output_dir_name)
     logger.info("Archived files into {}".format(file_name))
 
     try:
