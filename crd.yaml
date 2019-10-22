@@ -12,4 +12,6 @@ spec:
     shortNames:
     - rec
   scope: Namespaced
+  subresources:
+    status: {}
   version: v1alpha1
