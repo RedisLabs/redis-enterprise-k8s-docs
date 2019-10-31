@@ -159,7 +159,7 @@ def collect_pods_logs(namespace, output_dir):
         return
 
     for pod in pods:
-        cmd = "kubectl logs -n {} {}".format(namespace, pod)
+        cmd = "kubectl logs -n {} {} --all-containers=true".format(namespace, pod)
         with open(os.path.join(logs_dir, "{}.log".format(pod)), "w+") as fp:
             p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             while True:
