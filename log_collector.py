@@ -80,10 +80,11 @@ def get_redis_enterprise_debug_info(namespace, output_dir):
         return
 
     # get the debug file name
-    match = re.search(r'File (.*\.gz)', out)
+    match = re.search(r'File (/tmp/(.*\.gz))', out)
     if match:
-        debug_file = match.group(1)
-        logger.info("debug info created on pod {} in path {}".format(pod_name, debug_file))
+        debug_file_path = match.group(1)
+        debug_file_name = match.group(2)
+        logger.info("debug info created on pod {} in path {}".format(pod_name, debug_file_path))
     else:
         logger.warning(
             "Failed to extract debug info name from output - "
@@ -91,8 +92,8 @@ def get_redis_enterprise_debug_info(namespace, output_dir):
         return
 
     # copy package from RS pod
-    output_path = os.path.join(output_dir, debug_file)
-    cmd = "kubectl -n {} cp {}:{} {}".format(namespace, pod_name, debug_file, output_path)
+    output_path = os.path.join(output_dir, debug_file_name)
+    cmd = "kubectl -n {} cp {}:{} {}".format(namespace, pod_name, debug_file_path, output_path)
     rc, out = run_shell_command(cmd)
     if rc:
         logger.warning(
