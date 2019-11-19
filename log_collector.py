@@ -57,6 +57,7 @@ def run(namespace, output_dir):
     collect_resources_list(output_dir)
     collect_events(namespace, output_dir)
     collect_api_resources(namespace, output_dir)
+    collect_api_resources_description(namespace, output_dir)
     collect_pods_logs(namespace, output_dir)
     archive_files(output_dir, output_dir_name)
     logger.info("Finished Redis Enterprise log collector")
@@ -143,6 +144,23 @@ def collect_api_resources(namespace, output_dir):
 
     for entry, out in resources_out.items():
         with open(os.path.join(output_dir, "{}.yaml".format(entry)), "w+") as fp:
+            fp.write(out)
+
+
+def collect_api_resources_description(namespace, output_dir):
+    """
+        Creates file for each of the API resources with the output of kubectl describe <resource>
+    """
+    logger.info("Collecting API resources description:")
+    resources_out = OrderedDict()
+    for resource in api_resources:
+        output = run_kubectl_describe(namespace, resource)
+        if output:
+            resources_out[resource] = output
+            logger.info("  + {}".format(resource))
+
+    for entry, out in resources_out.items():
+        with open(os.path.join(output_dir, "{}_describe.yaml".format(entry)), "w+") as fp:
             fp.write(out)
 
 
@@ -267,6 +285,17 @@ def run_kubectl_get(namespace, resource_type):
     if rc == 0:
         return out
     logger.warning("Failed to get {} resource: {}".format(resource_type, out))
+
+
+def run_kubectl_describe(namespace, resource_type):
+    """
+        Runs kubectl describe command
+    """
+    cmd = "kubectl describe -n {} {}".format(namespace, resource_type)
+    rc, out = run_shell_command(cmd)
+    if rc == 0:
+        return out
+    logger.warning("Failed to describe {} resource: {}".format(resource_type, out))
 
 
 if __name__ == "__main__":
