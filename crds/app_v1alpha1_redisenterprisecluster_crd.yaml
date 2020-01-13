@@ -10,6 +10,8 @@ spec:
     plural: redisenterpriseclusters
     singular: redisenterprisecluster
     shortNames:
-    - rec
+      - rec
+  subresources:
+    status: {}
   scope: Namespaced
   version: v1alpha1

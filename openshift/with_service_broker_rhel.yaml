@@ -1,4 +1,4 @@
-apiVersion: "app.redislabs.com/v1alpha1"
+apiVersion: "app.redislabs.com/v1"
 kind: "RedisEnterpriseCluster"
 metadata:
   name: "redis-enterprise"
@@ -11,4 +11,4 @@ spec:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       redislabs/redis
-    versionTag:       5.4.6-18.rhel7-openshift
+    versionTag:       5.4.10-22.rhel7-openshift

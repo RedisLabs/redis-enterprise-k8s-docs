@@ -1,0 +1,7 @@
+apiVersion: app.redislabs.com/v1alpha1
+kind: RedisEnterpriseCluster
+metadata:
+  name: example-redisenterprisecluster
+spec:
+  # Add fields here
+  size: 3
