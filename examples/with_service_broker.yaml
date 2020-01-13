@@ -1,0 +1,10 @@
+apiVersion: "app.redislabs.com/v1"
+kind: "RedisEnterpriseCluster"
+metadata:
+  name: "redis-enterprise"
+spec:
+  nodes: 3
+  serviceBrokerSpec:
+    enabled: true
+    persistentSpec:
+      storageClassName: "gp2"

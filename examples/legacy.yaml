@@ -1,0 +1,18 @@
+apiVersion: "app.redislabs.com/v1"
+kind: "RedisEnterpriseCluster"
+metadata:
+  name: "redis-enterprise"
+spec:
+  nodes: 3
+  persistentSpec:
+    enabled: true
+    storageClassName: "gp2" # ! edit according to infrastructure
+  uiServiceType: LoadBalancer
+  username: "admin@redislabs.com"
+  redisEnterpriseNodeResources:
+    limits:
+      cpu: "4000m"
+      memory: 4Gi
+    requests:
+      cpu: "4000m"
+      memory: 4Gi
