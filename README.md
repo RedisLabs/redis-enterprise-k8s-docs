@@ -23,7 +23,7 @@
 ### Prerequisites
 
 - A minimum of 3 nodes which support the following requirements
-- A Kubernetes cluster (server) version of 1.8 or higher
+- A Kubernetes cluster (server) version of 1.9 or higher
 - A Kubernetes client (kubectl) with a matching version. For OpenShift, an OpenShift client (oc).
 - For service broker - a k8s distribution that supports service catalog (see also: service-catalog)
 - Access to DockerHub, RedHat Container Catalog or a private repository that can serve the required images
