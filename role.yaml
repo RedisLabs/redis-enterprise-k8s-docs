@@ -1,0 +1,56 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: redis-enterprise-operator
+rules:
+  - apiGroups: ["rbac.authorization.k8s.io", ""]
+    resources: ["roles", "serviceaccounts", "rolebindings"]
+    verbs: ["*"]
+  - apiGroups:
+      - app.redislabs.com
+    resources:
+      - "*"
+    verbs:
+      - "*"
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["*"]
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "statefulsets"]
+    verbs: ["*"]
+  - apiGroups: ["policy"]
+    resources: ["poddisruptionbudgets"]
+    verbs: ["create", "delete", "get"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create", "delete", "get" , "update", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["create", "delete", "get" , "update"]
+
+  # needed rbac rules for services controller
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "watch", "list", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "watch", "list", "update", "patch", "create", "delete"]
+  - apiGroups:
+      - route.openshift.io
+    resources: ["routes", "routes/custom-host"]
+    verbs: ["*"]
+  - apiGroups: ["extensions"]
+    resources: ["podsecuritypolicies"]
+    resourceNames:
+      - redis-enterprise-psp
+    verbs:
+      - use
+  - apiGroups: ["extensions"]
+    resources: ["ingresses"]
+    verbs: ["*"]

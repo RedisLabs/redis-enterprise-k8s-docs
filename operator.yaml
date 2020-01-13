@@ -12,12 +12,10 @@ spec:
       labels:
         name: redis-enterprise-operator
     spec:
-      serviceAccount: redis-enterprise-operator
+      serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:5.4.6-1186
-          securityContext:
-            runAsUser: 1001
+          image: redislabs/operator:5.4.10-8
           command:
           - redis-enterprise-operator
           imagePullPolicy: Always
@@ -30,3 +28,5 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "redis-enterprise-operator"
