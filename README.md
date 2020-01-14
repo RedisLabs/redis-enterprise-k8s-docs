@@ -32,11 +32,11 @@ For Service Broker, please see examples/with_service_broker_rhel.yaml. RedHat ce
 
 The following are the images and tags for this release:
 
-Redis Enterprise    -   `redislabs/redis:5.4.10-22` or `redislabs/redis:5.4.6-22b.rhel7-openshift`
+Redis Enterprise    -   `redislabs/redis:5.4.10-22` or `redislabs/redis:5.4.10-22b.rhel7-openshift` (for DockerHub pulls, ommit the 'b' notation)
 
-Operator            -   `redislabs/operator:5.4.10-8` or `redislabs/operator:5.4.6-8.rhel7`
+Operator            -   `redislabs/operator:5.4.10-8` or `redislabs/operator:5.4.10-8.rhel7`
 
-Services Rigger     -   `redislabs/k8s-controller:5.4.10-8` or `redislabs/k8s-controller:5.4.10-8b.rhel7`
+Services Rigger     -   `redislabs/k8s-controller:5.4.10-8` or `redislabs/k8s-controller:5.4.10-8b.rhel7` (for DockerHub pulls, ommit the 'b' notation)
 
 Service Broker      -   `redislabs/service-broker:78_4b9b17f` or `redislabs/service-broker:78_4b9b17f.rhel7`
 
