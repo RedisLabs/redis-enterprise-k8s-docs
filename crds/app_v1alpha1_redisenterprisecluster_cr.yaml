@@ -4,4 +4,4 @@ metadata:
   name: "redis-enterprise"
 spec:
   # Add fields here
-  size: 3
+  nodes: 3
