@@ -1,4 +1,20 @@
 ---
+kind: SecurityContextConstraints
+apiVersion: security.openshift.io/v1
+metadata:
+  name: redis-enterprise-scc
+allowPrivilegedContainer: false
+allowedCapabilities:
+  - SYS_RESOURCE
+runAsUser:
+  type: MustRunAs
+  uid: 1001
+FSGroup:
+  type: MustRunAs
+  ranges: 1001,1001
+seLinuxContext:
+  type: RunAsAny
+---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -124,7 +140,7 @@ spec:
       serviceAccount: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:5.4.10-8.rhel7
+          image: redislabs/operator-internal:100.0.0-182.rhel7
           securityContext:
             runAsUser: 1001
           command:

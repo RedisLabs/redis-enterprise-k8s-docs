@@ -15,7 +15,8 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:5.4.10-8
+          # Replace this with the built image name
+          image: redislabs/operator:100.0.0-182
           command:
           - redis-enterprise-operator
           imagePullPolicy: Always
