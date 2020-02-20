@@ -1,0 +1,12 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: redis-enterprise-operator
+spec:
+  template:
+    spec:
+      containers:
+        - name: redis-enterprise-operator
+          image: redislabs/operator:5.4.10-8.rhel7
+          securityContext:
+            runAsUser: 1001

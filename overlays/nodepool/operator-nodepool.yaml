@@ -1,0 +1,9 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: redis-enterprise-operator
+spec:
+  template:
+    spec:
+      nodeSelector:
+        cloud.google.com/gke-nodepool: default-pool

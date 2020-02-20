@@ -1,0 +1,6 @@
+resources:
+- role.yaml
+- role_binding.yaml
+- service_account.yaml
+- app_v1_redisenterprisecluster_crd.yaml
+- operator.yaml
