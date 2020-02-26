@@ -10,6 +10,8 @@
 * [Private Repositories](#private-repositories)
 * [Pull Secrets](#pull-secrets)
 * [IPV4 enforcement](#ipv4-enforcement)
+* [Upgrade](#upgrade)
+
 
 >Note: Please see the release notes for what's new in the latest release.
 
@@ -339,3 +341,10 @@ Note: Setting 'enforceIPv4' to 'true' is a requirement for running REC on PKS.
 
 [requirements]: https://redislabs.com/redis-enterprise-documentation/administering/designing-production/hardware-requirements/
 [service-catalog]: https://kubernetes.io/docs/concepts/extend-kubernetes/service-catalog/
+
+#### Upgrade
+The Operator automates and simplifies the upgrade process.<br>
+The Redis Enterprise Cluster Software and the Redis Enterprise Operator for Kubernetes versions are tightly coupled and should be upgraded together.<br>
+It is recommended to use the bundle.yaml to upgrade.<br>
+The Redis Enterprise Cluster spec 'autoUpgradeRedisEnterprise' impacts the upgrade process. If set to true, the Operator will upgrade Redis Enterprise as soon as possible. If this attribute is not set, the Operator upgrades Redis Enterprise only when explicitly set by the user using the 'versionTag' attribute of the Redis Enterprise Cluster spec.<br>
+Note: When updating the version of the operator, the StatefulSet gets updated even before the container of the Redis Enterprise Cluster gets updated, due to the Bootstrapper component. That behavior might be revisited in future versions.
