@@ -1,0 +1,6 @@
+bases:
+- ../../base
+resources:
+- sb_rbac.yaml
+patchesStrategicMerge:
+- operator.yaml
