@@ -138,7 +138,18 @@ oc adm policy add-scc-to-group redis-enterprise-scc system:serviceaccounts:my-pr
 kubectl apply -f openshift.bundle.yaml
 ```
 
-Apply the `RedisEnterpriseCluster` resource with RHEL7 based images
+If one wants to use the operator's OpenShift Service Broker support, one has to provide the operator's service account with the neccessary cluster role
+
+note: the `cluster_role_binding.yaml` has to be modified to apply to the namespace the operator is deployed in.
+
+```bash
+oc apply -f openshift/sb_cluster_role.yaml
+oc apply -f openshift/sb_cluster_role_binding.yaml
+```
+
+In addition, while OpenShift enables Service Broker by default on OpenShift 3.X, on 4.X, it has to be [enabled](https://docs.openshift.com/container-platform/4.3/applications/service_brokers/installing-service-catalog.html) by the administrator.
+
+5. Apply the `RedisEnterpriseCluster` resource with RHEL7 based images
 
 ```bash
 kubectl apply -f openshift/redis-enterprise-cluster_rhel.yaml
