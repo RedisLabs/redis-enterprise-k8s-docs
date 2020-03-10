@@ -156,6 +156,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | priorityClassName | Adds the priority class to pods managed by the operator | string |  | false |
 | volumes | additional volumes | []v1.Volume |  | false |
 | redisEnterpriseVolumeMounts | additional volume mounts within the redis enterprise containers | []v1.VolumeMount |  | false |
+| podAnnotations | pod annotations | map[string]string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseClusterStatus
