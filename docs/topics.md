@@ -171,21 +171,21 @@ For example:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/redis
-    versionTag:       5.4.6-18
+    versionTag:       5.4.14-19
 ```
 
 ```yaml
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       5.4.6-1186
+    versionTag:       5.4.14-2
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       5.4.6-1186
+    versionTag:       5.4.14-2
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -198,7 +198,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:5.4.6-1186
+          image: harbor.corp.local/redisenterprise/operator:5.4.14-2
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).

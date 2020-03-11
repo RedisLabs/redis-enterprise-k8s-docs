@@ -12,7 +12,6 @@
 * [IPV4 enforcement](#ipv4-enforcement)
 * [Upgrade](#upgrade)
 
-
 >Note: Please see the release notes for what's new in the latest release.
 
 ## Additional Documentation
@@ -30,15 +29,15 @@
 - For service broker - a k8s distribution that supports service catalog (see also: service-catalog)
 - Access to DockerHub, RedHat Container Catalog or a private repository that can serve the required images
 
-For Service Broker, please see examples/with_service_broker_rhel.yaml. RedHat certified images are available on: https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d
+For Service Broker, please see openshift/with_service_broker_rhel.yaml. RedHat certified images are available on: https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d
 
 The following are the images and tags for this release:
 
-Redis Enterprise    -   `redislabs/redis:5.4.10-22` or `redislabs/redis:5.4.10-22b.rhel7-openshift` (for DockerHub pulls, ommit the 'b' notation)
+Redis Enterprise    -   `redislabs/redis:5.4.14-19` or `redislabs/redis:5.4.14-19.rhel7-openshift` (for DockerHub pulls, ommit the 'b' notation)
 
-Operator            -   `redislabs/operator:5.4.10-8` or `redislabs/operator:5.4.10-8.rhel7`
+Operator            -   `redislabs/operator:5.4.14-2` or `redislabs/operator:5.4.14-2.rhel7`
 
-Services Rigger     -   `redislabs/k8s-controller:5.4.10-8` or `redislabs/k8s-controller:5.4.10-8b.rhel7` (for DockerHub pulls, ommit the 'b' notation)
+Services Rigger     -   `redislabs/k8s-controller:5.4.14-2` or `redislabs/k8s-controller:5.4.14-2.rhel7`
 
 Service Broker      -   `redislabs/service-broker:78_4b9b17f` or `redislabs/service-broker:78_4b9b17f.rhel7`
 
@@ -47,6 +46,7 @@ The "Basic" installations deploys the operator from the current release with the
 This is the fastest way to get up and running with a new cluster in most environments.
 Other Kubernetes distributions setup process as well as other custom configurations are referenced in this repository.
 
+Note: The v1 version of the operator is recommended to use and referenced in yaml file names below. However, the v1alpha1 version is the only supported version to run on K8s 1.9 and 1.10. For those versions, use the relevant yamls for v1alpha1. 
 1. Create a new namespace:
 
 ```bash
@@ -88,7 +88,7 @@ A typical response may look like this:
 |redis-enterprise-operator|1	   | 1        |  1         | 1         | 2m |
 ```
 
-4. Create A Redis Enterprise Cluster using the default configuration, which is suitable for development type deployments and works in typical scenarios. For more advanced deployment options you may choose the configuration relevant for you - see the index at the top for documentation references that cover many scenarios and the examples in the example folder.
+4. Create A Redis Enterprise Cluster using the default configuration, which is suitable for development type deployments and works in typical scenarios. For more advanced deployment options you may choose the configuration relevant for you - see the index at the top for documentation references that cover many scenarios.
 
 ```bash
 kubectl apply -f crds/app_v1_redisenterprisecluster_cr.yaml
@@ -135,7 +135,7 @@ oc adm policy add-scc-to-group redis-enterprise-scc system:serviceaccounts:my-pr
 4. Deploy the OpenShift operator bundle:
 
 ```bash
-kubectl apply -f openshift.bundle.yaml
+oc apply -f openshift.bundle.yaml
 ```
 
 Apply the `RedisEnterpriseCluster` resource with RHEL7 based images
@@ -152,7 +152,7 @@ Redis Image
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       redislabs/redis
-    versionTag:       5.4.10-22
+    versionTag:       5.4.14-19
 ```
 
 Persistence
@@ -265,21 +265,21 @@ For example:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/redis
-    versionTag:       5.4.10-22
+    versionTag:       5.4.14-19
 ```
 
 ```yaml
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       5.4.10-8
+    versionTag:       5.4.14-2
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       5.4.10-8
+    versionTag:       5.4.14-2
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -292,7 +292,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:5.4.10-8
+          image: harbor.corp.local/redisenterprise/operator:5.4.14-2
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).
