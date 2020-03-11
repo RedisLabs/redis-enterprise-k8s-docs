@@ -116,7 +116,7 @@ spec:
       containers:
         - name: redis-enterprise-operator
           # Replace this with the built image name
-          image: redislabs/operator-internal:5.4.14-2
+          image: redislabs/operator:5.4.14-2
           command:
           - redis-enterprise-operator
           imagePullPolicy: Always
