@@ -29,7 +29,7 @@
 - For service broker - a k8s distribution that supports service catalog (see also: service-catalog)
 - Access to DockerHub, RedHat Container Catalog or a private repository that can serve the required images
 
-For Service Broker, please see examples/with_service_broker_rhel.yaml. RedHat certified images are available on: https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d
+For Service Broker, please see openshift/with_service_broker_rhel.yaml. RedHat certified images are available on: https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d
 
 The following are the images and tags for this release:
 
