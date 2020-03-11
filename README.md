@@ -88,7 +88,7 @@ A typical response may look like this:
 |redis-enterprise-operator|1	   | 1        |  1         | 1         | 2m |
 ```
 
-4. Create A Redis Enterprise Cluster using the default configuration, which is suitable for development type deployments and works in typical scenarios. For more advanced deployment options you may choose the configuration relevant for you - see the index at the top for documentation references that cover many scenarios and the examples in the example folder.
+4. Create A Redis Enterprise Cluster using the default configuration, which is suitable for development type deployments and works in typical scenarios. For more advanced deployment options you may choose the configuration relevant for you - see the index at the top for documentation references that cover many scenarios.
 
 ```bash
 kubectl apply -f crds/app_v1_redisenterprisecluster_cr.yaml
