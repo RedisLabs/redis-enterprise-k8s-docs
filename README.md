@@ -29,11 +29,13 @@
 - For service broker - a k8s distribution that supports service catalog (see also: service-catalog)
 - Access to DockerHub, RedHat Container Catalog or a private repository that can serve the required images
 
-For Service Broker, please see openshift/with_service_broker_rhel.yaml. RedHat certified images are available on: https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d
+For Service Broker, please see openshift/with_service_broker_rhel.yaml. 
+
+RedHat certified images are available on: https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d
 
 The following are the images and tags for this release:
 
-Redis Enterprise    -   `redislabs/redis:5.4.14-19` or `redislabs/redis:5.4.14-19.rhel7-openshift` (for DockerHub pulls, ommit the 'b' notation)
+Redis Enterprise    -   `redislabs/redis:5.4.14-19` or `redislabs/redis:5.4.14-19.rhel7-openshift`
 
 Operator            -   `redislabs/operator:5.4.14-2` or `redislabs/operator:5.4.14-2.rhel7`
 
@@ -42,12 +44,18 @@ Services Rigger     -   `redislabs/k8s-controller:5.4.14-2` or `redislabs/k8s-co
 Service Broker      -   `redislabs/service-broker:78_4b9b17f` or `redislabs/service-broker:78_4b9b17f.rhel7`
 
 ## Basic installation
-The "Basic" installations deploys the operator from the current release with the default Ubuntu/Alpine base OS images from DockerHub and default settings.
+The basic installations deploys the operator from the current release with the default Ubuntu/Alpine base OS images from DockerHub and default settings.
 This is the fastest way to get up and running with a new cluster in most environments.
 Other Kubernetes distributions setup process as well as other custom configurations are referenced in this repository.
 
-Note: The v1 version of the operator is recommended to use and referenced in yaml file names below. However, the v1alpha1 version is the only supported version to run on K8s 1.9 and 1.10. For those versions, use the relevant yamls for v1alpha1. 
-1. Create a new namespace:
+Note: The v1 version of the crd is the one recommended for use and referenced in yaml file names below. However, the v1alpha1 version is the only supported version for running on K8s 1.9 and 1.10. For those versions, use the relevant yamls for v1alpha1. 
+
+1. Clone this repo:
+```bash
+git clone https://github.com/RedisLabs/redis-enterprise-k8s-docs
+```
+
+2. Create a new namespace:
 
 ```bash
 kubectl create namespace demo
@@ -59,7 +67,7 @@ Switch context to the newly created namespace:
 kubectl config set-context --current --namespace=demo
 ```
 
-2. To deploy the default installation with `kubectl`, the following command will deploy a bundle of all the yaml declarations required for the operator:
+3. To deploy the default installation with `kubectl`, the following command will deploy a bundle of all the yaml declarations required for the operator:
 
 ```bash
 kubectl apply -f bundle.yaml
@@ -78,7 +86,7 @@ kubectl apply -f operator.yaml
 role.yaml, role_binding.yaml and service_account.yaml.
 The crd.yaml file was renamed to redisenterprisecluster_crd.yaml, with the API version prepended to the filename.
 
-3. Run `kubectl get deployment` and verify redis-enterprise-operator deployment is running.
+4. Run `kubectl get deployment` and verify redis-enterprise-operator deployment is running.
 
 A typical response may look like this:
 
@@ -88,7 +96,7 @@ A typical response may look like this:
 |redis-enterprise-operator|1	   | 1        |  1         | 1         | 2m |
 ```
 
-4. Create A Redis Enterprise Cluster using the default configuration, which is suitable for development type deployments and works in typical scenarios. For more advanced deployment options you may choose the configuration relevant for you - see the index at the top for documentation references that cover many scenarios.
+5. Create A Redis Enterprise Cluster using the default configuration, which is suitable for development type deployments and works in typical scenarios. For more advanced deployment options you may choose the configuration relevant for you - see the index at the top for documentation references that cover many scenarios.
 
 ```bash
 kubectl apply -f crds/app_v1_redisenterprisecluster_cr.yaml
@@ -96,7 +104,7 @@ kubectl apply -f crds/app_v1_redisenterprisecluster_cr.yaml
 
 > Note: The redis-enterprise-cluster.yaml file was renamed to redisenterprisecluster_cr.yaml, with the API version prepended to the filename.
 
-5. Run ```kubectl get rec``` and verify creation was successful. "rec" is a shortcut for RedisEnterpriseCluster.
+6. Run ```kubectl get rec``` and verify creation was successful. "rec" is a shortcut for RedisEnterpriseCluster.
 A typical response may look like this:
 ```bash
 |NAME               |AGE
@@ -144,7 +152,7 @@ Apply the `RedisEnterpriseCluster` resource with RHEL7 based images
 kubectl apply -f openshift/redis-enterprise-cluster_rhel.yaml
 ```
 
-#### Configuration:
+### Configuration:
 The operator deploys with default configurations values, but those can be customized:
 
 Redis Image
