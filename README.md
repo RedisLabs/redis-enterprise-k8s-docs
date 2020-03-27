@@ -35,11 +35,11 @@ RedHat certified images are available on: https://access.redhat.com/containers/#
 
 The following are the images and tags for this release:
 
-Redis Enterprise    -   `redislabs/redis:5.4.14-19` or `redislabs/redis:5.4.14-19.rhel7-openshift`
+Redis Enterprise    -   `redislabs/redis:5.4.14-31` or `redislabs/redis:5.4.14-31.rhel7-openshift`
 
-Operator            -   `redislabs/operator:5.4.14-2` or `redislabs/operator:5.4.14-2.rhel7`
+Operator            -   `redislabs/operator:5.4.14-4` or `redislabs/operator:5.4.14-4.rhel7`
 
-Services Rigger     -   `redislabs/k8s-controller:5.4.14-2` or `redislabs/k8s-controller:5.4.14-2.rhel7`
+Services Rigger     -   `redislabs/k8s-controller:5.4.14-4` or `redislabs/k8s-controller:5.4.14-4.rhel7`
 
 Service Broker      -   `redislabs/service-broker:78_4b9b17f` or `redislabs/service-broker:78_4b9b17f.rhel7`
 
@@ -160,7 +160,7 @@ Redis Image
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       redislabs/redis
-    versionTag:       5.4.14-19
+    versionTag:       5.4.14-31
 ```
 
 Persistence
@@ -273,21 +273,21 @@ For example:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/redis
-    versionTag:       5.4.14-19
+    versionTag:       5.4.14-31
 ```
 
 ```yaml
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       5.4.14-2
+    versionTag:       5.4.14-4
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       5.4.14-2
+    versionTag:       5.4.14-4
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -300,7 +300,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:5.4.14-2
+          image: harbor.corp.local/redisenterprise/operator:5.4.14-4
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).
