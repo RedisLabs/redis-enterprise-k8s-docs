@@ -184,7 +184,7 @@ Redis Enterprise Nodes (pods)
 
 User Name to be used for accessing the cluster. Default is demo@redislabs.com
 ```yaml
-username: "admin@acme.com"
+username: "demo@redislabs.com"
 ```
 
 UI service type: Load Balancer or cluster IP (default)
