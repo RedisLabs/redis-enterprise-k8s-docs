@@ -67,7 +67,7 @@ kind: RedisEnterpriseCluster
 metadata:
   name: example-redisenterprisecluster
 spec:
-  size: 3
+  nodes: 3
   nodeSelector:
     cloud.google.com/gke-nodepool: pool1
 ```
