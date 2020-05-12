@@ -1,18 +1,18 @@
 <!-- omit in toc -->
-# Deploying Redis Enterprise K8s using an operator (custom controller)
+# Deploying Redis Enterprise K8s using an operator
 
-* [Documentation](#documentation)
+* [Documentation](#additional-documentation)
 * [Quickstart Guide](#quickstart-guide)
 * [Prerequisites](#prerequisites)
 * [Basic installation](#basic-installation)
 * [OpenShift](#openshift)
-* [Configuration Options](#configuration)
-* [Private Repositories](#private-repositories)
+* [Configuration Options](#configuration-options)
+* [Private Docker Repositories](#private-docker-repositories)
 * [Pull Secrets](#pull-secrets)
 * [IPV4 enforcement](#ipv4-enforcement)
 * [Upgrade](#upgrade)
 
->Note: Please see the release notes for what's new in the latest release.
+>Note: Please see the [release notes](https://github.com/RedisLabs/redis-enterprise-k8s-docs/releases) for what's new in the latest release.
 
 ## Additional Documentation
 
@@ -23,32 +23,27 @@
 
 ### Prerequisites
 
-- A minimum of 3 nodes which support the following requirements
-- A Kubernetes cluster (server) version of 1.9 or higher
+- A Kubernetes cluster version of 1.9 or higher, with a minimum of 3 worker nodes.
 - A Kubernetes client (kubectl) with a matching version. For OpenShift, an OpenShift client (oc).
-- For service broker - a k8s distribution that supports service catalog (see also: service-catalog)
-- Access to DockerHub, RedHat Container Catalog or a private repository that can serve the required images
+- For service broker - a k8s distribution that supports [service catalog](https://kubernetes.io/docs/concepts/extend-kubernetes/service-catalog). More detail 
+- Access to DockerHub, RedHat Container Catalog or a private repository that can serve the required images.
 
-For Service Broker, please see openshift/with_service_broker_rhel.yaml. 
-
-RedHat certified images are available on: https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d
 
 The following are the images and tags for this release:
-
-Redis Enterprise    -   `redislabs/redis:5.4.14-31` or `redislabs/redis:5.4.14-31.rhel7-openshift`
-
-Operator            -   `redislabs/operator:5.4.14-7` or `redislabs/operator:5.4.14-7.rhel7`
-
-Services Rigger     -   `redislabs/k8s-controller:5.4.14-7` or `redislabs/k8s-controller:5.4.14-7.rhel7`
-
-Service Broker      -   `redislabs/service-broker:78_4b9b17f` or `redislabs/service-broker:78_4b9b17f.rhel7`
+| Component | k8s | Openshift |
+| --- | --- | --- |
+| Redis Enterprise |`redislabs/redis:5.4.14-31` | `redislabs/redis:5.4.14-31.rhel7-openshift` |
+| Operator |`redislabs/operator:5.4.14-7` | `redislabs/operator:5.4.14-7.rhel7` |
+| Services Rigger |`redislabs/k8s-controller:5.4.14-7` | `redislabs/k8s-controller:5.4.14-7.rhel7` |
+| Service Broker |`redislabs/service-broker:78_4b9b17f` | `redislabs/service-broker:78_4b9b17f.rhel7` |
+> RedHat certified images are available on [Redhat Catalog](https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d). <br>
 
 ## Basic installation
 The basic installations deploys the operator from the current release with the default Ubuntu/Alpine base OS images from DockerHub and default settings.
-This is the fastest way to get up and running with a new cluster in most environments.
+This is the fastest way to get Redis Enterprise cluster up and running in most environments.
 Other Kubernetes distributions setup process as well as other custom configurations are referenced in this repository.
 
-Note: The v1 version of the crd is the one recommended for use and referenced in yaml file names below. However, the v1alpha1 version is the only supported version for running on K8s 1.9 and 1.10. For those versions, use the relevant yamls for v1alpha1. 
+> Note: The `v1` version of the crd is the one recommended for use and referenced in yaml file names below. However, the `v1alpha1` version is the only supported version for running on K8s 1.9 and 1.10. For those versions, use the relevant yamls for `v1alpha1`. 
 
 1. Clone this repo:
 ```bash
@@ -83,17 +78,16 @@ kubectl apply -f crds/app_v1_redisenterprisecluster_crd.yaml
 kubectl apply -f operator.yaml
 ```
 > Note: The rbac.yaml file used in previous releases has been broken down into three distinct files:
-role.yaml, role_binding.yaml and service_account.yaml.
-The crd.yaml file was renamed to redisenterprisecluster_crd.yaml, with the API version prepended to the filename.
+`role.yaml`, `role_binding.yaml` and `service_account.yaml`.
+The `crd.yaml` file was renamed to `redisenterprisecluster_crd.yaml`, with the API version prepended to the filename.
 
 4. Run `kubectl get deployment` and verify redis-enterprise-operator deployment is running.
 
 A typical response may look like this:
 
 ```bash
-|NAME                     |DESIRED | CURRENT  | UP-TO-DATE | AVAILABLE | AGE|
-|-------------------------|-------------------------------------------------|
-|redis-enterprise-operator|1	   | 1        |  1         | 1         | 2m |
+NAME                               READY   UP-TO-DATE   AVAILABLE   AGE
+redis-enterprise-operator          1/1     1            1           2m
 ```
 
 5. Create A Redis Enterprise Cluster using the default configuration, which is suitable for development type deployments and works in typical scenarios. For more advanced deployment options you may choose the configuration relevant for you - see the index at the top for documentation references that cover many scenarios.
@@ -141,6 +135,7 @@ oc adm policy add-scc-to-group redis-enterprise-scc system:serviceaccounts:my-pr
 ```
 
 4. Deploy the OpenShift operator bundle:
+> Note: For Service Broker, please see openshift/with_service_broker_rhel.yaml. 
 
 ```bash
 oc apply -f openshift.bundle.yaml
@@ -152,8 +147,8 @@ Apply the `RedisEnterpriseCluster` resource with RHEL7 based images
 kubectl apply -f openshift/redis-enterprise-cluster_rhel.yaml
 ```
 
-### Configuration:
-The operator deploys with default configurations values, but those can be customized:
+### Configuration Options
+The operator deploys a `RedisEnterpriseCluster`(`rec` short name) with default configurations values, but those can be customized in the `RedisEnterpriseCluster` spec as follow:
 
 Redis Image
 ```yaml
@@ -171,7 +166,7 @@ Persistence
     storageClassName: "standard" #on AWS common storage class is gp2
 ```
 
-Redis Enterprise Nodes (pods)
+Redis Enterprise Nodes(pods) resources:
 ```yaml
   redisEnterpriseNodeResources:
     limits:
@@ -187,16 +182,16 @@ User Name to be used for accessing the cluster. Default is demo@redislabs.com
 username: "admin@acme.com"
 ```
 
-UI service type: Load Balancer or cluster IP (default)
-```yaml
-uiServiceType: LoadBalancer
-```
-
 Extra Labels: additional labels to tag the k8s resources created during deployment
 ```yaml
   extraLabels:
     example1: "some-value"
     example2: "some-value"
+```
+
+UI service type: Load Balancer or cluster IP (default)
+```yaml
+uiServiceType: LoadBalancer
 ```
 
 UI annotations - add custom annotation to the UI service
@@ -205,7 +200,6 @@ UI annotations - add custom annotation to the UI service
     uiAnnotation1: 'UI-annotation1'
     uiAnnotation2: 'UI-Annotation2'
 ```
-
 
 SideCar containers- images that will run along side the redis enterprise containers
 ```yaml
@@ -250,9 +244,9 @@ activeActive: # edit values according to your cluster
         fqdn: <cluster3_name>.<cluster3_namespace>.svc.cluster.local
 ```
 
-#### Private Repositories
+#### Private Docker Repositories
 
-Whenever images are not pulled from DockerHub, the following configuration options must be specified:
+Whenever images are not pulled from DockerHub, the following configuration must be specified:
 
 In *RedisEnterpriseClusterSpec* (redis_enterprise_cluster.yaml):
 - *redisEnterpriseImageSpec*
@@ -307,7 +301,7 @@ Image specification follow the [K8s Container schema](https://kubernetes.io/docs
 
 #### Pull secrets
 
-Private repositories which require login can be accessed by creating a pull secret and declaring it in both the *RedisEnterpriseClusterSpec* and in the Operator Deployment spec.
+Private Docker repositories which require login can be accessed by creating a pull secret and declaring it in both the *RedisEnterpriseClusterSpec* and in the Operator Deployment spec.
 
 [Create a pull secret](https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/#create-a-secret-by-providing-credentials-on-the-command-line) by running:
 
