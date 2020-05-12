@@ -107,7 +107,7 @@ spec:
     served: true
     storage: true
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis-enterprise-operator
