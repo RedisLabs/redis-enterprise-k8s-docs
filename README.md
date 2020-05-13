@@ -168,7 +168,7 @@ Persistence
   persistentSpec:
     enabled: true
     volumeSize: "10Gi" # if you don't provide default is 5 times RAM size
-    storageClassName: "standard" #on AWS common storage class is gp2
+    storageClassName: "standard" #on AWS common storage class is gp2, volumeBindingMode must be set to Immediate
 ```
 
 Redis Enterprise Nodes (pods)
