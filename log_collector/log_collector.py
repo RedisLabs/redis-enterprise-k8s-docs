@@ -19,6 +19,9 @@ import shutil
 import json
 import signal
 
+RLEC_CONTAINER_NAME = "redis-enterprise-node"
+
+RS_LOG_FOLDER_PATH = "/var/opt/redislabs/log"
 # pylint: disable=locally-disabled, invalid-name
 logger = logging.getLogger("log collector")
 
@@ -43,7 +46,11 @@ API_RESOURCES = [
     "Endpoints",
     "Pod",
     "NetworkPolicy",
-    "CustomResourceDefinition"
+    "CustomResourceDefinition",
+    "CertificateSigningRequest",
+    "ValidatingWebhookConfiguration",
+    "ClusterRole",
+    "ClusterRoleBinding"
 ]
 
 
@@ -66,6 +73,8 @@ def run(namespace, output_dir):
     """
     if not namespace:
         namespace = get_namespace_from_config()
+        if not namespace:
+            namespace = "default"
 
     output_file_name = "redis_enterprise_k8s_debug_info_{}".format(TIME_FORMAT)
 
@@ -77,6 +86,7 @@ def run(namespace, output_dir):
     make_dir(output_dir)
 
     get_redis_enterprise_debug_info(namespace, output_dir)
+    collect_pod_rs_logs(namespace, output_dir)
     collect_cluster_info(output_dir)
     collect_resources_list(namespace, output_dir)
     collect_events(namespace, output_dir)
@@ -87,6 +97,69 @@ def run(namespace, output_dir):
     archive_files(output_dir, output_file_name)
 
     logger.info("Finished Redis Enterprise log collector")
+
+
+def get_non_ready_rs_pod_names(namespace):
+    """
+        get names of rs pods that are not ready
+    """
+    pod_names = []
+    rs_pods = get_pods(namespace, selector='redis.io/role=node')
+    if not rs_pods:
+        logger.warning("Cannot find redis enterprise pods")
+        return []
+
+    for rs_pod in rs_pods:
+        pod_name = rs_pod['metadata']['name']
+        if "status" in rs_pod and "containerStatuses" in rs_pod["status"]:
+            for container_status_entry in rs_pod["status"]["containerStatuses"]:
+                container_name = container_status_entry['name']
+                is_ready = container_status_entry["ready"]
+                if container_name == RLEC_CONTAINER_NAME and not is_ready:
+                    pod_names.append(pod_name)
+
+    return pod_names
+
+
+def collect_pod_rs_logs(namespace, output_dir):
+    """
+        get logs from rs pods that are not ready
+    """
+    rs_pod_logs_dir = os.path.join(output_dir, "rs_pod_logs")
+    make_dir(rs_pod_logs_dir)
+    non_ready_rs_pod_names = get_non_ready_rs_pod_names(namespace)
+    if not non_ready_rs_pod_names:
+        return
+    for rs_pod_name in non_ready_rs_pod_names:
+        pod_log_dir = os.path.join(rs_pod_logs_dir, rs_pod_name)
+        make_dir(pod_log_dir)
+        cmd = "kubectl -n {} cp {}:{} {} -c {}".format(namespace,
+                                                       rs_pod_name,
+                                                       RS_LOG_FOLDER_PATH,
+                                                       pod_log_dir,
+                                                       RLEC_CONTAINER_NAME)
+        return_code, out = run_shell_command(cmd)
+        if return_code:
+            logger.warning("Failed to copy rs logs from pod "
+                           "to output directory, output:%s", out)
+
+        else:
+            logger.info("Collected rs logs from pod marked as not ready, pod name: %s", rs_pod_name)
+
+        pod_config_dir = os.path.join(pod_log_dir, "config")
+        make_dir(pod_config_dir)
+        cmd = "kubectl -n {} cp {}:{} {} -c {}".format(namespace,
+                                                       rs_pod_name,
+                                                       "/opt/redislabs/config",
+                                                       pod_config_dir,
+                                                       RLEC_CONTAINER_NAME)
+        return_code, out = run_shell_command(cmd)
+        if return_code:
+            logger.warning("Failed to copy rs config from pod "
+                           "to output directory, output:%s", out)
+
+        else:
+            logger.info("Collected rs config from pod marked as not ready, pod name: %s", rs_pod_name)
 
 
 def get_redis_enterprise_debug_info(namespace, output_dir):
@@ -108,10 +181,9 @@ def get_redis_enterprise_debug_info(namespace, output_dir):
         pod_names = [pod['metadata']['name'] for pod in rs_pods]
 
     pod_name = pod_names[0]
-    cont = "redis-enterprise-node"
     prog = "/opt/redislabs/bin/rladmin"
     cmd = "kubectl -n {} exec {} -c {} {} cluster debug_info path /tmp"\
-        .format(namespace, pod_name, cont, prog)
+        .format(namespace, pod_name, RLEC_CONTAINER_NAME, prog)
     return_code, out = run_shell_command(cmd)
     if "Downloading complete" not in out:
         logger.warning("Failed running rladmin command in pod: %s",
@@ -443,10 +515,10 @@ if __name__ == "__main__":
     parser.add_argument('-n', '--namespace', action="store", type=str)
     parser.add_argument('-o', '--output_dir', action="store", type=str)
     parser.add_argument('-t', '--timeout', action="store",
-                        type=int, default=120,
+                        type=int, default=180,
                         help="time to wait for external commands to "
                              "finish execution "
-                             "(default: 120s, specify 0 to not timeout) "
+                             "(default: 180s, specify 0 to not timeout) "
                              "(Linux only)")
 
     # pylint: disable=locally-disabled, invalid-name

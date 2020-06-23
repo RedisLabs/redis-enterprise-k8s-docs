@@ -1,5 +1,5 @@
-# API Docs
-This document describes the parameters for the Redis Enterprise CRD
+# Redis Enterprise Cluster API
+This document describes the parameters for the Redis Enterprise Cluster custom resource
 > Note this document is auto-generated from code comments. To contribute a change please change the code comments.
 ## Table of Contents
 * [Objects](#objects)
@@ -7,16 +7,13 @@ This document describes the parameters for the Redis Enterprise CRD
   * [ImageSpec](#imagespec)
   * [PeerCluster](#peercluster)
   * [PersistentConfigurationSpec](#persistentconfigurationspec)
-  * [RedisDatabase](#redisdatabase)
-  * [RedisDatabaseList](#redisdatabaselist)
-  * [RedisDatabaseSpec](#redisdatabasespec)
-  * [RedisDatabaseStatus](#redisdatabasestatus)
   * [RedisEnterpriseCluster](#redisenterprisecluster)
   * [RedisEnterpriseClusterList](#redisenterpriseclusterlist)
   * [RedisEnterpriseClusterSpec](#redisenterpriseclusterspec)
   * [RedisEnterpriseClusterStatus](#redisenterpriseclusterstatus)
   * [ServiceBrokerSpec](#servicebrokerspec)
   * [ServicesRiggerConfigurationSpec](#servicesriggerconfigurationspec)
+  * [SlaveHA](#slaveha)
   * [UpgradeSpec](#upgradespec)
 * [Enums](#enums)
   * [ActiveActiveMethod](#activeactivemethod)
@@ -68,45 +65,12 @@ Specification for Redis Enterprise Cluster persistence
 | volumeSize |  | resource.Quantity |  | true |
 [Back to Table of Contents](#table-of-contents)
 
-### RedisDatabase
-TBD
-
-| Field | Description | Scheme | Default Value | Required |
-| ----- | ----------- | ------ | -------- | -------- |
-| metadata |  | [metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#objectmeta-v1-meta) |  | true |
-| spec |  | [RedisDatabaseSpec](#redisdatabasespec) |  | true |
-| status |  | [RedisDatabaseStatus](#redisdatabasestatus) |  | false |
-[Back to Table of Contents](#table-of-contents)
-
-### RedisDatabaseList
-TBD
-
-| Field | Description | Scheme | Default Value | Required |
-| ----- | ----------- | ------ | -------- | -------- |
-| metadata |  | [metav1.ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#listmeta-v1-meta) |  | true |
-| items |  | [][RedisDatabase](#redisdatabase) |  | true |
-[Back to Table of Contents](#table-of-contents)
-
-### RedisDatabaseSpec
-not implemented yet
-
-| Field | Description | Scheme | Default Value | Required |
-| ----- | ----------- | ------ | -------- | -------- |
-[Back to Table of Contents](#table-of-contents)
-
-### RedisDatabaseStatus
-not implemented yet
-
-| Field | Description | Scheme | Default Value | Required |
-| ----- | ----------- | ------ | -------- | -------- |
-[Back to Table of Contents](#table-of-contents)
-
 ### RedisEnterpriseCluster
 RedisEnterpriseCluster is the Schema for the redisenterpriseclusters API
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| metadata |  | [metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#objectmeta-v1-meta) |  | false |
+| metadata |  | [metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#objectmeta-v1-meta) |  | false |
 | spec |  | [RedisEnterpriseClusterSpec](#redisenterpriseclusterspec) |  | false |
 | status |  | [RedisEnterpriseClusterStatus](#redisenterpriseclusterstatus) |  | false |
 [Back to Table of Contents](#table-of-contents)
@@ -116,7 +80,7 @@ RedisEnterpriseClusterList contains a list of RedisEnterpriseCluster
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| metadata |  | [metav1.ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#listmeta-v1-meta) |  | false |
+| metadata |  | [metav1.ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#listmeta-v1-meta) |  | false |
 | items |  | [][RedisEnterpriseCluster](#redisenterprisecluster) |  | true |
 [Back to Table of Contents](#table-of-contents)
 
@@ -137,10 +101,10 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | redisEnterpriseImageSpec | Specification for Redis Enterprise container image | *[ImageSpec](#imagespec) | the default Redis Enterprise image for this version | false |
 | redisEnterpriseServicesRiggerImageSpec | Specification for Services Rigger container image | *[ImageSpec](#imagespec) | the default Services Rigger image for this version | false |
 | bootstrapperImageSpec | Specification for Bootstrapper container image | *[ImageSpec](#imagespec) | the default Bootstrapper image for this version | false |
-| redisEnterpriseNodeResources | Compute resource requirements for Redis Enterprise containers | *[v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#resourcerequirements-v1-core) | 2 CPUs and 4GB memory | false |
-| bootstrapperResources | Compute resource requirements for bootstrapper containers | *[v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#resourcerequirements-v1-core) | 0.1 CPUs and 128Mi memory | false |
-| redisEnterpriseServicesRiggerResources | Compute resource requirements for Services Rigger pod | *[v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#resourcerequirements-v1-core) | 0.5 CPU and 0.5GB memory | false |
-| pullSecrets | PullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ | [][v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#localobjectreference-v1-core) | empty | false |
+| redisEnterpriseNodeResources | Compute resource requirements for Redis Enterprise containers | *[v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core) | 2 CPUs and 4GB memory | false |
+| bootstrapperResources | Compute resource requirements for bootstrapper containers | *[v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core) | 0.1 CPUs and 128Mi memory | false |
+| redisEnterpriseServicesRiggerResources | Compute resource requirements for Services Rigger pod | *[v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core) | 0.5 CPU and 0.5GB memory | false |
+| pullSecrets | PullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ | [][v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#localobjectreference-v1-core) | empty | false |
 | persistentSpec | Specification for Redis Enterprise Cluster persistence | [PersistentConfigurationSpec](#persistentconfigurationspec) | disabled | false |
 | serviceBrokerSpec | Specification for Service Broker | [ServiceBrokerSpec](#servicebrokerspec) | disabled | false |
 | sideContainersSpec | Specification for a side container that will be added to each Redis Enterprise pod | []v1.Container | empty | false |
@@ -154,9 +118,11 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | clusterRecovery | ClusterRecovery initiates cluster recovery when set to true. Note that this field is cleared automatically after the cluster is recovered | *bool |  | false |
 | rackAwarenessNodeLabel | Node label that specifies rack ID - if specified, will create rack aware cluster. Rack awareness requires node label must exist on all nodes. Additionally, operator needs a special cluster role with permission to list nodes. | string |  | false |
 | priorityClassName | Adds the priority class to pods managed by the operator | string |  | false |
-| volumes | additional volumes | []v1.Volume |  | false |
-| redisEnterpriseVolumeMounts | additional volume mounts within the redis enterprise containers | []v1.VolumeMount |  | false |
+| volumes | additional volumes | [][v1.Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#volume-v1-core) |  | false |
+| redisEnterpriseVolumeMounts | additional volume mounts within the redis enterprise containers | [][v1.VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#volumemount-v1-core) |  | false |
 | podAnnotations | pod annotations | map[string]string |  | false |
+| podTolerations | Tolerations that are added to all managed pods. for more information: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/ | [][v1.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#toleration-v1-core) | empty | false |
+| slaveHA | Slave high availability mechanism configuration. | *[SlaveHA](#slaveha) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseClusterStatus
@@ -176,7 +142,7 @@ Specification for Service Broker
 | enabled | Whether to deploy Service Broker | bool |  | true |
 | persistentSpec | Persistence specification for Service Broker | [PersistentConfigurationSpec](#persistentconfigurationspec) |  | false |
 | imageSpec | Image specification for Service Broker | *[ImageSpec](#imagespec) |  | false |
-| resources | Compute resource requirements for Service Broker | *[v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.11/#resourcerequirements-v1-core) |  | false |
+| resources | Compute resource requirements for Service Broker | *[v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ServicesRiggerConfigurationSpec
@@ -187,6 +153,14 @@ Specification for service rigger
 | databaseServiceType | Service type for access to databases | string |  | true |
 | serviceNaming |  | string |  | true |
 | extraEnvVars |  | []v1.EnvVar |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### SlaveHA
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| slaveHAGracePeriod | Time in seconds between when a node fails, and when slave high availability mechanism starts relocating shards. If set to 0, will not affect cluster configuration. | *uint32 | 1800 | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### UpgradeSpec
