@@ -10,10 +10,12 @@
 - [Pod Security Policy (PSP)](#pod-security-policy-psp)
 - [Service Broker](#service-broker)
 - [Private Repositories](#private-repositories)
-- [Pull secrets](#pull-secrets)
+- [Pull Secrets](#pull-secrets)
 - [IPV4 enforcement](#ipv4-enforcement)
 - [Side Cars](#side-cars)
 - [Extra Labels](#extra-labels)
+- [Resource Limits and Quotas](#resource-limits-and-quotas)
+- [Custom Resource Deletion](#custom-resource-deletion)
 
 ## Guaranteed Quality of Service
 
@@ -67,7 +69,7 @@ kind: RedisEnterpriseCluster
 metadata:
   name: example-redisenterprisecluster
 spec:
-  size: 3
+  nodes: 3
   nodeSelector:
     cloud.google.com/gke-nodepool: pool1
 ```
@@ -116,7 +118,7 @@ If you use this option, you should add the policy name to REC configuration, in 
 podSecurityPolicyName: "redis-enterprise-psp"
 ```
 
->see [RedisEnterpriseClusterSpec](./operator.md#redisenterpriseclusterspec) for full reference
+>see [RedisEnterpriseClusterSpec](operator.md#redisenterpriseclusterspec) for full reference
 
 ## Service Broker
 
@@ -149,7 +151,7 @@ Add the `serviceBrokerSpec` Service Broker in the RedisEntepteriseCluster Spec (
       storageClassName: "gp2"
 ```
 
->see [ServiceBrokerSpec](./operator.md#servicebrokerspec) for full reference
+>see [ServiceBrokerSpec](operator.md#servicebrokerspec) for full reference
 
 ## Private Repositories
 
@@ -163,7 +165,7 @@ In *RedisEnterpriseClusterSpec* (redis_enterprise_cluster.yaml):
 - *bootstrapperImageSpec*
 
 Image specifications in *RedisEnterpriseClusterSpec* follow the same schema:
->see [ImageSpec](./operator.md#imagespec) for full reference
+>see [ImageSpec](operator.md#imagespec) for full reference
 
 For example:
 
@@ -171,21 +173,21 @@ For example:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/redis
-    versionTag:       5.4.14-31
+    versionTag:       6.0.6-35
 ```
 
 ```yaml
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       5.4.14-7
+    versionTag:       6.0.6-6
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       5.4.14-7
+    versionTag:       6.0.6-6
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -198,7 +200,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:5.4.14-7
+          image: harbor.corp.local/redisenterprise/operator:6.0.6-6
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).
@@ -274,3 +276,68 @@ additional labels to tag the k8s resources created during deployment
     example1: "some-value"
     example2: "some-value"
 ```
+
+## Resource Limits and Quotas
+
+All the pods created by the operator are set with a resources section to their spec, so it is possible to apply a ResourceQuota on the namespace of the Redis Enterprise Cluster. The operator itself is set with resources limits and requests.
+The recommended settings are set in the operator.yaml file and the bundles. The operator was tested and proved to be working in minimal workloads with the following settings in operator.yaml:
+
+
+```yaml
+  resources:
+    limits:
+      cpu: 0.5
+      memory: 256Mi
+    requests:
+      cpu: 0.5
+      memory: 256Mi
+```
+
+When creating ResourceQuota, be careful when applying quotas on ConfigMaps. When testing the operator the limit was found to be met even when one ConfigMap was used, perhaps due to enforcement logic of some sort. The following ResourceQuota worked on internal testing, but might need tweaking according to the deployment scenario:
+```yaml
+  hard:
+    secrets: "40"
+    persistentvolumeclaims: "20"
+    replicationcontrollers: "40"
+    pods: "40"
+    requests.storage: "120400Mi"
+    services: "20"
+    requests.memory: "43344Mi"
+    limits.memory: "57792Mi"
+    limits.cpu: "64"
+    requests.cpu: "48"
+```
+
+## Custom Resource Deletion
+### REDB Deletion
+The Redis Enterprise Database (REDB) object has a finalizer, to make sure the database is deleted before the REDB custom resource is removed from k8s.  
+The finalizer name is `finalizer.redisenterprisedatabases.app.redislabs.com`.  
+When a user requests the deletion of REDB (for example by running `kubectl delete redb <name>`), the following happens:
+1. K8s API adds `DeletionTimestamp` to the REDB resource.
+2. The Operator notices the `DeletionTimestamp`, and sends delete request to the RS API.
+3. When RS API the approves delete request, the operator removes the REDB finalizer.
+4. K8s cleans up the REDB resource, now that it has no finalizers.
+
+If for some reason the user ends up with an REDB resource that can't be deleted, because the finalizer can't be removed, they can remove the finalizer manually by editing the REDB resource.
+For example, if the REDB name is `redis-enterprise-database`, here is a command to remove its finalizer manually:
+```shell script
+kubectl patch redb redis-enterprise-database --type=json -p '[{"op":"remove","path":"/metadata/finalizers","value":"finalizer.redisenterprisedatabases.app.redislabs.com"}]'
+```
+note: In this case the database may still exist in the Redis Enterprise cluster, and should be deleted via RS GUI, or API.
+
+### REC Deletion
+The Redis Enterprise Cluster (REC) object has a finalizer, to make sure all REDBs on that cluster are deleted before the REC custom resource is removed from k8s.  
+The finalizer name is `redbfinalizer.redisenterpriseclusters.app.redislabs.com`.  
+When a user requests the deletion of an REC (for example by running `kubectl delete rec <name>`), the following happens:
+1. K8s API adds `DeletionTimestamp` to the REC resource.
+2. The Operator notices the `DeletionTimestamp`, and checks if this REC has REDBs attached to it.
+3. If there are such REDBs, the operator will not delete the REC, and will log the error: `Cannot delete REC, as REDBs that were stored in the cluster still exist.`
+4. When there are no more REDBs attached to that REC, the operator will remove the finalizer from the REC resource.
+5. K8s cleans up the REC resource, including deployments and stateful sets, now that it has no finalizers.
+
+If for some reason the user ends up with an REC resource that can't be deleted, because the finalizer can't be removed, they can remove the finalizer manually by editing the REC resource.
+For example, if the REC name is `redis-enterprise`, here is a command to remove its finalizer manually:
+```shell script
+kubectl patch rec redis-enterprise --type=json -p '[{"op":"remove","path":"/metadata/finalizers","value":"redbfinalizer.redisenterpriseclusters.app.redislabs.com"}]'
+```
+note: In this case the REDB resources that were attached to the REC may still exist. see [REDB Deletion](#redb-deletion) for details on how to delete these REDBs.

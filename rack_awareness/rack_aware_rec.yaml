@@ -3,5 +3,5 @@ kind: RedisEnterpriseCluster
 metadata:
   name: rack-aware-cluster
 spec:
-  size: 3
+  nodes: 3
   rackAwarenessNodeLabel: failure-domain.beta.kubernetes.io/zone
