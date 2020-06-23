@@ -169,7 +169,7 @@ Other custom configurations are referenced in this repository.
     kubectl apply -f openshift/redis-enterprise-cluster_rhel.yaml
     ```
 
-6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase` (Alpha feature)
+6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase`
 
    Create a `RedisEnterpriseDatabase` (REDB) by using Custom Resource.
    The Redis Enterprise Operator can be instructed to manage databases on the Redis Enterprise Cluster using the REDB custom resource.
