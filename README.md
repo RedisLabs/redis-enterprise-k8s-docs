@@ -69,7 +69,6 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     > Note: The rbac.yaml file used in previous releases has been broken down into three distinct files:
     `role.yaml`, `role_binding.yaml` and `service_account.yaml`.
     The `crd.yaml` file was renamed to `redisenterprisecluster_crd.yaml`, with the API version prepended to the filename.
-    Apply the `crds/app_v1alpha1_redisenterprisedatabase_crd.yaml` if managing database instances through Kubernetes API and commands is desired.
 
 3. Run `kubectl get deployment` and verify redis-enterprise-operator deployment is running.
 
