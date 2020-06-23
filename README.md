@@ -193,7 +193,7 @@ Other custom configurations are referenced in this repository.
 
    > Optional: REDB admission controller
    >
-   > When using the REDB Custom Resource Definition (Redis Enterprise Database) it is recommended to set up admission controller to improve input validation and catch configuration errors before they reach the cluster. The procedure is documented [here](admission/README.md).
+   > When using the REDB Custom Resource Definition (Redis Enterprise Database) it is recommended to set up the admission controller to improve input validation and catch configuration errors before they reach the cluster. The procedure is documented [here](admission/README.md).
 
 
 
