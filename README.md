@@ -119,7 +119,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     All REDB configuration options are documented [here](redis_enterprise_database_api.md).
 
 
-   > Optional: REDB admission controller (Alpha feature)
+   > Optional: REDB admission controller
    >
    > When using the REDB Custom Resource Definition (Redis Enterprise Database) it is recommended to set up admission control to improve input validation and catch configuration errors before they reach the cluster. The procedure is documented [here](admission/README.md)
 
