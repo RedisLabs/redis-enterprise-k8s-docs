@@ -328,7 +328,7 @@ note: In this case the database may still exist in the Redis Enterprise cluster,
 ### REC Deletion
 The Redis Enterprise Cluster (REC) object has a finalizer, to make sure all REDBs on that cluster are deleted before the REC custom resource is removed from k8s.  
 The finalizer name is `redbfinalizer.redisenterpriseclusters.app.redislabs.com`.  
-When a user requests the deletion of REC (for example by running `kubectl delete rec <name>`), the following happens:
+When a user requests the deletion of an REC (for example by running `kubectl delete rec <name>`), the following happens:
 1. K8s API adds `DeletionTimestamp` to the REC resource.
 2. The Operator notices the `DeletionTimestamp`, and checks if this REC has REDBs attached to it.
 3. If there are such REDBs, the operator will not delete the REC, and will log the error: `Cannot delete REC, as REDBs that were stored in the cluster still exist.`
