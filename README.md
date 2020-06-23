@@ -97,7 +97,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     redis-enterprise   5m
     ```
 
-6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase` (Alpha feature)
+6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase`
 
    Create a `RedisEnterpriseDatabase` (REDB) by using Custom Resource.
    The Redis Enterprise Operator can be instructed to manage databases on the Redis Enterprise Cluster using the REDB custom resource.
@@ -119,7 +119,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     All REDB configuration options are documented [here](redis_enterprise_database_api.md).
 
 
-   > Optional: REDB admission controller (Alpha feature)
+   > Optional: REDB admission controller
    >
    > When using the REDB Custom Resource Definition (Redis Enterprise Database) it is recommended to set up admission control to improve input validation and catch configuration errors before they reach the cluster. The procedure is documented [here](admission/README.md)
 
@@ -169,7 +169,7 @@ Other custom configurations are referenced in this repository.
     kubectl apply -f openshift/redis-enterprise-cluster_rhel.yaml
     ```
 
-6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase` (Alpha feature)
+6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase`
 
    Create a `RedisEnterpriseDatabase` (REDB) by using Custom Resource.
    The Redis Enterprise Operator can be instructed to manage databases on the Redis Enterprise Cluster using the REDB custom resource.
@@ -191,7 +191,7 @@ Other custom configurations are referenced in this repository.
     All REDB configuration options are documented [here](redis_enterprise_database_api.md).
 
 
-   > Optional: REDB admission controller (Alpha feature)
+   > Optional: REDB admission controller
    >
    > When using the REDB Custom Resource Definition (Redis Enterprise Database) it is recommended to set up admission controller to improve input validation and catch configuration errors before they reach the cluster. The procedure is documented [here](admission/README.md).
 
