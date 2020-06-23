@@ -97,7 +97,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     redis-enterprise   5m
     ```
 
-6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase` (Alpha feature)
+6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase` 
 
    Create a `RedisEnterpriseDatabase` (REDB) by using Custom Resource.
    The Redis Enterprise Operator can be instructed to manage databases on the Redis Enterprise Cluster using the REDB custom resource.
