@@ -279,7 +279,7 @@ additional labels to tag the k8s resources created during deployment
 
 ## Resource Limits and Quotas
 
-All the pods created by the operator are set with with a resources section to their spec, so it is possible to apply a ResourceQuota on the namespace of the Redis Enterprise Cluster. The operator itself is set with resources limit and request.
+All the pods created by the operator are set with a resources section to their spec, so it is possible to apply a ResourceQuota on the namespace of the Redis Enterprise Cluster. The operator itself is set with resources limits and requests.
 The recommended settings are set in the operator.yaml file and the bundles. The operator was tested and proved to be working in minimal workloads with the following settings in operator.yaml:
 
 
