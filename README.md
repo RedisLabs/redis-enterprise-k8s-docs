@@ -191,7 +191,7 @@ Other custom configurations are referenced in this repository.
     All REDB configuration options are documented [here](redis_enterprise_database_api.md).
 
 
-   > Optional: REDB admission controller (Alpha feature)
+   > Optional: REDB admission controller
    >
    > When using the REDB Custom Resource Definition (Redis Enterprise Database) it is recommended to set up admission controller to improve input validation and catch configuration errors before they reach the cluster. The procedure is documented [here](admission/README.md).
 
@@ -389,4 +389,3 @@ Alternatively:
   RedisEnterpriseImageSpec:
     versionTag: redislabs/redis:6.0.6-35
 ```
-
