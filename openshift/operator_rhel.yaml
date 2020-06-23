@@ -15,7 +15,7 @@ spec:
       serviceAccount: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:5.4.14-7.rhel7
+          image: redislabs/operator:6.0.6-6.rhel7
           securityContext:
             runAsUser: 1001
           command:
@@ -30,3 +30,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: DATABASE_CONTROLLER_ENABLED
+              value: "true"
+          resources:
+            limits:
+              cpu: 4000m
+              memory: 512Mi
+            requests:
+              cpu: 500m
+              memory: 256Mi
