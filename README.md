@@ -355,7 +355,7 @@ To use in the *RedisEnterpriseClusterSpec*:
 ```yaml
 spec:
   pullSecrets:
-    -name: regcred
+  - name: regcred
 ```  
 
 To use in the Operator Deployment:
@@ -364,7 +364,7 @@ spec:
   template:
     spec:
       imagePullSecrets:
-      -name: regcred
+      - name: regcred
 ```
 
 ### Advanced Configuration
