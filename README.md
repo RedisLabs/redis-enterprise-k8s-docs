@@ -26,9 +26,9 @@ This page describe how to deploy Redis Enterprise on Kubernetes using the Redis 
 The following are the images and tags for this release:
 | Component | k8s | Openshift |
 | --- | --- | --- |
-| Redis Enterprise | `redislabs/redis:6.0.6-35` | `redislabs/redis:6.0.6-35.rhel7-openshift` |
-| Operator | `redislabs/operator:6.0.6-6` | `redislabs/operator:6.0.6-6.rhel7` |
-| Services Rigger | `redislabs/k8s-controller:6.0.6-6` | `redislabs/k8s-controller:6.0.6-6.rhel7` |
+| Redis Enterprise | `redislabs/redis:6.0.6-39` | `redislabs/redis:6.0.6-39.rhel7-openshift` |
+| Operator | `redislabs/operator:6.0.6-11` | `redislabs/operator:6.0.6-11.rhel7` |
+| Services Rigger | `redislabs/k8s-controller:6.0.6-11` | `redislabs/k8s-controller:6.0.6-11.rhel7` |
 > * RedHat certified images are available on [Redhat Catalog](https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d) </br>
 
 
@@ -69,6 +69,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     > Note: The rbac.yaml file used in previous releases has been broken down into three distinct files:
     `role.yaml`, `role_binding.yaml` and `service_account.yaml`.
     The `crd.yaml` file was renamed to `redisenterprisecluster_crd.yaml`, with the API version prepended to the filename.
+    Apply the `crds/app_v1alpha1_redisenterprisedatabase_crd.yaml` if managing database instances through Kubernetes API and commands is desired.
 
 3. Run `kubectl get deployment` and verify redis-enterprise-operator deployment is running.
 
@@ -96,7 +97,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     redis-enterprise   5m
     ```
 
-6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase`
+6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase` (Alpha feature)
 
    Create a `RedisEnterpriseDatabase` (REDB) by using Custom Resource.
    The Redis Enterprise Operator can be instructed to manage databases on the Redis Enterprise Cluster using the REDB custom resource.
@@ -118,7 +119,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     All REDB configuration options are documented [here](redis_enterprise_database_api.md).
 
 
-   > Optional: REDB admission controller
+   > Optional: REDB admission controller (Alpha feature)
    >
    > When using the REDB Custom Resource Definition (Redis Enterprise Database) it is recommended to set up admission control to improve input validation and catch configuration errors before they reach the cluster. The procedure is documented [here](admission/README.md)
 
@@ -168,7 +169,7 @@ Other custom configurations are referenced in this repository.
     kubectl apply -f openshift/redis-enterprise-cluster_rhel.yaml
     ```
 
-6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase`
+6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase` (Alpha feature)
 
    Create a `RedisEnterpriseDatabase` (REDB) by using Custom Resource.
    The Redis Enterprise Operator can be instructed to manage databases on the Redis Enterprise Cluster using the REDB custom resource.
@@ -190,7 +191,7 @@ Other custom configurations are referenced in this repository.
     All REDB configuration options are documented [here](redis_enterprise_database_api.md).
 
 
-   > Optional: REDB admission controller
+   > Optional: REDB admission controller (Alpha feature)
    >
    > When using the REDB Custom Resource Definition (Redis Enterprise Database) it is recommended to set up admission controller to improve input validation and catch configuration errors before they reach the cluster. The procedure is documented [here](admission/README.md).
 
@@ -206,7 +207,7 @@ The operator deploys a `RedisEnterpriseCluster` with default configurations valu
     redisEnterpriseImageSpec:
       imagePullPolicy:  IfNotPresent
       repository:       redislabs/redis
-      versionTag:       6.0.6-35
+      versionTag:       6.0.6-39
   ```
 
 * Persistence
@@ -302,21 +303,21 @@ For example:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/redis
-    versionTag:       6.0.6-35
+    versionTag:       6.0.6-39
 ```
 
 ```yaml
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       6.0.6-6
+    versionTag:       6.0.6-11
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       6.0.6-6
+    versionTag:       6.0.6-11
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -328,7 +329,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:6.0.6-6
+          image: harbor.corp.local/redisenterprise/operator:6.0.6-11
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).
@@ -377,7 +378,7 @@ spec:
 The Operator automates and simplifies the upgrade process.  
 The Redis Enterprise Cluster Software, and the Redis Enterprise Operator for Kubernetes versions are tightly coupled and should be upgraded together.  
 It is recommended to use the bundle.yaml to upgrade, as it loads all the relevant CRD documents for this version. If the updated CRDs are not loaded, the operator might fail.
-There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.0.6-35
+There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.0.6-39
 
 ```yaml
   autoUpgradeRedisEnterprise: true
@@ -386,6 +387,6 @@ There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within t
 Alternatively:
 ```yaml
   RedisEnterpriseImageSpec:
-    versionTag: redislabs/redis:6.0.6-35
+    versionTag: redislabs/redis:6.0.6-39
 ```
 
