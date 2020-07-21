@@ -106,7 +106,7 @@ spec:
             scheme: HTTPS
       initContainers:
       - name: admin-init
-        image: redislabs/operator-internal:6.0.6-11.rhel7
+        image: redislabs/operator:6.0.6-11.rhel7
         command:
         - /usr/local/bin/admission
         args:
