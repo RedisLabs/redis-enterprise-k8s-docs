@@ -69,7 +69,6 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     > Note: The rbac.yaml file used in previous releases has been broken down into three distinct files:
     `role.yaml`, `role_binding.yaml` and `service_account.yaml`.
     The `crd.yaml` file was renamed to `redisenterprisecluster_crd.yaml`, with the API version prepended to the filename.
-    Apply the `crds/app_v1alpha1_redisenterprisedatabase_crd.yaml` if managing database instances through Kubernetes API and commands is desired.
 
 3. Run `kubectl get deployment` and verify redis-enterprise-operator deployment is running.
 
@@ -97,7 +96,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     redis-enterprise   5m
     ```
 
-6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase` (Alpha feature)
+6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase`
 
    Create a `RedisEnterpriseDatabase` (REDB) by using Custom Resource.
    The Redis Enterprise Operator can be instructed to manage databases on the Redis Enterprise Cluster using the REDB custom resource.
@@ -119,7 +118,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     All REDB configuration options are documented [here](redis_enterprise_database_api.md).
 
 
-   > Optional: REDB admission controller (Alpha feature)
+   > Optional: REDB admission controller
    >
    > When using the REDB Custom Resource Definition (Redis Enterprise Database) it is recommended to set up admission control to improve input validation and catch configuration errors before they reach the cluster. The procedure is documented [here](admission/README.md)
 
@@ -169,7 +168,7 @@ Other custom configurations are referenced in this repository.
     kubectl apply -f openshift/redis-enterprise-cluster_rhel.yaml
     ```
 
-6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase` (Alpha feature)
+6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase`
 
    Create a `RedisEnterpriseDatabase` (REDB) by using Custom Resource.
    The Redis Enterprise Operator can be instructed to manage databases on the Redis Enterprise Cluster using the REDB custom resource.
@@ -191,7 +190,7 @@ Other custom configurations are referenced in this repository.
     All REDB configuration options are documented [here](redis_enterprise_database_api.md).
 
 
-   > Optional: REDB admission controller (Alpha feature)
+   > Optional: REDB admission controller
    >
    > When using the REDB Custom Resource Definition (Redis Enterprise Database) it is recommended to set up admission controller to improve input validation and catch configuration errors before they reach the cluster. The procedure is documented [here](admission/README.md).
 
