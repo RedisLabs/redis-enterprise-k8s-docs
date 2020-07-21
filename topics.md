@@ -279,7 +279,7 @@ additional labels to tag the k8s resources created during deployment
 
 ## Resource Limits and Quotas
 
-All the pods created by the operator are set with with a resources section to their spec, so it is possible to apply a ResourceQuota on the namespace of the Redis Enterprise Cluster. The operator itself is set with resources limit and request.
+All the pods created by the operator are set with a resources section to their spec, so it is possible to apply a ResourceQuota on the namespace of the Redis Enterprise Cluster. The operator itself is set with resources limits and requests.
 The recommended settings are set in the operator.yaml file and the bundles. The operator was tested and proved to be working in minimal workloads with the following settings in operator.yaml:
 
 
@@ -318,7 +318,7 @@ When a user requests the deletion of REDB (for example by running `kubectl delet
 3. When RS API approves delete request, the operator removes the REDB finalizer.
 4. K8s cleans up the REDB resource, now that it has no finalizers.
 
-If for some reason the user ends up with a REDB resource that can't be deleted, because the finalizer can't be removed, they can remove the finalizer manually by editing the REDB resource.
+If for some reason the user ends up with an REDB resource that can't be deleted, because the finalizer can't be removed, they can remove the finalizer manually by editing the REDB resource.
 For example, if the REDB name is `redis-enterprise-database`, here is a command to remove its finalizer manually:
 ```shell script
 kubectl patch redb redis-enterprise-database --type=json -p '[{"op":"remove","path":"/metadata/finalizers","value":"finalizer.redisenterprisedatabases.app.redislabs.com"}]'
@@ -328,14 +328,14 @@ note: In this case the database may still exist in the Redis Enterprise cluster,
 ### REC Deletion
 The Redis Enterprise Cluster (REC) object has a finalizer, to make sure all REDBs on that cluster are deleted before the REC custom resource is removed from k8s.  
 The finalizer name is `redbfinalizer.redisenterpriseclusters.app.redislabs.com`.  
-When a user requests the deletion of REC (for example by running `kubectl delete rec <name>`), the following happens:
+When a user requests the deletion of an REC (for example by running `kubectl delete rec <name>`), the following happens:
 1. K8s API adds `DeletionTimestamp` to the REC resource.
 2. The Operator notices the `DeletionTimestamp`, and checks if this REC has REDBs attached to it.
 3. If there are such REDBs, the operator will not delete the REC, and will log the error: `Cannot delete REC, as REDBs that were stored in the cluster still exist.`
 4. When there are no more REDBs attached to that REC, the operator will remove the finalizer from the REC resource.
 5. K8s cleans up the REC resource, including deployments and stateful sets, now that it has no finalizers.
 
-If for some reason the user ends up with a REC resource that can't be deleted, because the finalizer can't be removed, they can remove the finalizer manually by editing the REC resource.
+If for some reason the user ends up with an REC resource that can't be deleted, because the finalizer can't be removed, they can remove the finalizer manually by editing the REC resource.
 For example, if the REC name is `redis-enterprise`, here is a command to remove its finalizer manually:
 ```shell script
 kubectl patch rec redis-enterprise --type=json -p '[{"op":"remove","path":"/metadata/finalizers","value":"redbfinalizer.redisenterpriseclusters.app.redislabs.com"}]'
