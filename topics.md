@@ -315,7 +315,7 @@ The finalizer name is `finalizer.redisenterprisedatabases.app.redislabs.com`.
 When a user requests the deletion of REDB (for example by running `kubectl delete redb <name>`), the following happens:
 1. K8s API adds `DeletionTimestamp` to the REDB resource.
 2. The Operator notices the `DeletionTimestamp`, and sends delete request to the RS API.
-3. When RS API approves delete request, the operator removes the REDB finalizer.
+3. When RS API approves the delete request, the operator removes the REDB finalizer.
 4. K8s cleans up the REDB resource, now that it has no finalizers.
 
 If for some reason the user ends up with an REDB resource that can't be deleted, because the finalizer can't be removed, they can remove the finalizer manually by editing the REDB resource.
