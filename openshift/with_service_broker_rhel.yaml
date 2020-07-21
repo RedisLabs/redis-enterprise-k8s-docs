@@ -11,4 +11,4 @@ spec:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       redislabs/redis
-    versionTag:       6.0.6-35.rhel7-openshift
+    versionTag:       6.0.6-39.rhel7-openshift
