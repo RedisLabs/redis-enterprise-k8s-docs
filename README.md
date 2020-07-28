@@ -165,7 +165,7 @@ Other custom configurations are referenced in this repository.
     Apply the `RedisEnterpriseCluster` resource with RHEL7 based images:
 
     ```bash
-    kubectl apply -f openshift/redis-enterprise-cluster_rhel.yaml
+    oc apply -f openshift/redis-enterprise-cluster_rhel.yaml
     ```
 
 6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase`
