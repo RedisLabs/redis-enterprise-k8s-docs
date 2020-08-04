@@ -1,7 +1,7 @@
 apiVersion: app.redislabs.com/v1alpha1
 kind: RedisEnterpriseDatabase
 metadata:
-  name: example-redisenterprisedatabase
+  name: redis-enterprise-database
 spec:
   redisEnterpriseCluster:
-    name: example-redisenterprisecluster
+    name: redis-enterprise

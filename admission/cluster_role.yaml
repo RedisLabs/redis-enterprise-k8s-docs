@@ -1,0 +1,8 @@
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: redis-enterprise-admission
+rules:
+  - apiGroups: ["certificates.k8s.io"]
+    resources: ["certificatesigningrequests"]
+    verbs: ["create", "watch"]
