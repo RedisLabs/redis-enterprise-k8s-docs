@@ -174,7 +174,8 @@ def get_redis_enterprise_debug_info(namespace, output_dir):
 
     pod_names = []
     for pod in rs_pods:
-        if all(container_status['ready'] for container_status in pod['status']['containerStatuses']):
+        if 'containerStatuses' in pod['status'] and all(
+                container_status['ready'] for container_status in pod['status']['containerStatuses']):
             pod_names.append(pod['metadata']['name'])
     if not pod_names:
         logger.warning("Cannot find a ready redis enterprise pod, will use a non-ready pod")
