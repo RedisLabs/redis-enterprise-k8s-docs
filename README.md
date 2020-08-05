@@ -154,13 +154,13 @@ Other custom configurations are referenced in this repository.
     ```
 
 4. Deploy the OpenShift operator bundle:
-    > NOTE: Update the `storageClassName` setting in `openshift.bundle.yaml` (by default its set to `gp2`).
 
     ```bash
     oc apply -f openshift.bundle.yaml
     ``` 
 
 5. Redis Enterprise Cluster custom resource - `RedisEnterpriseCluster`
+> NOTE: Update the `storageClassName` setting in `redis-enterprise-cluster_rhel.yaml` as required (it's set to `gp2` by default).
 
     Apply the `RedisEnterpriseCluster` resource with RHEL7 based images:
 
