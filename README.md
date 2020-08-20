@@ -11,6 +11,7 @@
   * [Pull Secrets](#pull-secrets)
   * [Advanced Configuration](#advanced-configuration)
 * [Upgrade](#upgrade)
+* [Supported K8S Distributions](#supported-k8s-distributions)
 
 This page describe how to deploy Redis Enterprise on Kubernetes using the Redis Enterprise Operator. High level architecture and overview of the solution can be found [HERE](https://docs.redislabs.com/latest/platforms/kubernetes/).
 
@@ -27,8 +28,8 @@ The following are the images and tags for this release:
 | Component | k8s | Openshift |
 | --- | --- | --- |
 | Redis Enterprise | `redislabs/redis:6.0.6-39` | `redislabs/redis:6.0.6-39.rhel7-openshift` |
-| Operator | `redislabs/operator:6.0.6-11` | `redislabs/operator:6.0.6-11.rhel7` |
-| Services Rigger | `redislabs/k8s-controller:6.0.6-11` | `redislabs/k8s-controller:6.0.6-11.rhel7` |
+| Operator | `redislabs/operator:6.0.6-23` | `redislabs/operator:6.0.6-23` |
+| Services Rigger | `redislabs/k8s-controller:6.0.6-23` | `redislabs/k8s-controller:6.0.6-23` |
 > * RedHat certified images are available on [Redhat Catalog](https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d) </br>
 
 
@@ -69,6 +70,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     > Note: The rbac.yaml file used in previous releases has been broken down into three distinct files:
     `role.yaml`, `role_binding.yaml` and `service_account.yaml`.
     The `crd.yaml` file was renamed to `redisenterprisecluster_crd.yaml`, with the API version prepended to the filename.
+    Apply the `crds/app_v1alpha1_redisenterprisedatabase_crd.yaml` if managing database instances through Kubernetes API and commands is desired.
 
 3. Run `kubectl get deployment` and verify redis-enterprise-operator deployment is running.
 
@@ -87,7 +89,9 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     kubectl apply -f crds/app_v1_redisenterprisecluster_cr.yaml
     ```
 
-    > Note: The redis-enterprise-cluster.yaml file was renamed to redisenterprisecluster_cr.yaml, with the API version prepended to the filename.
+    > Notes:
+    > 1. The `redis-enterprise-cluster.yaml` file was renamed to `redisenterprisecluster_cr.yaml`, with the API version prepended to the filename.
+    > 2. The Operator can only manage one Redis Enterprise Cluster customer resource in a namespace. To deploy another Enterprise Clusters in the same Kubernetes cluster, deploy additional an Operator in an additional namespace for each additional Enterprise Cluster required. Note that each Enterprise Cluster can effectively host hundreds of Redis Database instances. Deploying multiple clusters is typically used for scenarios where complete operational isolation is required at the cluster level.
 
 5. Run ```kubectl get rec``` and verify creation was successful. `rec` is a shortcut for RedisEnterpriseCluster.
     A typical response may look like this:
@@ -154,18 +158,18 @@ Other custom configurations are referenced in this repository.
     ```
 
 4. Deploy the OpenShift operator bundle:
+    > NOTE: Update the `storageClassName` setting in `openshift.bundle.yaml` (by default its set to `gp2`).
 
     ```bash
     oc apply -f openshift.bundle.yaml
     ``` 
 
 5. Redis Enterprise Cluster custom resource - `RedisEnterpriseCluster`
-> NOTE: Update the `storageClassName` setting in `redis-enterprise-cluster_rhel.yaml` as required (it's set to `gp2` by default).
 
     Apply the `RedisEnterpriseCluster` resource with RHEL7 based images:
 
     ```bash
-    kubectl apply -f openshift/redis-enterprise-cluster_rhel.yaml
+    oc apply -f openshift/redis-enterprise-cluster_rhel.yaml
     ```
 
 6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase`
@@ -194,6 +198,9 @@ Other custom configurations are referenced in this repository.
    >
    > When using the REDB Custom Resource Definition (Redis Enterprise Database) it is recommended to set up admission controller to improve input validation and catch configuration errors before they reach the cluster. The procedure is documented [here](admission/README.md).
 
+
+### Installation on PKS
+  Instruction on how to deploy the Operator on PKS can be found on the [Redis Labs documentation Website](https://docs.redislabs.com/latest/platforms/pks/)
 
 
 ## Configuration
@@ -309,14 +316,14 @@ For example:
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       6.0.6-11
+    versionTag:       6.0.6-23
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       6.0.6-11
+    versionTag:       6.0.6-23
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -328,7 +335,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:6.0.6-11
+          image: harbor.corp.local/redisenterprise/operator:6.0.6-23
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).
@@ -342,6 +349,8 @@ Private repositories which require login can be accessed by creating a pull secr
 ```shell
 kubectl create secret docker-registry regcred --docker-server=<your-registry-server> --docker-username=<your-name> --docker-password=<your-pword> --docker-email=<your-email>
 ```
+> NOTE: Make sure to witch context to the REC namespace or add flag -n <namespace>.
+
 where:
 
 -   `<your-registry-server>`  is your Private repository FQDN. ([https://index.docker.io/v1/](https://index.docker.io/v1/)  for DockerHub)
@@ -377,7 +386,7 @@ spec:
 The Operator automates and simplifies the upgrade process.  
 The Redis Enterprise Cluster Software, and the Redis Enterprise Operator for Kubernetes versions are tightly coupled and should be upgraded together.  
 It is recommended to use the bundle.yaml to upgrade, as it loads all the relevant CRD documents for this version. If the updated CRDs are not loaded, the operator might fail.
-There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise version compatible with this release is 6.0.6-39
+There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.0.6-39
 
 ```yaml
   autoUpgradeRedisEnterprise: true
@@ -388,3 +397,24 @@ Alternatively:
   RedisEnterpriseImageSpec:
     versionTag: redislabs/redis:6.0.6-39
 ```
+
+## Supported K8S Distributions
+Each release of the Redis Enterprise Operator deployment is thoroughly tested against a set of Kubernetes distributions. The table below lists these, along with the current release's support status. "Supported", as well as "deprecated" support status indicates the current release has been tested in this environment and supported by RedisLabs. "Deprecated" also indicates that support will be dropped in a coming future release. "No longer supported" indicates that support has been dropped for this distribution. Any distribution that isn't explicitly listed is not supported for production workloads by RedisLabs. 
+| Distribution      | Support Status      |
+|-------------------|---------------------|
+| Openshift 3.11    | deprecated          |
+| Openshift 4.1     | supported           |
+| Openshift 4.2     | supported           |
+| Openshift 4.3     | supported           |
+| KOPS vanilla 1.9  | no longer supported |
+| KOPS vanilla 1.10 | no longer supported |
+| KOPS vanilla 1.11 | deprecated          |
+| KOPS vanilla 1.12 | supported           |
+| KOPS vanilla 1.13 | supported           |
+| KOPS vanilla 1.14 | supported           |
+| KOPS vanilla 1.15 | supported           |
+| KOPS vanilla 1.16 | supported           |
+| KOPS vanilla 1.17 | supported           |
+| GKE 1.14          | supported           |
+| GKE 1.15          | supported           |
+| GKE 1.16          | supported           |
