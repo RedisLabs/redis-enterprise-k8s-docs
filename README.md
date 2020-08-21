@@ -91,7 +91,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
 
     > Notes:
     > 1. The `redis-enterprise-cluster.yaml` file was renamed to `redisenterprisecluster_cr.yaml`, with the API version prepended to the filename.
-    > 2. The Operator can only manage one Redis Enterprise Cluster customer resource in a namespace. To deploy another Enterprise Clusters in the same Kubernetes cluster, deploy additional an Operator in an additional namespace for each additional Enterprise Cluster required. Note that each Enterprise Cluster can effectively host hundreds of Redis Database instances. Deploying multiple clusters is typically used for scenarios where complete operational isolation is required at the cluster level.
+    > 2. The Operator can only manage one Redis Enterprise Cluster custom resource in a namespace. To deploy another Enterprise Clusters in the same Kubernetes cluster, deploy an Operator in an additional namespace for each additional Enterprise Cluster required. Note that each Enterprise Cluster can effectively host hundreds of Redis Database instances. Deploying multiple clusters is typically used for scenarios where complete operational isolation is required at the cluster level.
 
 5. Run ```kubectl get rec``` and verify creation was successful. `rec` is a shortcut for RedisEnterpriseCluster.
     A typical response may look like this:
