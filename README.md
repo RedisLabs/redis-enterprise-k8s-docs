@@ -402,7 +402,7 @@ Alternatively:
 Each release of the Redis Enterprise Operator deployment is thoroughly tested against a set of Kubernetes distributions. The table below lists these, along with the current release's support status. "Supported", as well as "deprecated" support status indicates the current release has been tested in this environment and supported by RedisLabs. "Deprecated" also indicates that support will be dropped in a coming future release. "No longer supported" indicates that support has been dropped for this distribution. Any distribution that isn't explicitly listed is not supported for production workloads by RedisLabs. 
 | Distribution      | Support Status      |
 |-------------------|---------------------|
-| Openshift 3.11    | deprecated          |
+| Openshift 3.11    | supported          |
 | Openshift 4.1     | supported           |
 | Openshift 4.2     | supported           |
 | Openshift 4.3     | supported           |
