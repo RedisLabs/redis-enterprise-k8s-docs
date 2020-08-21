@@ -16,29 +16,19 @@ sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' admission.bundle.y
 
 If this is the first time one is deploying the admission controller, one has to approve the CSR and setup the webhook to enable resource validation.  If one has already set these up, and one is just updating the admission controller, one skips steps 2 and 3 as they are already configured correctly   
 
-2. and waits for the CSR to ready and approves it
-
-wait for it to be ready to be approved
+2. and waits for the secret to be created
 
 ```shell script
-kubectl get csr admission-tls
-```
-
-and approve it once it's pending approval
-
-```shell script
-kubectl certificate approve admission-tls
-```
-or on openshift
-```shell script
-oc adm certificate approve admission-tls
+kubectl get secret admission-tls
+NAME            TYPE     DATA   AGE
+admission-tls   Opaque   2      2m43s
 ```
 
 3. and modifies the webhook to use the certificate generated
 
 ```shell script
 # save cert
-CERT=`kubectl get csr admission-tls -o jsonpath='{.status.certificate}'`
+CERT=`kubectl get secret admission-tls -o jsonpath='{.data.cert}'`
 # create patch file
 cat > modified-webhook.yaml <<EOF
 webhooks:

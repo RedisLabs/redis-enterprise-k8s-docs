@@ -50,7 +50,10 @@ API_RESOURCES = [
     "CertificateSigningRequest",
     "ValidatingWebhookConfiguration",
     "ClusterRole",
-    "ClusterRoleBinding"
+    "ClusterRoleBinding",
+    "Csv",
+    "Subscription",
+    "Installplan"
 ]
 
 
@@ -162,6 +165,50 @@ def collect_pod_rs_logs(namespace, output_dir):
             logger.info("Collected rs config from pod marked as not ready, pod name: %s", rs_pod_name)
 
 
+def debuginfo_attempt_on_pod(namespace, output_dir, pod_name, attempt):
+    """
+    Execute the rladmin command to get debug info on a specific pod
+    Returns: true on success, false on failure
+    """
+    prog = "/opt/redislabs/bin/rladmin"
+    cmd = "kubectl -n {} exec {} -c {} {} cluster debug_info path /tmp" \
+        .format(namespace, pod_name, RLEC_CONTAINER_NAME, prog)
+    return_code, out = run_shell_command(cmd)
+    if "Downloading complete" not in out:
+        logger.warning("Failed running rladmin command in pod: %s (attempt %d)",
+                       out.rstrip(), attempt)
+        return False
+
+    # get the debug file name
+    match = re.search(r'File (/tmp/(.*\.gz))', out)
+    if match:
+        debug_file_path = match.group(1)
+        debug_file_name = match.group(2)
+        logger.info("debug info created on pod %s in path %s",
+                    pod_name, debug_file_path)
+    else:
+        logger.warning(
+            "Failed to extract debug info name from output (attempt %d for pod %s) - (%s)",
+            attempt, pod_name, out)
+        return False
+
+    # copy package from RS pod
+    output_path = os.path.join(output_dir, debug_file_name)
+    cmd = "kubectl -n {} cp {}:{} {}".format(namespace,
+                                             pod_name,
+                                             debug_file_path,
+                                             output_path)
+    return_code, out = run_shell_command(cmd)
+    if return_code:
+        logger.warning("Failed to copy debug info from pod "
+                       "to output directory (attempt %d for pod %s), output:%s",
+                       attempt, pod_name, out)
+        return False
+
+    # all is well
+    return True
+
+
 def get_redis_enterprise_debug_info(namespace, output_dir):
     """
         Connects to an RS cluster node,
@@ -181,42 +228,17 @@ def get_redis_enterprise_debug_info(namespace, output_dir):
         logger.warning("Cannot find a ready redis enterprise pod, will use a non-ready pod")
         pod_names = [pod['metadata']['name'] for pod in rs_pods]
 
-    pod_name = pod_names[0]
-    prog = "/opt/redislabs/bin/rladmin"
-    cmd = "kubectl -n {} exec {} -c {} {} cluster debug_info path /tmp"\
-        .format(namespace, pod_name, RLEC_CONTAINER_NAME, prog)
-    return_code, out = run_shell_command(cmd)
-    if "Downloading complete" not in out:
-        logger.warning("Failed running rladmin command in pod: %s",
-                       out.rstrip())
-        return
-
-    # get the debug file name
-    match = re.search(r'File (/tmp/(.*\.gz))', out)
-    if match:
-        debug_file_path = match.group(1)
-        debug_file_name = match.group(2)
-        logger.info("debug info created on pod %s in path %s",
-                    pod_name, debug_file_path)
-    else:
-        logger.warning(
-            "Failed to extract debug info name from output - (%s)"
-            "Skipping collecting Redis Enterprise cluster debug info", out)
-        return
-
-    # copy package from RS pod
-    output_path = os.path.join(output_dir, debug_file_name)
-    cmd = "kubectl -n {} cp {}:{} {}".format(namespace,
-                                             pod_name,
-                                             debug_file_path,
-                                             output_path)
-    return_code, out = run_shell_command(cmd)
-    if return_code:
-        logger.warning("Failed to copy debug info from pod "
-                       "to output directory, output:%s", out)
-        return
-
-    logger.info("Collected Redis Enterprise cluster debug package")
+    logger.info("Trying to extract debug info from RS pods: {%s}", pod_names)
+    for pod_name in pod_names:
+        for attempt in range(3):
+            if attempt > 0:
+                time.sleep(1)
+            if debuginfo_attempt_on_pod(namespace,
+                                        output_dir,
+                                        pod_name,
+                                        attempt + 1):
+                logger.info("Collected Redis Enterprise cluster debug package")
+                return
 
 
 def collect_resources_list(namespace, output_dir):
@@ -451,7 +473,7 @@ def run_shell_command_timeout(args, cwd=None, shell=True, env=None):
                                          stdout=subprocess.PIPE,
                                          stderr=subprocess.PIPE)
         stdout, _ = piped_process.communicate()
-        return [int(piped_process) for proc in stdout.split()]
+        return [int(proc) for proc in stdout.split()]
 
     # no need for pass here:
     # https://github.com/PyCQA/pylint/issues/2616#issuecomment-442738701

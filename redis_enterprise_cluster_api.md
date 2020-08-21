@@ -95,7 +95,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | uiServiceType | Type of service used to expose Redis Enterprise UI (https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types) | *v1.ServiceType | v1.ServiceTypeClusterIP | false |
 | uiAnnotations | Annotations for Redis Enterprise UI service | map[string]string |  | false |
 | servicesRiggerSpec | Specification for service rigger | *[ServicesRiggerConfigurationSpec](#servicesriggerconfigurationspec) |  | false |
-| license | Redis Enterprise License | string |  | false |
+| license | Redis Enterprise License | string | Empty string which is a [Trial Mode licesne](https://docs.redislabs.com/latest/rs/administering/cluster-operations/settings/license-keys/#trial-mode) | false |
 | username | Username for the admin user of Redis Enterprise | string | demo@redislabs.com | false |
 | nodeSelector | Selector for nodes that could fit Redis Enterprise pod | *map[string]string |  | false |
 | redisEnterpriseImageSpec | Specification for Redis Enterprise container image | *[ImageSpec](#imagespec) | the default Redis Enterprise image for this version | false |
@@ -105,7 +105,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | bootstrapperResources | Compute resource requirements for bootstrapper containers | *[v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core) | 0.1 CPUs and 128Mi memory | false |
 | redisEnterpriseServicesRiggerResources | Compute resource requirements for Services Rigger pod | *[v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core) | 0.5 CPU and 0.5GB memory | false |
 | pullSecrets | PullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ | [][v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#localobjectreference-v1-core) | empty | false |
-| persistentSpec | Specification for Redis Enterprise Cluster persistence | [PersistentConfigurationSpec](#persistentconfigurationspec) | disabled | false |
+| persistentSpec | Specification for Redis Enterprise Cluster persistence | [PersistentConfigurationSpec](#persistentconfigurationspec) |  | false |
 | serviceBrokerSpec | Specification for Service Broker | [ServiceBrokerSpec](#servicebrokerspec) | disabled | false |
 | sideContainersSpec | Specification for a side container that will be added to each Redis Enterprise pod | []v1.Container | empty | false |
 | extraLabels | Labels that the user defines for their convenience | map[string]string | empty | false |
@@ -177,8 +177,8 @@ Method of ingress from another cluster in Active-Active configuration
 
 | Value | Description |
 | ----- | ----------- |
-| OpenShiftRoute | Routes are only usable in OpenShift |
-| Ingress | See https://kubernetes.io/docs/concepts/services-networking/ingress/ |
+| "openShiftRoute" | Routes are only usable in OpenShift |
+| "ingress" | See https://kubernetes.io/docs/concepts/services-networking/ingress/ |
 [Back to Table of Contents](#table-of-contents)
 
 ### ClusterEventReason
@@ -186,8 +186,8 @@ Reason for cluster event
 
 | Value | Description |
 | ----- | ----------- |
-| InvalidConfiguration | Invalid Configuration |
-| StatusChange | Status Change |
+| "InvalidConfiguration" | Invalid Configuration |
+| "StatusChange" | Status Change |
 [Back to Table of Contents](#table-of-contents)
 
 ### ClusterState
@@ -195,16 +195,16 @@ State of the Redis Enterprise Cluster
 
 | Value | Description |
 | ----- | ----------- |
-| ClusterPendingCreate | ClusterPendingCreate means cluster is not created yet |
-| ClusterBootstrappingFirstPod | Bootstrapping first pod |
-| ClusterInitializing | ClusterInitializing means the cluster was created and nodes are in the process of joining the cluster |
-| ClusterRecoveryReset | ClusterRecoveryReset resets the cluster by deleting all pods |
-| ClusterRecoveringFirstPod | ClusterRecoveringFirstPod means the cluster entered cluster recovery |
-| ClusterRunning | ClusterRunning means the cluster's sub-resources have been created and are in running state |
-| ClusterError | ClusterError means the there was an error when starting creating/updating the one or more of the cluster's resources |
-| ClusterConfigurationInvalid | ClusterConfigurationInvalid means an invalid spec was applied |
-| ClusterInvalidUpgrade | ClusterInvalidUpgrade means an upgrade is not possible at this time |
-| ClusterUpgrade | ClusterUpgrade |
+| "PendingCreation" | ClusterPendingCreate means cluster is not created yet |
+| "BootstrappingFirstPod" | Bootstrapping first pod |
+| "Initializing" | ClusterInitializing means the cluster was created and nodes are in the process of joining the cluster |
+| "RecoveryReset" | ClusterRecoveryReset resets the cluster by deleting all pods |
+| "RecoveringFirstPod" | ClusterRecoveringFirstPod means the cluster entered cluster recovery |
+| "Running" | ClusterRunning means the cluster's sub-resources have been created and are in running state |
+| "Error" | ClusterError means the there was an error when starting creating/updating the one or more of the cluster's resources |
+| "Invalid" | ClusterConfigurationInvalid means an invalid spec was applied |
+| "InvalidUpgrade" | ClusterInvalidUpgrade means an upgrade is not possible at this time |
+| "Upgrade" | ClusterUpgrade |
 [Back to Table of Contents](#table-of-contents)
 
 ### SpecStatusName
@@ -212,6 +212,6 @@ Whether the REC specification is valid (custom resource)
 
 | Value | Description |
 | ----- | ----------- |
-| SpecStatusInvalid | Specification status invalid |
-| SpecStatusValid | Specification status valid |
+| "Invalid" | Specification status invalid |
+| "Valid" | Specification status valid |
 [Back to Table of Contents](#table-of-contents)
