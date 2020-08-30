@@ -91,7 +91,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
 
     > Notes:
     > 1. The `redis-enterprise-cluster.yaml` file was renamed to `redisenterprisecluster_cr.yaml`, with the API version prepended to the filename.
-    > 2. The Operator can only manage one Redis Enterprise Cluster customer resource in a namespace. To deploy another Enterprise Clusters in the same Kubernetes cluster, deploy additional an Operator in an additional namespace for each additional Enterprise Cluster required. Note that each Enterprise Cluster can effectively host hundreds of Redis Database instances. Deploying multiple clusters is typically used for scenarios where complete operational isolation is required at the cluster level.
+    > 2. The Operator can only manage one Redis Enterprise Cluster custom resource in a namespace. To deploy another Enterprise Clusters in the same Kubernetes cluster, deploy additional an Operator in an additional namespace for each additional Enterprise Cluster required. Note that each Enterprise Cluster can effectively host hundreds of Redis Database instances. Deploying multiple clusters is typically used for scenarios where complete operational isolation is required at the cluster level.
 
 5. Run ```kubectl get rec``` and verify creation was successful. `rec` is a shortcut for RedisEnterpriseCluster.
     A typical response may look like this:
@@ -402,10 +402,11 @@ Alternatively:
 Each release of the Redis Enterprise Operator deployment is thoroughly tested against a set of Kubernetes distributions. The table below lists these, along with the current release's support status. "Supported", as well as "deprecated" support status indicates the current release has been tested in this environment and supported by RedisLabs. "Deprecated" also indicates that support will be dropped in a coming future release. "No longer supported" indicates that support has been dropped for this distribution. Any distribution that isn't explicitly listed is not supported for production workloads by RedisLabs. 
 | Distribution      | Support Status      |
 |-------------------|---------------------|
-| Openshift 3.11    | deprecated          |
+| Openshift 3.11    | supported           |
 | Openshift 4.1     | supported           |
 | Openshift 4.2     | supported           |
 | Openshift 4.3     | supported           |
+| Openshift 4.4     | supported           |
 | KOPS vanilla 1.9  | no longer supported |
 | KOPS vanilla 1.10 | no longer supported |
 | KOPS vanilla 1.11 | deprecated          |
@@ -418,3 +419,5 @@ Each release of the Redis Enterprise Operator deployment is thoroughly tested ag
 | GKE 1.14          | supported           |
 | GKE 1.15          | supported           |
 | GKE 1.16          | supported           |
+| Rancher 2.4.5     | supported           |
+
