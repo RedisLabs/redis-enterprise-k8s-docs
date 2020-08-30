@@ -79,7 +79,7 @@ spec:
       serviceAccountName: redis-enterprise-admission
       containers:
       - name: admin
-        image: redislabs/operator:6.0.6-23
+        image: redislabs/operator:6.0.6-24
         command:
         - /usr/local/bin/admission
         args:
@@ -110,7 +110,7 @@ spec:
             scheme: HTTPS
       initContainers:
       - name: admin-init
-        image: redislabs/operator-internal:6.0.6-23
+        image: redislabs/operator:6.0.6-24
         command:
         - /usr/local/bin/admission
         args:
