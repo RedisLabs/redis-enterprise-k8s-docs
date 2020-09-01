@@ -456,7 +456,7 @@ def run_shell_command_regular(args):
     except subprocess.CalledProcessError as ex:
         logger.warning("Failed in shell command: %s, output: %s",
                        args, ex.output)
-        return ex.returncode, ex.output
+        return ex.returncode, native_string(ex.output)
 
     return 0, native_string(output)
 
