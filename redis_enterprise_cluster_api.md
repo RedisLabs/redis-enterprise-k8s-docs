@@ -150,7 +150,7 @@ Specification for service rigger
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| databaseServiceType | Service types for access to databases. should be a comma separated list. The possible values are cluster_ip, headless and load_balancer. | string | cluster_ip,headless | true |
+| databaseServiceType | Service types for access to databases. should be a comma separated list. The possible values are cluster_ip, headless and load_balancer. | string | cluster_ip,headless,load_balancer | true |
 | serviceNaming |  | string |  | true |
 | extraEnvVars |  | []v1.EnvVar |  | false |
 [Back to Table of Contents](#table-of-contents)
