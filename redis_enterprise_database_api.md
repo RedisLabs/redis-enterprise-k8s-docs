@@ -155,7 +155,7 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | shardCount | Number of database server-side shards | uint16 | 1 | false |
 | replication | In-memory database replication. When enabled, database will have replica shard for every master - leading to higher availability. | *bool | false | false |
 | persistence | Database on-disk persistence policy | *[DatabasePersistence](#databasepersistence) | disabled | false |
-| databaseSecretName | The name of the K8s secret that holds the password to the database. | string |  | false |
+| databaseSecretName | The name of the K8s secret that holds the password to the database. The key value of the secret must be 'password'.| string |  | false |
 | evictionPolicy | Database eviction policy. see more https://docs.redislabs.com/latest/rs/administering/database-operations/eviction-policy/ | string | volatile-lru | false |
 | tlsMode | Require SSL authenticated and encrypted connections to the database. enabled - all incoming connections to the Database must use SSL. disabled - no incoming connection to the Database should use SSL. replica_ssl - databases that replicate from this one need to use SSL. | string | disabled | false |
 | clientAuthenticationCertificates | The Secrets containing TLS Client Certificate to use for Authentication | []string |  | false |
