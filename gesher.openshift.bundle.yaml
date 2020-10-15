@@ -1,0 +1,233 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gesher
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gesher
+rules:
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - validatingwebhookconfigurations
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - app.redislabs.com
+  resources:
+  - namespacedvalidatingtypes
+  - namespacedvalidatingtypes/status
+  - namespacedvalidatingrules
+  - namespacedvalidatingrules/status
+  verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: gesher
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - services
+  - services/finalizers
+  - endpoints
+  - persistentvolumeclaims
+  - events
+  - configmaps
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - daemonsets
+  - replicasets
+  - statefulsets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - get
+  - create
+- apiGroups:
+  - apps
+  resourceNames:
+  - gesher
+  resources:
+  - deployments/finalizers
+  verbs:
+  - update
+- apiGroups: ["extensions"]
+  resources: ["podsecuritypolicies"]
+  resourceNames:
+  - redis-enterprise-psp
+  verbs:
+  - use
+  
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: gesher
+subjects:
+- kind: ServiceAccount
+  name: gesher
+roleRef:
+  kind: Role
+  name: gesher
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: gesher
+subjects:
+- kind: ServiceAccount
+  name: gesher
+  namespace: NAMESPACE_OF_SERVICE_ACCOUNT
+roleRef:
+  kind: ClusterRole
+  name: gesher
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gesher
+spec:
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    name: gesher
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: namespacedvalidatingrules.app.redislabs.com
+spec:
+  group: app.redislabs.com
+  names:
+    kind: NamespacedValidatingRule
+    listKind: NamespacedValidatingRuleList
+    plural: namespacedvalidatingrules
+    singular: namespacedvalidatingrule
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+  subresources:
+    status: {}
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: namespacedvalidatingtypes.app.redislabs.com
+spec:
+  group: app.redislabs.com
+  names:
+    kind: NamespacedValidatingType
+    listKind: NamespacedValidatingTypeList
+    plural: namespacedvalidatingtypes
+    singular: namespacedvalidatingtype
+  scope: Cluster
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+  subresources:
+    status: {}
+---
+apiVersion: app.redislabs.com/v1alpha1
+kind: NamespacedValidatingType
+metadata:
+  name: redb
+spec:
+  types:
+  - operations: ["*"]
+    apiGroups: ["app.redislabs.com"]
+    apiVersions: ["v1alpha1"]
+    resources: ["redisenterprisedatabases"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gesher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: gesher
+  template:
+    metadata:
+      labels:
+        name: gesher
+    spec:
+      serviceAccountName: gesher
+      volumes:
+      - name: certs
+        emptyDir:
+          medium: Memory
+      containers:
+        - name: gesher
+          volumeMounts:
+          - mountPath: /certs
+            name: certs
+          image: redislabs/gesher:0.4
+          command:
+          - "/manager"
+          args:
+          - "--namespace"
+          - "$(POD_NAMESPACE)"
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              value: ""
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: OPERATOR_NAME
+              value: "gesher"
+          resources:
+            limits:
+              cpu: 4000m
+              memory: 512Mi
+            requests:
+              cpu: 500m
+              memory: 256Mi
+              
+---

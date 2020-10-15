@@ -1,0 +1,21 @@
+apiVersion: app.redislabs.com/v1alpha1
+kind: NamespacedValidatingRule
+metadata:
+  name: redb
+spec:
+  webhooks:
+  - name: "redb-admission"
+    failurePolicy: "fail"
+    timeoutSeconds: 25
+    clientConfig:
+      service:
+        name: "admission"
+        port: 443
+        path: "/admission"
+      caBundle: CERTIFICATE_PLACEHOLDER
+    rules:
+    - apiGroups: ["app.redislabs.com"]
+      apiVersions: ["v1alpha1"]
+      resources: ["redisenterprisedatabases"]
+      operations: ["*"]
+

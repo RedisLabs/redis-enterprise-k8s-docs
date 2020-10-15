@@ -27,9 +27,9 @@ This page describe how to deploy Redis Enterprise on Kubernetes using the Redis 
 The following are the images and tags for this release:
 | Component | k8s | Openshift |
 | --- | --- | --- |
-| Redis Enterprise | `redislabs/redis:6.0.6-39` | `redislabs/redis:6.0.6-39.rhel7-openshift` |
-| Operator | `redislabs/operator:6.0.6-24` | `redislabs/operator:6.0.6-24` |
-| Services Rigger | `redislabs/k8s-controller:6.0.6-24` | `redislabs/k8s-controller:6.0.6-24` |
+| Redis Enterprise | `redislabs/redis:6.0.8-28` | `redislabs/redis:6.0.8-28.rhel7-openshift` |
+| Operator | `redislabs/operator:6.0.8-1` | `redislabs/operator:6.0.8-1` |
+| Services Rigger | `redislabs/k8s-controller:6.0.8-1` | `redislabs/k8s-controller:6.0.8-1` |
 > * RedHat certified images are available on [Redhat Catalog](https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d) </br>
 
 
@@ -213,7 +213,7 @@ The operator deploys a `RedisEnterpriseCluster` with default configurations valu
     redisEnterpriseImageSpec:
       imagePullPolicy:  IfNotPresent
       repository:       redislabs/redis
-      versionTag:       6.0.6-39
+      versionTag:       6.0.8-28
   ```
 
 * Persistence
@@ -250,6 +250,12 @@ The operator deploys a `RedisEnterpriseCluster` with default configurations valu
 * UI service type: Load Balancer or cluster IP (default)
   ```yaml
   uiServiceType: LoadBalancer
+  ```
+
+* Database service type: Service types for access to databases. should be a comma separated list. The possible values are cluster_ip, headless and load_balancer. Default value is `cluster_ip,headless`.
+  ```yaml
+  servicesRiggerSpec:
+    databaseServiceType: load_balancer
   ```
 
 * UI annotations: Add custom annotation to the UI service
@@ -309,21 +315,21 @@ For example:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/redis
-    versionTag:       6.0.6-39
+    versionTag:       6.0.8-28
 ```
 
 ```yaml
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       6.0.6-24
+    versionTag:       6.0.8-1
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       6.0.6-24
+    versionTag:       6.0.8-1
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -335,7 +341,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:6.0.6-24
+          image: harbor.corp.local/redisenterprise/operator:6.0.8-1
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).
@@ -386,7 +392,7 @@ spec:
 The Operator automates and simplifies the upgrade process.  
 The Redis Enterprise Cluster Software, and the Redis Enterprise Operator for Kubernetes versions are tightly coupled and should be upgraded together.  
 It is recommended to use the bundle.yaml to upgrade, as it loads all the relevant CRD documents for this version. If the updated CRDs are not loaded, the operator might fail.
-There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.0.6-39
+There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.0.8-28
 
 ```yaml
   autoUpgradeRedisEnterprise: true
@@ -395,14 +401,14 @@ There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within t
 Alternatively:
 ```yaml
   RedisEnterpriseImageSpec:
-    versionTag: redislabs/redis:6.0.6-39
+    versionTag: redislabs/redis:6.0.8-28
 ```
 
 ## Supported K8S Distributions
 Each release of the Redis Enterprise Operator deployment is thoroughly tested against a set of Kubernetes distributions. The table below lists these, along with the current release's support status. "Supported", as well as "deprecated" support status indicates the current release has been tested in this environment and supported by RedisLabs. "Deprecated" also indicates that support will be dropped in a coming future release. "No longer supported" indicates that support has been dropped for this distribution. Any distribution that isn't explicitly listed is not supported for production workloads by RedisLabs. 
 | Distribution      | Support Status      |
 |-------------------|---------------------|
-| Openshift 3.11    | supported           |
+| Openshift 3.11    | supported          |
 | Openshift 4.1     | supported           |
 | Openshift 4.2     | supported           |
 | Openshift 4.3     | supported           |
@@ -419,5 +425,4 @@ Each release of the Redis Enterprise Operator deployment is thoroughly tested ag
 | GKE 1.14          | supported           |
 | GKE 1.15          | supported           |
 | GKE 1.16          | supported           |
-| Rancher 2.4.5     | supported           |
-
+| Rancher 2.4       | supported           |

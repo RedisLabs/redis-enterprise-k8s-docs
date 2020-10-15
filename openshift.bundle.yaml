@@ -114,7 +114,7 @@ spec:
     served: true
     storage: true
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis-enterprise-operator
@@ -131,7 +131,7 @@ spec:
       serviceAccount: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:6.0.6-24
+          image: redislabs/operator:6.0.8-1
           securityContext:
             runAsUser: 1001
           command:

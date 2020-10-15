@@ -7,6 +7,7 @@ This document describes the parameters for the Redis Enterprise Database custom 
   * [BackupSpec](#backupspec)
   * [BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold)
   * [DbAlertsSettings](#dbalertssettings)
+  * [DbModule](#dbmodule)
   * [FtpStorage](#ftpstorage)
   * [GoogleStorage](#googlestorage)
   * [InternalEndpoint](#internalendpoint)
@@ -66,20 +67,31 @@ DbAlertsSettings An API object that represents the database alerts configuration
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| bdb_backup_delayed | Periodic backup has been delayed for longer than specified threshold value [minutes] | [BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
-| bdb_crdt_src_high_syncer_lag | Active-active source - sync lag is higher than specified threshold value [seconds] | [BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
-| bdb_crdt_src_syncer_connection_error | Active-active source - sync has connection error while trying to connect replica source | [BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
-| bdb_crdt_src_syncer_general_error | Active-active source - sync encountered in general error | [BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
-| bdb_high_latency | Latency is higher than specified threshold value [micro-sec] | [BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
-| bdb_high_throughput | Throughput is higher than specified threshold value [requests / sec.] | [BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
-| bdb_long_running_action | An alert for state-machines that are running for too long | [BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
-| bdb_low_throughput | Throughput is lower than specified threshold value [requests / sec.] | [BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
-| bdb_ram_dataset_overhead | Dataset RAM overhead of a shard has reached the threshold value [% of its RAM limit] | [BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
-| bdb_ram_values | Percent of values kept in a shard's RAM is lower than [% of its key count] | [BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
-| bdb_replica_src_high_syncer_lag | Replica-of source - sync lag is higher than specified threshold value [seconds] | [BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
-| bdb_replica_src_syncer_connection_error | Replica-of source - sync has connection error while trying to connect replica source | [BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
-| bdb_shard_num_ram_values | Number of values kept in a shard's RAM is lower than [values] | [BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
-| bdb_size | Dataset size has reached the threshold value [% of the memory limit] | [BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
+| bdb_backup_delayed | Periodic backup has been delayed for longer than specified threshold value [minutes] | *[BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
+| bdb_crdt_src_high_syncer_lag | Active-active source - sync lag is higher than specified threshold value [seconds] | *[BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
+| bdb_crdt_src_syncer_connection_error | Active-active source - sync has connection error while trying to connect replica source | *[BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
+| bdb_crdt_src_syncer_general_error | Active-active source - sync encountered in general error | *[BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
+| bdb_high_latency | Latency is higher than specified threshold value [micro-sec] | *[BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
+| bdb_high_throughput | Throughput is higher than specified threshold value [requests / sec.] | *[BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
+| bdb_long_running_action | An alert for state-machines that are running for too long | *[BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
+| bdb_low_throughput | Throughput is lower than specified threshold value [requests / sec.] | *[BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
+| bdb_ram_dataset_overhead | Dataset RAM overhead of a shard has reached the threshold value [% of its RAM limit] | *[BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
+| bdb_ram_values | Percent of values kept in a shard's RAM is lower than [% of its key count] | *[BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
+| bdb_replica_src_high_syncer_lag | Replica-of source - sync lag is higher than specified threshold value [seconds] | *[BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
+| bdb_replica_src_syncer_connection_error | Replica-of source - sync has connection error while trying to connect replica source | *[BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
+| bdb_shard_num_ram_values | Number of values kept in a shard's RAM is lower than [values] | *[BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
+| bdb_size | Dataset size has reached the threshold value [% of the memory limit] | *[BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### DbModule
+Redis Enterprise Module: https://redislabs.com/redis-enterprise/modules/
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| name | The module's name e.g \"ft\" for redissearch | string |  | true |
+| version | Module's semantic version e.g \"1.6.12\" | string |  | true |
+| config | Module command line arguments e.g. VKEY_MAX_ENTITY_COUNT 30 | string |  | false |
+| uid | Module's uid - do not set, for system use only | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### FtpStorage
@@ -162,6 +174,7 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | replicaSources | What databases to replicate from | [][ReplicaSource](#replicasource) |  | false |
 | alertSettings | Settings for database alerts | *[DbAlertsSettings](#dbalertssettings) |  | false |
 | backup | Target for automatic database backups. | *[BackupSpec](#backupspec) |  | false |
+| modulesList | List of modules associated with database | *[][DbModule](#dbmodule) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseDatabaseStatus
@@ -180,6 +193,7 @@ RedisEnterpriseDatabaseStatus defines the observed state of RedisEnterpriseDatab
 | version | Database compatibility version | string |  | false |
 | replicaSourceStatuses | ReplicaSource statuses | [][ReplicaSourceStatus](#replicasourcestatus) |  | false |
 | internalEndpoints | Endpoints listed internally by the Redis Enterprise Cluster. Can be used to correlate a ReplicaSourceStatus entry. | [][InternalEndpoint](#internalendpoint) |  | false |
+| observedGeneration | The generation (built in update counter of K8s) of the REDB resource that was fully acted upon, meaning that all changes were handled and sent as an API call to the Redis Enterprise Cluster (REC). This field value should equal the current generation when the resource changes were handled. Note: the lastActionStatus field tracks actions handled asynchronously by the Redis Enterprise Cluster. | int64 |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ReplicaSource

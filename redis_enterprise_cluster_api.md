@@ -5,13 +5,13 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
 * [Objects](#objects)
   * [ActiveActive](#activeactive)
   * [ImageSpec](#imagespec)
+  * [Module](#module)
   * [PeerCluster](#peercluster)
   * [PersistentConfigurationSpec](#persistentconfigurationspec)
   * [RedisEnterpriseCluster](#redisenterprisecluster)
   * [RedisEnterpriseClusterList](#redisenterpriseclusterlist)
   * [RedisEnterpriseClusterSpec](#redisenterpriseclusterspec)
   * [RedisEnterpriseClusterStatus](#redisenterpriseclusterstatus)
-  * [ServiceBrokerSpec](#servicebrokerspec)
   * [ServicesRiggerConfigurationSpec](#servicesriggerconfigurationspec)
   * [SlaveHA](#slaveha)
   * [UpgradeSpec](#upgradespec)
@@ -31,7 +31,6 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
 | apiIngressUrl | RS API URL | string |  | true |
 | dbIngressSuffix | DB ENDPOINT SUFFIX - will be used to set the db host ingress <db name><db ingress suffix> Creates a host name so it should be unique if more than one db is created on the cluster with the same name | string |  | true |
 | ingressAnnotations | Used for ingress controllers such as ha-proxy or nginx in GKE | map[string]string |  | false |
-| peerClusters | List of peer clusters to be used by the service broker | [][PeerCluster](#peercluster) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ImageSpec
@@ -42,6 +41,16 @@ Image specification
 | repository | Repository | string |  | true |
 | versionTag |  | string |  | true |
 | imagePullPolicy |  | v1.PullPolicy |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### Module
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| name |  | string |  | true |
+| displayName |  | string |  | true |
+| versions |  | []string |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### PeerCluster
@@ -106,7 +115,6 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | redisEnterpriseServicesRiggerResources | Compute resource requirements for Services Rigger pod | *[v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core) | 0.5 CPU and 0.5GB memory | false |
 | pullSecrets | PullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ | [][v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#localobjectreference-v1-core) | empty | false |
 | persistentSpec | Specification for Redis Enterprise Cluster persistence | [PersistentConfigurationSpec](#persistentconfigurationspec) |  | false |
-| serviceBrokerSpec | Specification for Service Broker | [ServiceBrokerSpec](#servicebrokerspec) | disabled | false |
 | sideContainersSpec | Specification for a side container that will be added to each Redis Enterprise pod | []v1.Container | empty | false |
 | extraLabels | Labels that the user defines for their convenience | map[string]string | empty | false |
 | podAntiAffinity | Override for the default anti-affinity rules of the Redis Enterprise pods | *v1.PodAntiAffinity |  | false |
@@ -132,17 +140,7 @@ RedisEnterpriseClusterStatus defines the observed state of RedisEnterpriseCluste
 | ----- | ----------- | ------ | -------- | -------- |
 | state | State of Redis Enterprise Cluster | [ClusterState](#clusterstate) |  | true |
 | specStatus | Validity of Redis Enterprise Cluster specification | [SpecStatusName](#specstatusname) |  | true |
-[Back to Table of Contents](#table-of-contents)
-
-### ServiceBrokerSpec
-Specification for Service Broker
-
-| Field | Description | Scheme | Default Value | Required |
-| ----- | ----------- | ------ | -------- | -------- |
-| enabled | Whether to deploy Service Broker | bool |  | true |
-| persistentSpec | Persistence specification for Service Broker | [PersistentConfigurationSpec](#persistentconfigurationspec) |  | false |
-| imageSpec | Image specification for Service Broker | *[ImageSpec](#imagespec) |  | false |
-| resources | Compute resource requirements for Service Broker | *[v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#resourcerequirements-v1-core) |  | false |
+| modules | Modules Available in Cluster | [][Module](#module) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ServicesRiggerConfigurationSpec
