@@ -252,7 +252,7 @@ The operator deploys a `RedisEnterpriseCluster` with default configurations valu
   uiServiceType: LoadBalancer
   ```
 
-* Database service type: Service types for access to databases. should be a comma separated list. The possible values are cluster_ip, headless and load_balancer. Default value is `cluster_ip,headless`.
+* Database service type (optional): Service types for access to databases. Should be a comma separated list. The possible values are cluster_ip, headless, and load_balancer. Default value is `cluster_ip,headless`. For example, to create on load_balancer type database services, explicitly add the following declaration to the Redis Enterprise Cluster spec:
   ```yaml
   servicesRiggerSpec:
     databaseServiceType: load_balancer
