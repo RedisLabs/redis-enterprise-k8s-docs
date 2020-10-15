@@ -4,15 +4,6 @@ kind: ServiceAccount
 metadata:
   name: redis-enterprise-admission
 ---
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: redis-enterprise-admission
-rules:
-  - apiGroups: ["certificates.k8s.io"]
-    resources: ["certificatesigningrequests"]
-    verbs: ["create", "watch"]
----
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -35,19 +26,6 @@ subjects:
   name: redis-enterprise-admission
 roleRef:
   kind: Role
-  name: redis-enterprise-admission
-  apiGroup: rbac.authorization.k8s.io
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: redis-enterprise-admission
-subjects:
-- kind: ServiceAccount
-  namespace: NAMESPACE_OF_SERVICE_ACCOUNT
-  name: redis-enterprise-admission
-roleRef:
-  kind: ClusterRole
   name: redis-enterprise-admission
   apiGroup: rbac.authorization.k8s.io
 ---
@@ -79,11 +57,9 @@ spec:
       serviceAccountName: redis-enterprise-admission
       containers:
       - name: admin
-        image: redislabs/operator:6.0.6-24
+        image: redislabs/operator:6.0.8-1
         command:
         - /usr/local/bin/admission
-        args:
-        - '-v=0'
         imagePullPolicy: Always
         ports:
         - containerPort: 443
@@ -110,12 +86,11 @@ spec:
             scheme: HTTPS
       initContainers:
       - name: admin-init
-        image: redislabs/operator:6.0.6-24
+        image: redislabs/operator:6.0.8-1
         command:
         - /usr/local/bin/admission
         args:
         - '-generate-tls'
-        - '-v=1'
         imagePullPolicy: Always
         env:
         - name: POD_NAME
@@ -138,24 +113,4 @@ spec:
             cpu: 100m
             memory: 256Mi
 
----
-apiVersion: admissionregistration.k8s.io/v1beta1
-kind: ValidatingWebhookConfiguration
-metadata:
-  name: redb-admission
-webhooks:
-- name: redb.admission.redislabs
-  failurePolicy: Fail
-  rules:
-  - apiGroups:   ["app.redislabs.com"]
-    apiVersions: ["v1alpha1"]
-    operations:  ["*"]
-    resources:   ["redisenterprisedatabases"]
-  clientConfig:
-    service:
-      namespace: NAMESPACE_OF_SERVICE_ACCOUNT
-      name: admission
-      path: /admission
-    caBundle: "" # Fill in with BASE64 encoded signed cert
-  admissionReviewVersions: ["v1beta1"]
 ---

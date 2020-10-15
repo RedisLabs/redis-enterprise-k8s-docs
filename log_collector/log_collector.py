@@ -51,9 +51,12 @@ API_RESOURCES = [
     "ValidatingWebhookConfiguration",
     "ClusterRole",
     "ClusterRoleBinding",
-    "Csv",
+    "ClusterServiceVersion",
     "Subscription",
-    "Installplan"
+    "Installplan",
+    "CatalogSource"
+    "PodSecurityPolicy",
+    "ReplicaSet",
 ]
 
 

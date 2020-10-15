@@ -1,0 +1,10 @@
+apiVersion: app.redislabs.com/v1alpha1
+kind: NamespacedValidatingType
+metadata:
+  name: redb
+spec:
+  types:
+  - operations: ["*"]
+    apiGroups: ["app.redislabs.com"]
+    apiVersions: ["v1alpha1"]
+    resources: ["redisenterprisedatabases"]
