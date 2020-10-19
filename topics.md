@@ -88,7 +88,7 @@ name:gke-7253cc19-42g0	MemoryPressure:False	DiskPressure:False
 
 ### Eviction Thresholds
 
-We recommend setting high a [soft eviction threshold](https://kubernetes.io/docs/tasks/administer-cluster/out-of-resource/#soft-eviction-thresholds),
+We recommend setting a high [soft eviction threshold](https://kubernetes.io/docs/tasks/administer-cluster/out-of-resource/#soft-eviction-thresholds),
 relative to the [hard eviction threshold](https://kubernetes.io/docs/tasks/administer-cluster/out-of-resource/#hard-eviction-thresholds).
 The high soft threshold mean the node condition will change earlier, alerting the administrator.
 We also recommend setting `eviction-max-pod-grace-period` high enough to allow RS pods to migrate redis databases itself, before being force killed.
