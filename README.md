@@ -413,6 +413,7 @@ Each release of the Redis Enterprise Operator deployment is thoroughly tested ag
 | Openshift 4.2     | supported           |
 | Openshift 4.3     | supported           |
 | Openshift 4.4     | supported           |
+| OpenShift 4.5     | supported           |
 | KOPS vanilla 1.9  | no longer supported |
 | KOPS vanilla 1.10 | no longer supported |
 | KOPS vanilla 1.11 | no longer supported          |
