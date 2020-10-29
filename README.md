@@ -158,7 +158,7 @@ Other custom configurations are referenced in this repository.
     ```
 
 4. Deploy the OpenShift operator bundle:
-    > NOTE: Update the `storageClassName` setting in `openshift.bundle.yaml` (by default its set to `gp2`).
+    > NOTE: Update the `storageClassName` setting in `redis-enterprise-cluster_rehl.yaml` (by default its set to `gp2`).
 
     ```bash
     oc apply -f openshift.bundle.yaml
