@@ -8,7 +8,7 @@ spec:
     enabled: true
     storageClassName: "gp2" # ! edit according to infrastructure
   uiServiceType: LoadBalancer
-  username: "admin@acme.com"
+  username: "admin@admin.com"
   redisEnterpriseNodeResources:
     limits:
       cpu: "4000m"
