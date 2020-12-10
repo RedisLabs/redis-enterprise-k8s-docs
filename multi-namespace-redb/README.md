@@ -69,7 +69,8 @@ value: "comma,delimited,list,of,namespaces,to,watch"
 ...
 ``` 
 ### 4. Updating the admission control deployment
-Admission control for REDB is recommended. If that is used, repeat step 3 to update the admission-deploy deployment (same environment variable).
+Admission control for REDB is recommended. If that is used, repeat step 3 to update the admission-deploy deployment (same environment variable). 
+_Note: make sure to edit the container spec under 'containers' and not 'initContainers'_
 
 After these steps have been done, users within the specified namespaces that have permission to create REDB objects will be able to create them.  The database will be created within the centrally managed redis enterprise cluster and services corresponding to the databases will be visible within the namespace.
 
