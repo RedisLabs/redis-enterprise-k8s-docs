@@ -15,7 +15,7 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:6.0.8-20
+          image: redislabs/operator-internal:6.0.8-20
           command:
           - redis-enterprise-operator
           imagePullPolicy: Always
@@ -32,6 +32,8 @@ spec:
               value: "redis-enterprise-operator"
             - name: DATABASE_CONTROLLER_ENABLED
               value: "true"
+            - name: REDB_NAMESPACES
+              value: "COMMA,DELIMITED,CONSUMER_NAMESPACE_LIST_TO_WATCH"
           resources:
             limits:
               cpu: 4000m

@@ -99,7 +99,7 @@ Redis Enterprise Module: https://redislabs.com/redis-enterprise/modules/
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| url | a URI of the \"ftp[s]://[USER[:PASSWORD]@]HOST[:PORT]/PATH[/]\" format | string |  | true |
+| url | a URI of the \"ftps://[USER[:PASSWORD]@]HOST[:PORT]/PATH[/]\" format | string |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### GoogleStorage
@@ -161,7 +161,7 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| redisEnterpriseCluster | Connection to Redis Enterprise Cluster | [RedisEnterpriseConnection](#redisenterpriseconnection) |  | true |
+| redisEnterpriseCluster | Connection to Redis Enterprise Cluster | *[RedisEnterpriseConnection](#redisenterpriseconnection) |  | false |
 | memorySize | memory size of database. use formats like 100MB, 0.1GB. minimum value in 100MB. | string | 100MB | false |
 | rackAware | Whether database should be rack aware. This improves availability - more information: https://docs.redislabs.com/latest/rs/concepts/high-availability/rack-zone-awareness/ | *bool |  | false |
 | shardCount | Number of database server-side shards | uint16 | 1 | false |
@@ -193,6 +193,7 @@ RedisEnterpriseDatabaseStatus defines the observed state of RedisEnterpriseDatab
 | version | Database compatibility version | string |  | false |
 | replicaSourceStatuses | ReplicaSource statuses | [][ReplicaSourceStatus](#replicasourcestatus) |  | false |
 | internalEndpoints | Endpoints listed internally by the Redis Enterprise Cluster. Can be used to correlate a ReplicaSourceStatus entry. | [][InternalEndpoint](#internalendpoint) |  | false |
+| redisEnterpriseCluster | The Redis Enterprise Cluster Object this Resource is associated with | string |  | false |
 | observedGeneration | The generation (built in update counter of K8s) of the REDB resource that was fully acted upon, meaning that all changes were handled and sent as an API call to the Redis Enterprise Cluster (REC). This field value should equal the current generation when the resource changes were handled. Note: the lastActionStatus field tracks actions handled asynchronously by the Redis Enterprise Cluster. | int64 |  | false |
 [Back to Table of Contents](#table-of-contents)
 
@@ -202,10 +203,10 @@ RedisEnterpriseDatabaseStatus defines the observed state of RedisEnterpriseDatab
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | replicaSourceType | Determines what Kuberetes resource ReplicaSourceName refers to SECRET - Get URI from secret named in ReplicaSourceName.  The secret will have a uri key that defines the complete, redis:// URI REDB - Determine URI from Kubernetes REDB resource named in ReplicaSourceName | [RepliceSourceType](#replicesourcetype) |  | true |
-| replicaSourceName | Kubernetes resource name of type ReplicaSourceType | string |  | true |
+| replicaSourceName | Kubernetes resource (SECRET/REDB) name of type ReplicaSourceType | string |  | true |
 | compression | GZIP Compression level (0-9) to use for replication | int |  | false |
-| clientKeySecret | Secret that defines what client key to use.  The secret needs 2 keys in it's map, \"cert\" that is the PEM encoded certificate and \"key\" that is the PEM encoded private key | *string |  | false |
-| serverCertSecret | Secret that defines the Server's certificate.  The secret needs 1 key in it's map, \"cert\" that is the PEM encoded certificate | *string |  | false |
+| clientKeySecret | Secret that defines what client key to use.  The secret needs 2 keys in its map, \"cert\" that is the PEM encoded certificate and \"key\" that is the PEM encoded private key | *string |  | false |
+| serverCertSecret | Secret that defines the Server's certificate.  The secret needs 1 key in its map, \"cert\" that is the PEM encoded certificate | *string |  | false |
 | tlsSniName | TLS SNI Name to use | *string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
