@@ -7,17 +7,18 @@ parameter will run on current namespace. Run with -h to see options
 """
 
 import argparse
+import json
 import logging
 import os
 import re
+import shutil
+import signal
 import subprocess
 import sys
 import tarfile
 import time
 from collections import OrderedDict
-import shutil
-import json
-import signal
+from multiprocessing import Process
 
 RLEC_CONTAINER_NAME = "redis-enterprise-node"
 
@@ -26,6 +27,8 @@ RS_LOG_FOLDER_PATH = "/var/opt/redislabs/log"
 logger = logging.getLogger("log collector")
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
+
+timeout = 180
 
 API_RESOURCES = [
     "RedisEnterpriseCluster",
@@ -73,36 +76,69 @@ def make_dir(directory):
             sys.exit()
 
 
-def run(namespace, output_dir):
+def _get_namespaces_to_run_on(namespace):
+    def _get_namespace_from_config():
+        config_namespace = get_namespace_from_config()
+        if not config_namespace:
+            return ["default"]
+        return [config_namespace]
+
+    if not namespace:
+        return _get_namespace_from_config()
+
+    if namespace == 'all':
+        return_code, out = run_shell_command("kubectl get ns -o=custom-columns='DATA:metadata.name' --no-headers=true")
+        if return_code:
+            logger.warning("Failed to parse namespace list - will use namespace from config: %s", out)
+            return _get_namespace_from_config()
+        return out.split()
+
+    # comma separated string
+    return namespace.split(',')
+
+
+def collect_from_ns(namespace, output_dir):
+    "Collect the context of a specific namespace. Typically runs in parallel processes."
+    logger.info("Started collecting from namespace '%s'", namespace)
+    ns_output_dir = output_dir + ("/" + namespace if output_dir[-1] != '/' else namespace)
+    make_dir(ns_output_dir)
+
+    get_redis_enterprise_debug_info(namespace, ns_output_dir)
+    collect_pod_rs_logs(namespace, ns_output_dir)
+    collect_resources_list(namespace, ns_output_dir)
+    collect_events(namespace, ns_output_dir)
+    collect_api_resources(namespace, ns_output_dir)
+    collect_api_resources_description(namespace, ns_output_dir)
+    collect_pods_logs(namespace, ns_output_dir)
+
+
+def run(namespace_input, output_dir):
     """
         Collect logs
     """
-    if not namespace:
-        namespace = get_namespace_from_config()
-        if not namespace:
-            namespace = "default"
+    start_time = time.time()
+    namespaces = _get_namespaces_to_run_on(namespace_input)
 
     output_file_name = "redis_enterprise_k8s_debug_info_{}".format(TIME_FORMAT)
-
     if not output_dir:
         # if not specified, use cwd
         output_dir = os.getcwd()
-
     output_dir = os.path.join(output_dir, output_file_name)
     make_dir(output_dir)
-
-    get_redis_enterprise_debug_info(namespace, output_dir)
-    collect_pod_rs_logs(namespace, output_dir)
     collect_cluster_info(output_dir)
-    collect_resources_list(namespace, output_dir)
-    collect_events(namespace, output_dir)
-    collect_api_resources(namespace, output_dir)
-    collect_api_resources_description(namespace, output_dir)
-    collect_pods_logs(namespace, output_dir)
+
+    processes = []
+    for namespace in namespaces:
+        p = Process(target=collect_from_ns, args=[namespace, output_dir])
+        p.start()
+        processes.append(p)
+
+    for p in processes:
+        p.join()
 
     archive_files(output_dir, output_file_name)
-
     logger.info("Finished Redis Enterprise log collector")
+    logger.info("--- Run time: %d minutes ---", round(((time.time() - start_time) / 60), 3))
 
 
 def get_non_ready_rs_pod_names(namespace):
@@ -112,7 +148,7 @@ def get_non_ready_rs_pod_names(namespace):
     pod_names = []
     rs_pods = get_pods(namespace, selector='redis.io/role=node')
     if not rs_pods:
-        logger.warning("Cannot find redis enterprise pods")
+        logger.info("Namespace '%s': cannot find redis enterprise pods", namespace)
         return []
 
     for rs_pod in rs_pods:
@@ -132,10 +168,10 @@ def collect_pod_rs_logs(namespace, output_dir):
         get logs from rs pods that are not ready
     """
     rs_pod_logs_dir = os.path.join(output_dir, "rs_pod_logs")
-    make_dir(rs_pod_logs_dir)
     non_ready_rs_pod_names = get_non_ready_rs_pod_names(namespace)
     if not non_ready_rs_pod_names:
         return
+    make_dir(rs_pod_logs_dir)
     for rs_pod_name in non_ready_rs_pod_names:
         pod_log_dir = os.path.join(rs_pod_logs_dir, rs_pod_name)
         make_dir(pod_log_dir)
@@ -150,7 +186,8 @@ def collect_pod_rs_logs(namespace, output_dir):
                            "to output directory, output:%s", out)
 
         else:
-            logger.info("Collected rs logs from pod marked as not ready, pod name: %s", rs_pod_name)
+            logger.info("Namespace '%s': "
+                        "Collected rs logs from pod marked as not ready, pod name: %s", namespace, rs_pod_name)
 
         pod_config_dir = os.path.join(pod_log_dir, "config")
         make_dir(pod_config_dir)
@@ -187,8 +224,8 @@ def debuginfo_attempt_on_pod(namespace, output_dir, pod_name, attempt):
     if match:
         debug_file_path = match.group(1)
         debug_file_name = match.group(2)
-        logger.info("debug info created on pod %s in path %s",
-                    pod_name, debug_file_path)
+        logger.info("Namespace '%s': debug info created on pod %s in path %s",
+                    namespace, pod_name, debug_file_path)
     else:
         logger.warning(
             "Failed to extract debug info name from output (attempt %d for pod %s) - (%s)",
@@ -219,7 +256,7 @@ def get_redis_enterprise_debug_info(namespace, output_dir):
     """
     rs_pods = get_pods(namespace, selector='redis.io/role=node')
     if not rs_pods:
-        logger.warning("Cannot find redis enterprise pod")
+        logger.info("Namespace '%s': Cannot find redis enterprise pod", namespace)
         return
 
     pod_names = []
@@ -240,7 +277,7 @@ def get_redis_enterprise_debug_info(namespace, output_dir):
                                         output_dir,
                                         pod_name,
                                         attempt + 1):
-                logger.info("Collected Redis Enterprise cluster debug package")
+                logger.info("Namespace '%s': Collected Redis Enterprise cluster debug package", namespace)
                 return
 
 
@@ -251,7 +288,8 @@ def collect_resources_list(namespace, output_dir):
     collect_helper(output_dir,
                    cmd="kubectl get all -o wide -n {}".format(namespace),
                    file_name="resources_list",
-                   resource_name="resources list")
+                   resource_name="resources list",
+                   namespace=namespace)
 
 
 def collect_cluster_info(output_dir):
@@ -273,7 +311,7 @@ def collect_events(namespace, output_dir):
         return
     cmd = "kubectl get events -n {} -o wide".format(namespace)
     collect_helper(output_dir, cmd=cmd,
-                   file_name="events", resource_name="events")
+                   file_name="events", resource_name="events", namespace=namespace)
 
 
 def collect_api_resources(namespace, output_dir):
@@ -281,14 +319,13 @@ def collect_api_resources(namespace, output_dir):
         Creates file for each of the API resources
         with the output of kubectl get <resource> -o yaml
     """
-    logger.info("Collecting API resources:")
+    logger.info("Namespace '%s': Collecting API resources", namespace)
     resources_out = OrderedDict()
     for resource in API_RESOURCES:
         output = run_kubectl_get_yaml(namespace, resource)
         if output:
             resources_out[resource] = output
-            logger.info("  + %s", resource)
-
+            logger.info("Namespace '%s':   + Collected %s", namespace, resource)
     for entry, out in resources_out.items():
         with open(os.path.join(output_dir,
                                "{}.yaml".format(entry)), "w+") as file_handle:
@@ -300,13 +337,13 @@ def collect_api_resources_description(namespace, output_dir):
         Creates file for each of the API resources
         with the output of kubectl describe <resource>
     """
-    logger.info("Collecting API resources description:")
+    logger.info("Namespace '%s': Collecting API resources description", namespace)
     resources_out = OrderedDict()
     for resource in API_RESOURCES:
         output = run_kubectl_describe(namespace, resource)
         if output:
             resources_out[resource] = output
-            logger.info("  + %s", resource)
+            logger.info("Namespace: '%s' + Collected %s", namespace, resource)
 
     for entry, out in resources_out.items():
         with open(os.path.join(output_dir,
@@ -318,25 +355,25 @@ def collect_pods_logs(namespace, output_dir):
     """
         Collects all the pods logs from given namespace
     """
-    logger.info("Collecting pods' logs:")
+    logger.info("Namespace '%s': Collecting pods' logs:", namespace)
     logs_dir = os.path.join(output_dir, "pods")
-    make_dir(logs_dir)
 
     pods = get_pod_names(namespace)
     if not pods:
-        logger.warning("Could not get pods list - "
-                       "skipping pods logs collection")
+        logger.warning("Namespace '%s' Could not get pods list - "
+                       "skipping pods logs collection", namespace)
         return
 
+    make_dir(logs_dir)
     for pod in pods:
-        cmd = "kubectl logs --all-containers=true -n  {} {}"\
+        cmd = "kubectl logs --all-containers=true -n  {} {}" \
             .format(namespace, pod)
         with open(os.path.join(logs_dir, "{}.log".format(pod)),
                   "w+") as file_handle:
             _, output = run_shell_command(cmd)
             file_handle.write(output)
 
-        logger.info("  + %s", pod)
+        logger.info("Namespace '%s':  + %s", namespace, pod)
 
 
 def archive_files(output_dir, output_dir_name):
@@ -399,7 +436,7 @@ def get_namespace_from_config():
     return None
 
 
-def collect_helper(output_dir, cmd, file_name, resource_name):
+def collect_helper(output_dir, cmd, file_name, resource_name, namespace=None):
     """
         Runs command, write output to file_name, logs the resource_name
     """
@@ -410,7 +447,7 @@ def collect_helper(output_dir, cmd, file_name, resource_name):
     path = os.path.join(output_dir, file_name)
     with open(path, "w+") as file_handle:
         file_handle.write(out)
-    logger.info("Collected %s", resource_name)
+    logger.info("Namespace '%s': Collected %s", namespace, resource_name)
 
 
 def native_string(input_var):
@@ -431,8 +468,7 @@ def run_kubectl_get_yaml(namespace, resource_type):
     return_code, out = run_shell_command(cmd)
     if return_code == 0:
         return out
-    logger.warning("Failed to get %s resource: %s",
-                   resource_type, out.rstrip())
+    logger.warning("Namespace '%s': Failed to get %s resource %s.", namespace, resource_type, out.rstrip())
     return None
 
 
@@ -526,7 +562,7 @@ def run_kubectl_describe(namespace, resource_type):
     return_code, out = run_shell_command(cmd)
     if return_code == 0:
         return out
-    logger.warning("Failed to describe %s resource: %s", resource_type, out)
+    logger.warning("Namespace: '%s': Failed to describe %s resource: %s", namespace, resource_type, out)
     return None
 
 
@@ -538,10 +574,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Redis Enterprise'
                                                  ' K8s log collector')
 
-    parser.add_argument('-n', '--namespace', action="store", type=str)
+    parser.add_argument('-n', '--namespace', action="store", type=str,
+                        help="pass namespace name or comma separated list or 'all' "
+                             "when left empty will use namespace from kube config")
     parser.add_argument('-o', '--output_dir', action="store", type=str)
     parser.add_argument('-t', '--timeout', action="store",
-                        type=int, default=180,
+                        type=int, default=timeout,
                         help="time to wait for external commands to "
                              "finish execution "
                              "(default: 180s, specify 0 to not timeout) "

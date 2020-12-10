@@ -6,7 +6,6 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [ActiveActive](#activeactive)
   * [ImageSpec](#imagespec)
   * [Module](#module)
-  * [PeerCluster](#peercluster)
   * [PersistentConfigurationSpec](#persistentconfigurationspec)
   * [RedisEnterpriseCluster](#redisenterprisecluster)
   * [RedisEnterpriseClusterList](#redisenterpriseclusterlist)
@@ -29,7 +28,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
 | ----- | ----------- | ------ | -------- | -------- |
 | method | Used to distinguish between different platforms implementation | [ActiveActiveMethod](#activeactivemethod) |  | true |
 | apiIngressUrl | RS API URL | string |  | true |
-| dbIngressSuffix | DB ENDPOINT SUFFIX - will be used to set the db host ingress <db name><db ingress suffix> Creates a host name so it should be unique if more than one db is created on the cluster with the same name | string |  | true |
+| dbIngressSuffix | DB ENDPOINT SUFFIX - will be used to set the db host ingress <db name><db ingress suffix>. Creates a host name so it should be unique if more than one db is created on the cluster with the same name | string |  | true |
 | ingressAnnotations | Used for ingress controllers such as ha-proxy or nginx in GKE | map[string]string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
@@ -51,17 +50,6 @@ Image specification
 | name |  | string |  | true |
 | displayName |  | string |  | true |
 | versions |  | []string |  | true |
-[Back to Table of Contents](#table-of-contents)
-
-### PeerCluster
-Active Active peer cluster
-
-| Field | Description | Scheme | Default Value | Required |
-| ----- | ----------- | ------ | -------- | -------- |
-| fqdn | k8s cluster fqdn: cluster-name.namespace.svc.cluster.local | string |  | true |
-| apiIngressUrl | Redis Enterprise API URL | string |  | true |
-| dbIngressSuffix | DB host SUFFIX - will be used to set the db host ingress: <db name><db ingress suffix> Creates a host name so it should be unique if more than one db is created on the cluster with the same name | string |  | true |
-| authSecret | Name of k8s secret in current namespace that holds a \"password\" and \"username\" fields to allow connection to RS cluster API | string |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### PersistentConfigurationSpec
@@ -101,7 +89,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | nodes | Number of Redis Enterprise nodes (pods) | int32 | 3 | true |
 | serviceAccountName | Name of the service account to use | string | RedisEnterpriseCluster's name | false |
 | createServiceAccount | Whether to create service account | *bool | True | false |
-| uiServiceType | Type of service used to expose Redis Enterprise UI (https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types) | *v1.ServiceType | v1.ServiceTypeClusterIP | false |
+| uiServiceType | Type of service used to expose Redis Enterprise UI (https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types) | *v1.ServiceType | ClusterIP | false |
 | uiAnnotations | Annotations for Redis Enterprise UI service | map[string]string |  | false |
 | servicesRiggerSpec | Specification for service rigger | *[ServicesRiggerConfigurationSpec](#servicesriggerconfigurationspec) |  | false |
 | license | Redis Enterprise License | string | Empty string which is a [Trial Mode licesne](https://docs.redislabs.com/latest/rs/administering/cluster-operations/settings/license-keys/#trial-mode) | false |
