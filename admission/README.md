@@ -98,5 +98,5 @@ EOF
 This must fail with an error output by the admission webhook redb.admisison.redislabs that is being denied because it can't get the login credentials for the Redis Enterprise Cluster as none were specified.
 
 ```shell script
-Error from server: error when creating "STDIN": admission webhook "redb.admission.redislabs" denied the request: createRECClient: GetLoginInfo: resource name may not be empty
+Error from server: error when creating "STDIN": admission webhook "redb.admission.redislabs" denied the request: eviction_policy: u'illegal' is not one of [u'volatile-lru', u'volatile-ttl', u'volatile-random', u'allkeys-lru', u'allkeys-random', u'noeviction', u'volatile-lfu', u'allkeys-lfu']
 ```
