@@ -28,6 +28,8 @@ logger = logging.getLogger("log collector")
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
 
+timeout = 180
+
 API_RESOURCES = [
     "RedisEnterpriseCluster",
     "RedisEnterpriseDatabase",
@@ -75,7 +77,6 @@ def make_dir(directory):
 
 
 def _get_namespaces_to_run_on(namespace):
-
     def _get_namespace_from_config():
         config_namespace = get_namespace_from_config()
         if not config_namespace:
@@ -96,6 +97,21 @@ def _get_namespaces_to_run_on(namespace):
     return namespace.split(',')
 
 
+def collect_from_ns(namespace, output_dir):
+    "Collect the context of a specific namespace. Typically runs in parallel processes."
+    logger.info("Started collecting from namespace '%s'", namespace)
+    ns_output_dir = output_dir + ("/" + namespace if output_dir[-1] != '/' else namespace)
+    make_dir(ns_output_dir)
+
+    get_redis_enterprise_debug_info(namespace, ns_output_dir)
+    collect_pod_rs_logs(namespace, ns_output_dir)
+    collect_resources_list(namespace, ns_output_dir)
+    collect_events(namespace, ns_output_dir)
+    collect_api_resources(namespace, ns_output_dir)
+    collect_api_resources_description(namespace, ns_output_dir)
+    collect_pods_logs(namespace, ns_output_dir)
+
+
 def run(namespace_input, output_dir):
     """
         Collect logs
@@ -111,22 +127,9 @@ def run(namespace_input, output_dir):
     make_dir(output_dir)
     collect_cluster_info(output_dir)
 
-    def collect_from_ns(namespace):
-        logger.info("Started collecting from namespace '%s'", namespace)
-        ns_output_dir = output_dir + ("/" + namespace if output_dir[-1] != '/' else namespace)
-        make_dir(ns_output_dir)
-
-        get_redis_enterprise_debug_info(namespace, ns_output_dir)
-        collect_pod_rs_logs(namespace, ns_output_dir)
-        collect_resources_list(namespace, ns_output_dir)
-        collect_events(namespace, ns_output_dir)
-        collect_api_resources(namespace, ns_output_dir)
-        collect_api_resources_description(namespace, ns_output_dir)
-        collect_pods_logs(namespace, ns_output_dir)
-
     processes = []
     for namespace in namespaces:
-        p = Process(target=collect_from_ns, args=[namespace])
+        p = Process(target=collect_from_ns, args=[namespace, output_dir])
         p.start()
         processes.append(p)
 
@@ -135,7 +138,7 @@ def run(namespace_input, output_dir):
 
     archive_files(output_dir, output_file_name)
     logger.info("Finished Redis Enterprise log collector")
-    logger.info("--- Run time: %d minutes ---", round(((time.time() - start_time)/60), 3))
+    logger.info("--- Run time: %d minutes ---", round(((time.time() - start_time) / 60), 3))
 
 
 def get_non_ready_rs_pod_names(namespace):
@@ -576,7 +579,7 @@ if __name__ == "__main__":
                              "when left empty will use namespace from kube config")
     parser.add_argument('-o', '--output_dir', action="store", type=str)
     parser.add_argument('-t', '--timeout', action="store",
-                        type=int, default=180,
+                        type=int, default=timeout,
                         help="time to wait for external commands to "
                              "finish execution "
                              "(default: 180s, specify 0 to not timeout) "
