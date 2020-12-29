@@ -86,7 +86,7 @@ This will deploy the admission proxy, and via an included **NamespacedValidating
 
 8. Deployment for the Gesher operator
 
-**Note:** if one is using openshift, one should replace `operator.yaml` with `operator.openshift.yaml`
+    **Note:** if one is using openshift, one should replace `operator.yaml` with `operator.openshift.yaml`
 
     ```shell script
     kubectl apply -f gesher/operator.yaml
