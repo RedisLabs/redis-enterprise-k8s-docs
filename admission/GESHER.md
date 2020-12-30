@@ -248,5 +248,5 @@ EOF
 This must fail with an error output by the admission webhook proxy.webhook.gesher that is being denied because 'illegal' is not a valid eviction policy.
 
 ```shell script
-Error from server: error when creating "adm_redb.yaml": admission webhook "proxy.webhook.gesher" denied the request: proxied webhook webhook denied the request: eviction_policy: u'illegal' is not one of [u'volatile-lru', u'volatile-ttl', u'volatile-random', u'allkeys-lru', u'allkeys-random', u'noeviction', u'volatile-lfu', u'allkeys-lfu']
+Error from server: error when creating "STDIN": admission webhook "proxy.webhook.gesher" denied the request: proxied webhook webhook denied the request: eviction_policy: u'illegal' is not one of [u'volatile-lru', u'volatile-ttl', u'volatile-random', u'allkeys-lru', u'allkeys-random', u'noeviction', u'volatile-lfu', u'allkeys-lfu']
 ```
