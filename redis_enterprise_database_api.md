@@ -19,6 +19,7 @@ This document describes the parameters for the Redis Enterprise Database custom 
   * [RedisEnterpriseDatabaseStatus](#redisenterprisedatabasestatus)
   * [ReplicaSource](#replicasource)
   * [ReplicaSourceStatus](#replicasourcestatus)
+  * [RolePermission](#rolepermission)
   * [S3Storage](#s3storage)
   * [SftpStorage](#sftpstorage)
   * [SwiftStorage](#swiftstorage)
@@ -26,6 +27,7 @@ This document describes the parameters for the Redis Enterprise Database custom 
   * [DatabasePersistence](#databasepersistence)
   * [DatabaseStatus](#databasestatus)
   * [RepliceSourceType](#replicesourcetype)
+  * [RolePermissionType](#rolepermissiontype)
 ## Objects
 
 ### AzureBlobStorage
@@ -91,7 +93,6 @@ Redis Enterprise Module: https://redislabs.com/redis-enterprise/modules/
 | name | The module's name e.g \"ft\" for redissearch | string |  | true |
 | version | Module's semantic version e.g \"1.6.12\" | string |  | true |
 | config | Module command line arguments e.g. VKEY_MAX_ENTITY_COUNT 30 | string |  | false |
-| uid | Module's uid - do not set, for system use only | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### FtpStorage
@@ -175,6 +176,8 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | alertSettings | Settings for database alerts | *[DbAlertsSettings](#dbalertssettings) |  | false |
 | backup | Target for automatic database backups. | *[BackupSpec](#backupspec) |  | false |
 | modulesList | List of modules associated with database | *[][DbModule](#dbmodule) |  | false |
+| rolesPermissions | List of Redis Enteprise ACL and Role bindings to apply | [][RolePermission](#rolepermission) |  | false |
+| defaultUser | Is connecting with a default user allowed?  If disabled, the DatabaseSecret will not be created or updated | *bool | true | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseDatabaseStatus
@@ -222,6 +225,16 @@ RedisEnterpriseDatabaseStatus defines the observed state of RedisEnterpriseDatab
 | rdbTransferred | Number of bytes transferred from the source’s RDB during the syncing phase. | int |  | false |
 | status | Sync status of this source | string |  | false |
 | endpointHost | The internal host name of the replica source database. Can be used as an identifier. See the internalEndpoints list on the REDB status. | string |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### RolePermission
+Redis Enterprise Role and ACL Binding
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| type | Type of Redis Enterprise Database Role Permission | [RolePermissionType](#rolepermissiontype) |  | true |
+| role | Role Name of RolePermissionType (note: use exact name of the role from the Redis Enterprise role list, case sensitive) | string |  | true |
+| acl | Acl Name of RolePermissionType (note: use exact name of the ACL from the Redis Enterprise ACL list, case sensitive) | string |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### S3Storage
@@ -288,5 +301,12 @@ State of the Redis Enterprise Database
 | Value | Description |
 | ----- | ----------- |
 | "SECRET" | Information on DB to Replicate from stored in a secret |
-| "REDB" | Replicate from a DB created via the RedisEnterpriseDatabase Controller |
+| "REDB" | Replicate from a DB created via the RedisEnterpriseDatabase Controller. Note - specify only names of REDBs created on the same namespace. To configure replicaof with a database configured on another namespace, use \"SECRET\". |
+[Back to Table of Contents](#table-of-contents)
+
+### RolePermissionType
+
+| Value | Description |
+| ----- | ----------- |
+| "redis-enterprise" | Use Roles and ACLs defined within Redis Enterprise directly |
 [Back to Table of Contents](#table-of-contents)

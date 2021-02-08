@@ -76,6 +76,23 @@ def make_dir(directory):
             sys.exit()
 
 
+def _filter_non_existing_namespaces(namespaces):
+    """
+        Filter non-existing namespaces from user's input
+    """
+    return_code, out = run_shell_command("kubectl get ns -o=custom-columns='DATA:metadata.name' --no-headers=true")
+    if return_code:
+        return []
+    res = []
+    existing_namespaces = set(out.split())
+    for ns in namespaces:
+        if ns in existing_namespaces:
+            res.append(ns)
+        else:
+            logger.warning("Namespace %s doesn't exist - Skipping", ns)
+    return res
+
+
 def _get_namespaces_to_run_on(namespace):
     def _get_namespace_from_config():
         config_namespace = get_namespace_from_config()
@@ -94,7 +111,12 @@ def _get_namespaces_to_run_on(namespace):
         return out.split()
 
     # comma separated string
-    return namespace.split(',')
+    namespaces = namespace.split(',')
+    existing_namespaces = _filter_non_existing_namespaces(namespaces)
+    if not existing_namespaces:
+        logger.warning("Input doesn't contain an existing namespace - will use namespace from config")
+        return _get_namespace_from_config()
+    return existing_namespaces
 
 
 def collect_from_ns(namespace, output_dir):
@@ -168,11 +190,10 @@ def collect_pod_rs_logs(namespace, output_dir):
         get logs from rs pods that are not ready
     """
     rs_pod_logs_dir = os.path.join(output_dir, "rs_pod_logs")
-    non_ready_rs_pod_names = get_non_ready_rs_pod_names(namespace)
-    if not non_ready_rs_pod_names:
-        return
+    rs_pod_names = get_pod_names(namespace=namespace, selector='redis.io/role=node')
     make_dir(rs_pod_logs_dir)
-    for rs_pod_name in non_ready_rs_pod_names:
+    # TODO restore usage of get_non_ready_rs_pod_names once RS bug is resolved (RED-51857) # pylint: disable=W0511
+    for rs_pod_name in rs_pod_names:
         pod_log_dir = os.path.join(rs_pod_logs_dir, rs_pod_name)
         make_dir(pod_log_dir)
         cmd = "kubectl -n {} cp {}:{} {} -c {}".format(namespace,

@@ -5,6 +5,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
 * [Objects](#objects)
   * [ActiveActive](#activeactive)
   * [ImageSpec](#imagespec)
+  * [LicenseStatus](#licensestatus)
   * [Module](#module)
   * [PersistentConfigurationSpec](#persistentconfigurationspec)
   * [RedisEnterpriseCluster](#redisenterprisecluster)
@@ -40,6 +41,17 @@ Image specification
 | repository | Repository | string |  | true |
 | versionTag |  | string |  | true |
 | imagePullPolicy |  | v1.PullPolicy |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### LicenseStatus
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| licenseState | Is the license expired | string |  | true |
+| activationDate | When the license was activated | string |  | true |
+| expirationDate | When the license will\has expired | string |  | true |
+| shardsLimit | Number of redis shards allowed under this license | int32 |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### Module
@@ -129,6 +141,7 @@ RedisEnterpriseClusterStatus defines the observed state of RedisEnterpriseCluste
 | state | State of Redis Enterprise Cluster | [ClusterState](#clusterstate) |  | true |
 | specStatus | Validity of Redis Enterprise Cluster specification | [SpecStatusName](#specstatusname) |  | true |
 | modules | Modules Available in Cluster | [][Module](#module) |  | false |
+| licenseStatus | State of the Cluster's License | *[LicenseStatus](#licensestatus) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ServicesRiggerConfigurationSpec
@@ -191,6 +204,7 @@ State of the Redis Enterprise Cluster
 | "Invalid" | ClusterConfigurationInvalid means an invalid spec was applied |
 | "InvalidUpgrade" | ClusterInvalidUpgrade means an upgrade is not possible at this time |
 | "Upgrade" | ClusterUpgrade |
+| "Deleting" | ClusterDeleting |
 [Back to Table of Contents](#table-of-contents)
 
 ### SpecStatusName
