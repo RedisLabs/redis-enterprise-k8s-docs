@@ -511,7 +511,7 @@ Supported versions (platforms/versions that are not listed are not supported):
 | OpenShift 4.5  (K8s 1.18)       | supported      |
 | OpenShift 4.6  (K8s 1.19)       | supported      |
 | KOPS vanilla 1.13               | deprecated     |
-| KOPS vanilla 1.14               | supported      |
+| KOPS vanilla 1.14               | deprecated      |
 | KOPS vanilla 1.15               | supported      |
 | KOPS vanilla 1.16               | supported      |
 | KOPS vanilla 1.17               | supported      |
