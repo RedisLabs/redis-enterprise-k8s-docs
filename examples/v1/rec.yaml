@@ -1,7 +1,7 @@
 apiVersion: app.redislabs.com/v1
 kind: RedisEnterpriseCluster
 metadata:
-  name: "redis-enterprise"
+  name: rec
 spec:
   # Add fields here
   nodes: 3

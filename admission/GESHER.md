@@ -86,7 +86,7 @@ This will deploy the admission proxy, and via an included **NamespacedValidating
 
 8. Deployment for the Gesher operator
 
-**Note:** if one is using openshift, one should replace `operator.yaml` with `operator.openshift.yaml`
+    **Note:** if one is using openshift, one should replace `operator.yaml` with `operator.openshift.yaml`
 
     ```shell script
     kubectl apply -f gesher/operator.yaml
@@ -239,12 +239,14 @@ $ kubectl apply -f - << EOF
 apiVersion: app.redislabs.com/v1alpha1
 kind: RedisEnterpriseDatabase
 metadata:
-  name: test-database-custom-resource
+  name: redis-enterprise-database
+spec:
+  evictionPolicy: illegal
 EOF
 ```
 
-This must fail with an error output by the admission webhook redb.admisison.redislabs that is being denied because it can't get the login credentials for the Redis Enterprise Cluster as none were specified.
+This must fail with an error output by the admission webhook proxy.webhook.gesher that is being denied because 'illegal' is not a valid eviction policy.
 
 ```shell script
-Error from server: error when creating "STDIN": admission webhook "proxy.webhook.gesher" denied the request: proxied webhook webhook denied the request: failed get RedisEnterpriseCluster client: custom resource (RedisEnterpriseCluster) not found: resource name may not be empty
+Error from server: error when creating "STDIN": admission webhook "proxy.webhook.gesher" denied the request: proxied webhook webhook denied the request: eviction_policy: u'illegal' is not one of [u'volatile-lru', u'volatile-ttl', u'volatile-random', u'allkeys-lru', u'allkeys-random', u'noeviction', u'volatile-lfu', u'allkeys-lfu']
 ```

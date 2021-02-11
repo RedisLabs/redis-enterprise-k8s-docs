@@ -27,14 +27,14 @@ This page describe how to deploy Redis Enterprise on Kubernetes using the Redis 
 The following are the images and tags for this release:
 | Component | k8s | Openshift |
 | --- | --- | --- |
-| Redis Enterprise | `redislabs/redis:6.0.8-30` | `redislabs/redis:6.0.8-30.rhel7-openshift` |
-| Operator | `redislabs/operator:6.0.8-20` | `redislabs/operator:6.0.8-20` |
-| Services Rigger | `redislabs/k8s-controller:6.0.8-20` | `redislabs/k8s-controller:6.0.8-20` |
+| Redis Enterprise | `redislabs/redis:6.0.12-57` | `redislabs/redis:6.0.12-57.rhel7-openshift` |
+| Operator | `redislabs/operator:6.0.12-5` | `redislabs/operator:6.0.12-5` |
+| Services Rigger | `redislabs/k8s-controller:6.0.12-5` | `redislabs/k8s-controller:6.0.12-5` |
 > * RedHat certified images are available on [Redhat Catalog](https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d) </br>
 
 
 ### Installation
-The "Basic" installation deploys the operator (from the current release) with the default Ubuntu/Alpine base OS images from DockerHub and default settings.
+The "Basic" installation deploys the operator (from the current release) from DockerHub and default settings. Recommended for KOPS, GKE, AKS, Rancher, VMWare Tanzu.
 This is the fastest way to get up and running with a new Redis Enterprise on Kubernetes.
 
 1. Create a new namespace:
@@ -63,16 +63,12 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     kubectl apply -f role.yaml
     kubectl apply -f role_binding.yaml
     kubectl apply -f service_account.yaml
-    kubectl apply -f crds/app_v1_redisenterprisecluster_crd.yaml
-    kubectl apply -f crds/app_v1alpha1_redisenterprisedatabase_crd.yaml
+    kubectl apply -f crds/v1/rec_crd.yaml
+    kubectl apply -f crds/v1alpha1/redb_crd.yaml
     kubectl apply -f operator.yaml
     ```
-    > Note: The rbac.yaml file used in previous releases has been broken down into three distinct files:
-    `role.yaml`, `role_binding.yaml` and `service_account.yaml`.
-    The `crd.yaml` file was renamed to `redisenterprisecluster_crd.yaml`, with the API version prepended to the filename.
-    Apply the `crds/app_v1alpha1_redisenterprisedatabase_crd.yaml` if managing database instances through Kubernetes API and commands is desired.
 
-3. Run `kubectl get deployment` and verify redis-enterprise-operator deployment is running.
+    Run `kubectl get deployment` and verify redis-enterprise-operator deployment is running.
 
     A typical response may look like this:
 
@@ -81,25 +77,79 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     redis-enterprise-operator          1/1     1            1           2m
     ```
 
-4. Redis Enterprise Cluster custom resource - `RedisEnterpriseCluster`
+3. Redis Enterprise Cluster custom resource - `RedisEnterpriseCluster`
 
-   Create a `RedisEnterpriseCluster`(REC) using the default configuration, which is suitable for development type deployments and works in typical scenarios. For more advanced deployment options you may choose the configuration relevant for you - see the index at the top for documentation references that cover many scenarios and the examples in the example folder.
+   Create a `RedisEnterpriseCluster`(REC) using the default configuration, which is suitable for development type deployments and works in typical scenarios. The full list of attributes supported through the Redis Enterprise Cluster (REC) API can be found [HERE](redis_enterprise_cluster_api.md). Some examples can be found in the examples folder. 
 
     ```bash
-    kubectl apply -f crds/app_v1_redisenterprisecluster_cr.yaml
+    kubectl apply -f examples/v1/rec.yaml
     ```
 
-    > Notes:
-    > 1. The `redis-enterprise-cluster.yaml` file was renamed to `redisenterprisecluster_cr.yaml`, with the API version prepended to the filename.
-    > 2. The Operator can only manage one Redis Enterprise Cluster custom resource in a namespace. To deploy another Enterprise Clusters in the same Kubernetes cluster, deploy an Operator in an additional namespace for each additional Enterprise Cluster required. Note that each Enterprise Cluster can effectively host hundreds of Redis Database instances. Deploying multiple clusters is typically used for scenarios where complete operational isolation is required at the cluster level.
-
-5. Run ```kubectl get rec``` and verify creation was successful. `rec` is a shortcut for RedisEnterpriseCluster.
+    > Note:
+    The Operator can only manage one Redis Enterprise Cluster custom resource in a namespace. To deploy another Enterprise Clusters in the same Kubernetes cluster, deploy an Operator in an additional namespace for each additional Enterprise Cluster required. Note that each Enterprise Cluster can effectively host hundreds of Redis Database instances. Deploying multiple clusters is typically used for scenarios where complete operational isolation is required at the cluster level.
+  
+4. Run ```kubectl get rec``` and verify creation was successful. `rec` is a shortcut for RedisEnterpriseCluster. The cluster takes around 5-10 minutes to come up.
     A typical response may look like this:
     ```
-    NAME               AGE
-    redis-enterprise   5m
+    NAME  AGE
+    rec   5m
     ```
-
+    > Note: Once the cluster is up, the cluster GUI and API could be used to configure databases. It is recommended to use the K8s REDB API that is configured through the following steps. To configure the cluster using the cluster GUI/API, use the ui service created by the operator and the default credentials as set in a secret. The secret name is the same as the cluster name within the namespace.
+5. Redis Enterprise Database (REDB) Admission Controller:
+    The Admission Controlller is recommended for use. It uses the Redis Enterprise Cluster to dynamically validate that REDB resources as configured by the operator are valid.
+    Steps to configure the Admission Controller:
+    * Install the Admission Controller via a bundle:
+    ```shell script
+    kubectl create -f admission.bundle.yaml
+    ```
+    * Wait for the secret to be created:
+    ```shell script
+        kubectl get secret admission-tls
+        NAME            TYPE     DATA   AGE
+        admission-tls   Opaque   2      2m43s
+   ```
+    * Enable the Kubernetes webhook using the generated certificate
+   
+         **NOTE**: One must replace REPLACE_WITH_NAMESPACE in the following command with the namespace the REC was installed into.
+   
+         ```shell script
+         # save cert
+         CERT=`kubectl get secret admission-tls -o jsonpath='{.data.cert}'`
+         sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' webhook.yaml | kubectl create -f -
+   
+         # create patch file
+         cat > modified-webhook.yaml <<EOF
+         webhooks:
+         - admissionReviewVersions:
+           clientConfig:
+             caBundle: $CERT
+           name: redb.admission.redislabs
+           admissionReviewVersions: ["v1beta1"]
+         EOF
+         # patch webhook with caBundle
+         kubectl patch ValidatingWebhookConfiguration redb-admission --patch "$(cat modified-webhook.yaml)"
+         ```
+     * Verify the installation
+        In order to verify that the all the components of the Admission Controller are installed correctly, we will try to apply an invalid resource that should force the admission controller to reject it.  If it applies succesfully, it means the admission controller has not been hooked up correctly.
+        
+        ```shell script
+        $ kubectl apply -f - << EOF
+        apiVersion: app.redislabs.com/v1alpha1
+        kind: RedisEnterpriseDatabase
+        metadata:
+          name: redis-enterprise-database
+        spec:
+          evictionPolicy: illegal
+        EOF
+        ```
+        
+        This must fail with an error output by the admission webhook redb.admisison.redislabs that is being denied because it can't get the login credentials for the Redis Enterprise Cluster as none were specified.
+        
+        ```shell script
+        Error from server: error when creating "STDIN": admission webhook "redb.admission.redislabs" denied the request: eviction_policy: u'illegal' is not one of [u'volatile-lru', u'volatile-ttl', u'volatile-random', u'allkeys-lru', u'allkeys-random', u'noeviction', u'volatile-lfu', u'allkeys-lfu']
+        ```
+       > Note: procedure to enable admission is documented with further detail [here](admission/README.md
+ 
 6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase`
 
    Create a `RedisEnterpriseDatabase` (REDB) by using Custom Resource.
@@ -112,8 +162,6 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     metadata:
       name: redis-enterprise-database
     spec:
-      redisEnterpriseCluster:
-        name: redis-enterprise
       memorySize: 100MB
     EOF
     kubectl apply -f /tmp/redis-enterprise-database.yml
@@ -122,9 +170,6 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     All REDB configuration options are documented [here](redis_enterprise_database_api.md).
 
 
-   > Optional: REDB admission controller
-   >
-   > When using the REDB Custom Resource Definition (Redis Enterprise Database) it is recommended to set up admission control to improve input validation and catch configuration errors before they reach the cluster. The procedure is documented [here](admission/README.md)
 
 
 
@@ -169,10 +214,64 @@ Other custom configurations are referenced in this repository.
     Apply the `RedisEnterpriseCluster` resource with RHEL7 based images:
 
     ```bash
-    oc apply -f openshift/redis-enterprise-cluster_rhel.yaml
+    oc apply -f openshift/rec_rhel.yaml
     ```
+6. Redis Enterprise Database (REDB) Admission Controller:
+    The Admission Controlller is recommended for use. It uses the Redis Enterprise Cluster to dynamically validate that REDB resources as configured by the operator are valid.
+    Steps to configure the Admission Controller:
+    * Install the Admission Controller via a bundle:
+    ```shell script
+    kubectl create -f admission.bundle.yaml
+    ```
+    * Wait for the secret to be created:
+    ```shell script
+        kubectl get secret admission-tls
+        NAME            TYPE     DATA   AGE
+        admission-tls   Opaque   2      2m43s
+   ```
+    * Enable the Kubernetes webhook using the generated certificate
+   
+         **NOTE**: One must replace REPLACE_WITH_NAMESPACE in the following command with the namespace the REC was installed into.
+   
+         ```shell script
+         # save cert
+         CERT=`kubectl get secret admission-tls -o jsonpath='{.data.cert}'`
+         sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' webhook.yaml | kubectl create -f -
+   
+         # create patch file
+         cat > modified-webhook.yaml <<EOF
+         webhooks:
+         - admissionReviewVersions:
+           clientConfig:
+             caBundle: $CERT
+           name: redb.admission.redislabs
+           admissionReviewVersions: ["v1beta1"]
+         EOF
+         # patch webhook with caBundle
+         kubectl patch ValidatingWebhookConfiguration redb-admission --patch "$(cat modified-webhook.yaml)"
+         ```
+     * Verify the installation
+        In order to verify that the all the components of the Admission Controller are installed correctly, we will try to apply an invalid resource that should force the admission controller to reject it.  If it applies succesfully, it means the admission controller has not been hooked up correctly.
+        
+        ```shell script
+        $ kubectl apply -f - << EOF
+        apiVersion: app.redislabs.com/v1alpha1
+        kind: RedisEnterpriseDatabase
+        metadata:
+          name: redis-enterprise-database
+        spec:
+          evictionPolicy: illegal
+        EOF
+        ```
+        
+        This must fail with an error output by the admission webhook redb.admisison.redislabs that is being denied because it can't get the login credentials for the Redis Enterprise Cluster as none were specified.
+        
+        ```shell script
+        Error from server: error when creating "STDIN": admission webhook "redb.admission.redislabs" denied the request: eviction_policy: u'illegal' is not one of [u'volatile-lru', u'volatile-ttl', u'volatile-random', u'allkeys-lru', u'allkeys-random', u'noeviction', u'volatile-lfu', u'allkeys-lfu']
+        ```
+      > Note: procedure to enable admission is documented with further detail [here](admission/README.md
 
-6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase`
+7. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase`
 
    Create a `RedisEnterpriseDatabase` (REDB) by using Custom Resource.
    The Redis Enterprise Operator can be instructed to manage databases on the Redis Enterprise Cluster using the REDB custom resource.
@@ -184,8 +283,7 @@ Other custom configurations are referenced in this repository.
     metadata:
       name: redis-enterprise-database
     spec:
-      redisEnterpriseCluster:
-        name: redis-enterprise
+
       memorySize: 100MB
     EOF
     kubectl apply -f /tmp/redis-enterprise-database.yml
@@ -194,13 +292,9 @@ Other custom configurations are referenced in this repository.
     All REDB configuration options are documented [here](redis_enterprise_database_api.md).
 
 
-   > Optional: REDB admission controller
-   >
-   > When using the REDB Custom Resource Definition (Redis Enterprise Database) it is recommended to set up admission controller to improve input validation and catch configuration errors before they reach the cluster. The procedure is documented [here](admission/README.md).
 
-
-### Installation on PKS
-  Instruction on how to deploy the Operator on PKS can be found on the [Redis Labs documentation Website](https://docs.redislabs.com/latest/platforms/pks/)
+### Installation on VMWare Tanzu
+  Instruction on how to deploy the Operator on PKS can be found on the [Redis Labs documentation Website](https://docs.redislabs.com/latest/platforms/kubernetes/getting-started/tanzu/)
 
 
 ## Configuration
@@ -213,7 +307,7 @@ The operator deploys a `RedisEnterpriseCluster` with default configurations valu
     redisEnterpriseImageSpec:
       imagePullPolicy:  IfNotPresent
       repository:       redislabs/redis
-      versionTag:       6.0.8-30
+      versionTag:       6.0.12-57
   ```
 
 * Persistence
@@ -315,21 +409,21 @@ For example:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/redis
-    versionTag:       6.0.8-30
+    versionTag:       6.0.12-57
 ```
 
 ```yaml
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       6.0.8-20
+    versionTag:       6.0.12-5
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       6.0.8-20
+    versionTag:       6.0.12-5
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -341,7 +435,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:6.0.8-20
+          image: harbor.corp.local/redisenterprise/operator:6.0.12-5
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).
@@ -392,7 +486,7 @@ spec:
 The Operator automates and simplifies the upgrade process.  
 The Redis Enterprise Cluster Software, and the Redis Enterprise Operator for Kubernetes versions are tightly coupled and should be upgraded together.  
 It is recommended to use the bundle.yaml to upgrade, as it loads all the relevant CRD documents for this version. If the updated CRDs are not loaded, the operator might fail.
-There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.0.8-30
+There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.0.12-57
 
 ```yaml
   autoUpgradeRedisEnterprise: true
@@ -401,29 +495,39 @@ There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within t
 Alternatively:
 ```yaml
   RedisEnterpriseImageSpec:
-    versionTag: redislabs/redis:6.0.8-30
+    versionTag: redislabs/redis:6.0.12-57
 ```
 
 ## Supported K8S Distributions
-Each release of the Redis Enterprise Operator deployment is thoroughly tested against a set of Kubernetes distributions. The table below lists these, along with the current release's support status. "Supported", as well as "deprecated" support status indicates the current release has been tested in this environment and supported by RedisLabs. "Deprecated" also indicates that support will be dropped in a coming future release. "No longer supported" indicates that support has been dropped for this distribution. Any distribution that isn't explicitly listed is not supported for production workloads by RedisLabs. 
-| Distribution      | Support Status      |
-|-------------------|---------------------|
-| Openshift 3.11    | supported           |
-| Openshift 4.1     | supported           |
-| Openshift 4.2     | supported           |
-| Openshift 4.3     | supported           |
-| Openshift 4.4     | supported           |
-| OpenShift 4.5     | supported           |
-| KOPS vanilla 1.9  | no longer supported |
-| KOPS vanilla 1.10 | no longer supported |
-| KOPS vanilla 1.11 | no longer supported |
-| KOPS vanilla 1.12 | no longer supported |
-| KOPS vanilla 1.13 | supported           |
-| KOPS vanilla 1.14 | supported           |
-| KOPS vanilla 1.15 | supported           |
-| KOPS vanilla 1.16 | supported           |
-| KOPS vanilla 1.17 | supported           |
-| GKE 1.14          | supported           |
-| GKE 1.15          | supported           |
-| GKE 1.16          | supported           |
-| Rancher 2.4       | supported           |
+Each release of the Redis Enterprise Operator deployment is thoroughly tested against a set of Kubernetes distributions. The table below lists these, along with the current release's support status. "Supported", as well as "deprecated" support status indicates the current release has been tested in this environment and supported by RedisLabs. "Deprecated" also indicates that support will be dropped in a coming future release. "No longer supported" indicates that support has been dropped for this distribution. Any distribution that isn't explicitly listed is not supported for production workloads by RedisLabs.
+Supported versions (platforms/versions that are not listed are not supported): 
+| Distribution                    | Support Status |
+|---------------------------------|----------------|
+| Openshift 3.11 (K8s 1.11)       | supported      |
+| Openshift 4.1  (K8s 1.13)       | deprecated*    |
+| Openshift 4.2  (K8s 1.14)       | deprecated*    |
+| Openshift 4.3  (K8s 1.16)       | deprecated*    |
+| Openshift 4.4  (K8s 1.17)       | supported      |
+| OpenShift 4.5  (K8s 1.18)       | supported      |
+| OpenShift 4.6  (K8s 1.19)       | supported      |
+| KOPS vanilla 1.13               | deprecated     |
+| KOPS vanilla 1.14               | deprecated      |
+| KOPS vanilla 1.15               | supported      |
+| KOPS vanilla 1.16               | supported      |
+| KOPS vanilla 1.17               | supported      |
+| KOPS vanilla 1.18               | supported      |
+| KOPS vanilla 1.19               | supported      |
+| GKE 1.14                        | deprecated**   |
+| GKE 1.15                        | supported      |
+| GKE 1.16                        | supported      |
+| Rancher 2.4 (K8s 1.17)          | supported      |
+| Rancher 2.4 (K8s 1.18)          | supported      |
+| Rancher 2.5 (K8s 1.17)          | supported      |
+| Rancher 2.5 (K8s 1.18)          | supported      |
+| Rancher 2.5 (K8s 1.19).         | supported      |
+| VMWare TKGIE*** 1.7 (K8s 1.16)  | supported      |
+| AKS 1.18                        | supported      |
+
+\* No longer supported by Red Hat
+\*\* No longer supported by Google
+\*\*\* Tanzu Kubernetes Grid Integrated Edition

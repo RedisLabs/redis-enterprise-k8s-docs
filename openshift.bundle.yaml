@@ -39,7 +39,7 @@ rules:
     resources: ["events"]
     verbs: ["create"]
   - apiGroups: ["apps"]
-    resources: ["deployments", "statefulsets"]
+    resources: ["deployments", "statefulsets", "replicasets"]
     verbs: ["*"]
   - apiGroups: ["policy"]
     resources: ["poddisruptionbudgets"]
@@ -1788,7 +1788,7 @@ spec:
       serviceAccount: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:6.0.8-20
+          image: redislabs/operator:6.0.12-5
           securityContext:
             runAsUser: 1001
           command:
@@ -2139,6 +2139,9 @@ spec:
               description: The name of the K8s secret that holds the password to the
                 database.
               type: string
+            defaultUser:
+              description: Is connecting with a default user allowed?
+              type: boolean
             evictionPolicy:
               description: Database eviction policy. see more https://docs.redislabs.com/latest/rs/administering/database-operations/eviction-policy/
               type: string
@@ -2229,6 +2232,26 @@ spec:
               description: In-memory database replication. When enabled, database
                 will have replica shard for every master - leading to higher availability.
               type: boolean
+            rolesPermissions:
+              description: List of Redis Enteprise ACL and Role bindings to apply
+              items:
+                description: Redis Enterprise Role and ACL Binding
+                properties:
+                  acl:
+                    description: Acl Name of RolePermissionType
+                    type: string
+                  role:
+                    description: Role Name of RolePermissionType
+                    type: string
+                  type:
+                    description: Type of Redis Enterprise Database Role Permission
+                    type: string
+                required:
+                - acl
+                - role
+                - type
+                type: object
+              type: array
             shardCount:
               description: Number of database server-side shards
               type: integer
