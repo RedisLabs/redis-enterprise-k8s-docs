@@ -3,6 +3,31 @@ kind: CustomResourceDefinition
 metadata:
   name: redisenterpriseclusters.app.redislabs.com
 spec:
+  additionalPrinterColumns:
+    - JSONPath: .spec.nodes
+      name: Nodes
+      type: string
+    - JSONPath: .spec.redisEnterpriseImageSpec.versionTag
+      name: Version
+      type: string
+    - JSONPath: .status.state
+      name: State
+      type: string
+    - JSONPath: .status.specStatus
+      name: Spec Status
+      type: string
+    - JSONPath: .status.licenseStatus.licenseState
+      name: License State
+      type: string
+    - JSONPath: .status.licenseStatus.shardsLimit
+      name: Shards Limit
+      type: string
+    - JSONPath: .status.licenseStatus.expirationDate
+      name: License Expiration Date
+      type: string
+    - name: Age
+      type: date
+      JSONPath: .metadata.creationTimestamp
   group: app.redislabs.com
   names:
     kind: RedisEnterpriseCluster
