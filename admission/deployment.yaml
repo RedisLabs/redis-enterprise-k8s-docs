@@ -14,11 +14,9 @@ spec:
       serviceAccountName: redis-enterprise-admission
       containers:
       - name: admin
-        image: redislabs/operator:6.0.6-11
+        image: redislabs/operator:6.0.12-5
         command:
         - /usr/local/bin/admission
-        args:
-        - '-v=0'
         imagePullPolicy: Always
         ports:
         - containerPort: 443
@@ -29,10 +27,10 @@ spec:
               fieldPath: metadata.namespace
         resources:
           limits:
-            cpu: 100m
+            cpu: 1000m
             memory: 512Mi
           requests:
-            cpu: 25m
+            cpu: 250m
             memory: 256Mi
         readinessProbe:
           failureThreshold: 3
@@ -45,12 +43,11 @@ spec:
             scheme: HTTPS
       initContainers:
       - name: admin-init
-        image: redislabs/operator:6.0.6-11
+        image: redislabs/operator:6.0.12-5
         command:
         - /usr/local/bin/admission
         args:
         - '-generate-tls'
-        - '-v=1'
         imagePullPolicy: Always
         env:
         - name: POD_NAME
@@ -72,3 +69,4 @@ spec:
           requests:
             cpu: 100m
             memory: 256Mi
+

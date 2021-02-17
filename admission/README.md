@@ -1,148 +1,102 @@
-## REDB Admission Controller Setup
 
-In order to enable the REDB admission controller one has to deploy multiple Kubernetes resource.
 
-One can either install them via the provided yaml bundle, or individually.
+# REDB Admission Controller
 
-##### Bundle Installation
+Redis Labs' Redis Enterprise Operator provides an installable admission control that can be used to verify RedisEnterpriseDatabase resources on creation and modification for correctness.  This prevents end users from creating syntatically valid but functionally invalid database configurations.  The admission control leverages Kubernetes' built in [Dynamic Admission Control](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/).
 
-1. one installs them via a bundle after editing it to use the correct namespace.
+**Note:** Redis Labs' Redis Enterprise Operator can also be installed through the [Gesher Admission Proxy](GESHER.md) 
 
-**NOTE**: One must replace REPLACE_WITH_NAMESPACE in the following command with the proper namespace
+## Admission Control via Bundle Installation
 
-```shell script
-sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' admission.bundle.yaml | kubectl create -f -
-```
-
-If this is the first time one is deploying the admission controller, one has to approve the CSR and setup the webhook to enable resource validation.  If one has already set these up, and one is just updating the admission controller, one skips steps 2 and 3 as they are already configured correctly   
-
-2. and waits for the CSR to ready and approves it
-
-wait for it to be ready to be approved
+1. Install the Admission Controller via a bundle into the same namespace the REC was installed into.
 
 ```shell script
-kubectl get csr admission-tls
+kubectl create -f admission.bundle.yaml
 ```
 
-and approve it once it's pending approval
+## Individual Yaml Installation
 
-```shell script
-kubectl certificate approve admission-tls
-```
-or on openshift
-```shell script
-oc adm certificate approve admission-tls
-```
+1. namespaced Role that allows creation and reading of Secrets
 
-3. and modifies the webhook to use the certificate generated
+    ```shell script
+    kubectl apply -f role.yaml
+    ```
 
-```shell script
-# save cert
-CERT=`kubectl get csr admission-tls -o jsonpath='{.status.certificate}'`
-# create patch file
-cat > modified-webhook.yaml <<EOF
-webhooks:
-- admissionReviewVersions:
-  clientConfig:
-    caBundle: $CERT
-  name: redb.admission.redislabs
-  admissionReviewVersions: ["v1beta1"]
-EOF
-# patch webhook with caBundle
-kubectl patch ValidatingWebhookConfiguration redb-admission --patch "$(cat modified-webhook.yaml)"
-```
+2. ServiceAccount for admission controller to run as
 
-##### Individual Installation
+    ```shell script
+    kubectl apply -f service_account.yaml
+    ```
 
-1. ClusterRole that allows creation and watching of CertificateSigningRequest resources
+3. Binding namespaced Role to the service account
 
-```shell script
-kubectl apply -f cluster_role.yaml
-```
+    ```shell script
+    kubectl apply -f role_binding.yaml
+    ```
 
-2. namespaced Role that allows creation and reading of Secrets
+4. Kubernetes Service that is used to access the Admission Control HTTP Server
 
-```shell script
-kubectl apply -f role.yaml
-```
+    ```shell script
+    kubectl apply -f service.yaml
+    ```
 
-3. ServiceAccount for admission controller to run as
+5. TLS Key generator + Admission Controller HTTP Server
 
-```shell script
-kubectl apply -f service_account.yaml
-```
+    ```shell script
+    kubectl apply -f deployment.yaml
+    ```
 
-4. Binding ClusterRole and namespaced Role to the service account
+## Hooking up the Admission controller directly with Kubernetes
 
-**NOTE**: one must change the namespace for the ClusterRoleBinding to the namespace you are loading these resources into 
+**NOTE**: This only has to be done the first time setting up the admission controller, it can be skipped on update
 
-```shell script
-sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' cluster_role_binding.yaml | kubectl apply -f -
-kubectl apply -f role_binding.yaml
-```
+1. Wait for the secret to be created
 
-5. Kubernetes Service that is used to access the Admission Control HTTP Server
+    ```shell script
+    kubectl get secret admission-tls
+    NAME            TYPE     DATA   AGE
+    admission-tls   Opaque   2      2m43s
+    ```
 
-```shell script
-kubectl apply -f service.yaml
-```
+2. Enable the Kubernetes webhook using the generated certificate
 
-6. TLS Key generator and Signing Requester + Admission Controller HTTP Server
+      **NOTE**: One must replace REPLACE_WITH_NAMESPACE in the following command with the namespace the REC was installed into.
 
-```shell script
-kubectl apply -f deployment.yaml
-```
+      ```shell script
+      # save cert
+      CERT=`kubectl get secret admission-tls -o jsonpath='{.data.cert}'`
+      sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' webhook.yaml | kubectl create -f -
 
-**Note**: Same as above with the bundle installation, the first time deploying the admission controller, one has to approve the CertificateSigningRequest and deploy the admisison webhook resource.
+      # create patch file
+      cat > modified-webhook.yaml <<EOF
+      webhooks:
+      - admissionReviewVersions:
+        clientConfig:
+          caBundle: $CERT
+        name: redb.admission.redislabs
+        admissionReviewVersions: ["v1beta1"]
+      EOF
+      # patch webhook with caBundle
+      kubectl patch ValidatingWebhookConfiguration redb-admission --patch "$(cat modified-webhook.yaml)"
+      ```
+          
+## Verifying Installation
 
-1. approve CSR
-
-```shell script
-kubectl certificate approve admission-tls
-```
-or on openshift
-
-```shell script
-oc adm certificate approve admission-tls
-```
-
-2. and modifies the webhook to use the certificate generated
-
-```shell script
-# replace REPLACE_WITH_NAMESPACE with the correct namespace
-sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' webhook.yaml | kubectl apply -f -
-
-# save cert
-CERT=`kubectl get csr admission-tls -o jsonpath='{.status.certificate}'`
-
-# create patch file
-cat > modified-webhook.yaml <<EOF
-webhooks:
-- admissionReviewVersions:
-  clientConfig:
-    caBundle: $CERT
-  name: redb.admission.redislabs
-  admissionReviewVersions: ["v1beta1"]
-EOF
-# patch webhook with caBundle
-kubectl patch ValidatingWebhookConfiguration redb-admission --patch "$(cat modified-webhook.yaml)"
-```
-
-##### Verifying Installation
-
-In order to verify that the all the components of the webhook are installed correctly, we will try to apply an invalid resource that should force the admission controller to reject it.  If it applies succesfully, it means the admission controller has not been hooked up correctly.
+In order to verify that the all the components of the Admission Controller are installed correctly, we will try to apply an invalid resource that should force the admission controller to reject it.  If it applies succesfully, it means the admission controller has not been hooked up correctly.
 
 ```shell script
 $ kubectl apply -f - << EOF
 apiVersion: app.redislabs.com/v1alpha1
 kind: RedisEnterpriseDatabase
 metadata:
-  name: test-database-custom-resource
+  name: redis-enterprise-database
+spec:
+  evictionPolicy: illegal
 EOF
 ```
 
-This must fail with an error output by the admissio nwebhook redb.admisison.redislabs that is being denied becuase it can't get the login crendentials for the Redis Enterprise Cluster as none was specified.
+This must fail with an error output by the admission webhook redb.admisison.redislabs that is being denied because it can't get the login credentials for the Redis Enterprise Cluster as none were specified.
 
 ```shell script
-Error from server: error when creating "STDIN": admission webhook "redb.admission.redislabs" denied the request: createRECClient: GetLoginInfo: resource name may not be empty
+Error from server: error when creating "STDIN": admission webhook "redb.admission.redislabs" denied the request: eviction_policy: u'illegal' is not one of [u'volatile-lru', u'volatile-ttl', u'volatile-random', u'allkeys-lru', u'allkeys-random', u'noeviction', u'volatile-lfu', u'allkeys-lfu']
 ```

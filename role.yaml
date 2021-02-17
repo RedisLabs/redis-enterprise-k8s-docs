@@ -22,7 +22,7 @@ rules:
     resources: ["events"]
     verbs: ["create"]
   - apiGroups: ["apps"]
-    resources: ["deployments", "statefulsets"]
+    resources: ["deployments", "statefulsets", "replicasets"]
     verbs: ["*"]
   - apiGroups: ["policy"]
     resources: ["poddisruptionbudgets"]
