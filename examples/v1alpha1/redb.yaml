@@ -5,3 +5,4 @@ metadata:
 spec:
   redisEnterpriseCluster:
     name: redis-enterprise
+  memorySize: 100MB
