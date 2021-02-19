@@ -115,7 +115,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
          ```shell script
          # save cert
          CERT=`kubectl get secret admission-tls -o jsonpath='{.data.cert}'`
-         sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' webhook.yaml | kubectl create -f -
+         sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' admissiom/webhook.yaml | kubectl create -f -
    
          # create patch file
          cat > modified-webhook.yaml <<EOF
