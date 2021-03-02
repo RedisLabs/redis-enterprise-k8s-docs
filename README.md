@@ -170,7 +170,6 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     EOF
     kubectl apply -f /tmp/redis-enterprise-database.yml
     ```
-    Replace the name of the cluster with the one used on the current namespace.
     All REDB configuration options are documented [here](redis_enterprise_database_api.md).
 
 
@@ -292,7 +291,6 @@ Other custom configurations are referenced in this repository.
     EOF
     kubectl apply -f /tmp/redis-enterprise-database.yml
     ```
-    Replace the name of the cluster with the one used on the current namespace.
     All REDB configuration options are documented [here](redis_enterprise_database_api.md).
 
 
