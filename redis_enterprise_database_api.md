@@ -205,7 +205,7 @@ RedisEnterpriseDatabaseStatus defines the observed state of RedisEnterpriseDatab
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| replicaSourceType | Determines what Kuberetes resource ReplicaSourceName refers to SECRET - Get URI from secret named in ReplicaSourceName.  The secret will have a uri key that defines the complete, redis:// URI REDB - Determine URI from Kubernetes REDB resource named in ReplicaSourceName | [RepliceSourceType](#replicesourcetype) |  | true |
+| replicaSourceType | Determines what Kubernetes resource ReplicaSourceName refers to SECRET - Get URI from secret named in ReplicaSourceName.  The secret will have a uri key that defines the complete, redis:// URI REDB - Determine URI from Kubernetes REDB resource named in ReplicaSourceName | [RepliceSourceType](#replicesourcetype) |  | true |
 | replicaSourceName | Kubernetes resource (SECRET/REDB) name of type ReplicaSourceType | string |  | true |
 | compression | GZIP Compression level (0-9) to use for replication | int |  | false |
 | clientKeySecret | Secret that defines what client key to use.  The secret needs 2 keys in its map, \"cert\" that is the PEM encoded certificate and \"key\" that is the PEM encoded private key | *string |  | false |
