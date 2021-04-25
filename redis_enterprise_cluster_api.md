@@ -4,21 +4,30 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
 ## Table of Contents
 * [Objects](#objects)
   * [ActiveActive](#activeactive)
+  * [CmServer](#cmserver)
+  * [CrdbCoordinator](#crdbcoordinator)
+  * [CrdbWorker](#crdbworker)
   * [ImageSpec](#imagespec)
   * [LicenseStatus](#licensestatus)
+  * [MdnsServer](#mdnsserver)
   * [Module](#module)
+  * [PdnsServer](#pdnsserver)
   * [PersistentConfigurationSpec](#persistentconfigurationspec)
   * [RedisEnterpriseCluster](#redisenterprisecluster)
   * [RedisEnterpriseClusterList](#redisenterpriseclusterlist)
   * [RedisEnterpriseClusterSpec](#redisenterpriseclusterspec)
   * [RedisEnterpriseClusterStatus](#redisenterpriseclusterstatus)
+  * [RedisEnterpriseServicesConfiguration](#redisenterpriseservicesconfiguration)
+  * [Saslauthd](#saslauthd)
   * [ServicesRiggerConfigurationSpec](#servicesriggerconfigurationspec)
   * [SlaveHA](#slaveha)
+  * [StatsArchiver](#statsarchiver)
   * [UpgradeSpec](#upgradespec)
 * [Enums](#enums)
   * [ActiveActiveMethod](#activeactivemethod)
   * [ClusterEventReason](#clustereventreason)
   * [ClusterState](#clusterstate)
+  * [OperatingMode](#operatingmode)
   * [SpecStatusName](#specstatusname)
 ## Objects
 
@@ -31,6 +40,30 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
 | apiIngressUrl | RS API URL | string |  | true |
 | dbIngressSuffix | DB ENDPOINT SUFFIX - will be used to set the db host ingress <db name><db ingress suffix>. Creates a host name so it should be unique if more than one db is created on the cluster with the same name | string |  | true |
 | ingressAnnotations | Used for ingress controllers such as ha-proxy or nginx in GKE | map[string]string |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### CmServer
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| operatingMode | Whether to enable/disable the CM server | [OperatingMode](#operatingmode) |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### CrdbCoordinator
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| operatingMode | Whether to enable/disable the crdb coordinator process | [OperatingMode](#operatingmode) |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### CrdbWorker
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| operatingMode | Whether to enable/disable the crdb worker processes | [OperatingMode](#operatingmode) |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### ImageSpec
@@ -54,6 +87,14 @@ Image specification
 | shardsLimit | Number of redis shards allowed under this license | int32 |  | true |
 [Back to Table of Contents](#table-of-contents)
 
+### MdnsServer
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| operatingMode | Whether to enable/disable the Multicast DNS server | [OperatingMode](#operatingmode) |  | true |
+[Back to Table of Contents](#table-of-contents)
+
 ### Module
 
 
@@ -62,6 +103,14 @@ Image specification
 | name |  | string |  | true |
 | displayName |  | string |  | true |
 | versions |  | []string |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### PdnsServer
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| operatingMode | Whether to enable/disable the pdns server | [OperatingMode](#operatingmode) |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### PersistentConfigurationSpec
@@ -116,7 +165,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | pullSecrets | PullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images. If specified, these secrets will be passed to individual puller implementations for them to use. More info: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ | [][v1.LocalObjectReference](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#localobjectreference-v1-core) | empty | false |
 | persistentSpec | Specification for Redis Enterprise Cluster persistence | [PersistentConfigurationSpec](#persistentconfigurationspec) |  | false |
 | sideContainersSpec | Specification for a side container that will be added to each Redis Enterprise pod | []v1.Container | empty | false |
-| extraLabels | Labels that the user defines for their convenience | map[string]string | empty | false |
+| extraLabels | Labels that the user defines for their convenience. Note that Persistent Volume Claims would only be labeled with the extra labels specified during the cluster's creation (modifying this field when the cluster is running won't affect the Persistent Volume | map[string]string | empty | false |
 | podAntiAffinity | Override for the default anti-affinity rules of the Redis Enterprise pods | *v1.PodAntiAffinity |  | false |
 | antiAffinityAdditionalTopologyKeys | Additional antiAffinity terms in order to support installation on different zones/vcenters | []string |  | false |
 | activeActive | Specification for ActiveActive setup | *[ActiveActive](#activeactive) |  | false |
@@ -131,6 +180,11 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | podAnnotations | pod annotations | map[string]string |  | false |
 | podTolerations | Tolerations that are added to all managed pods. for more information: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/ | [][v1.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#toleration-v1-core) | empty | false |
 | slaveHA | Slave high availability mechanism configuration. | *[SlaveHA](#slaveha) |  | false |
+| clusterCredentialSecretName | Secret Name/Path to use for Cluster Credentials.  If left blank, will use cluster name | string |  | false |
+| clusterCredentialSecretType | Type of Secret to use for ClusterCredential, Vault, Kuberetes,... If left blank, will default ot kubernetes secrets | string |  | true |
+| clusterCredentialSecretRole | Used only if ClusterCredentialSecretType is vault, to define vault role to be used.  If blank, defaults to \"redis-enterprise-operator\" | string |  | true |
+| vaultCASecret | K8s secret name containing Vault's CA cert - defaults to \"vault-ca-cert\" | string |  | true |
+| redisEnterpriseServicesConfiguration | RS Cluster optional services settings | *[RedisEnterpriseServicesConfiguration](#redisenterpriseservicesconfiguration) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseClusterStatus
@@ -142,6 +196,28 @@ RedisEnterpriseClusterStatus defines the observed state of RedisEnterpriseCluste
 | specStatus | Validity of Redis Enterprise Cluster specification | [SpecStatusName](#specstatusname) |  | true |
 | modules | Modules Available in Cluster | [][Module](#module) |  | false |
 | licenseStatus | State of the Cluster's License | *[LicenseStatus](#licensestatus) |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### RedisEnterpriseServicesConfiguration
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| mdnsServer |  | *[MdnsServer](#mdnsserver) |  | false |
+| cmServer |  | *[CmServer](#cmserver) |  | false |
+| statsArchiver |  | *[StatsArchiver](#statsarchiver) |  | false |
+| saslauthd |  | *[Saslauthd](#saslauthd) |  | false |
+| pdnsServer |  | *[PdnsServer](#pdnsserver) |  | false |
+| crdbCoordinator |  | *[CrdbCoordinator](#crdbcoordinator) |  | false |
+| crdbWorker |  | *[CrdbWorker](#crdbworker) |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### Saslauthd
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| operatingMode | Whether to enable/disable the saslauthd service | [OperatingMode](#operatingmode) |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### ServicesRiggerConfigurationSpec
@@ -160,6 +236,14 @@ Specification for service rigger
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | slaveHAGracePeriod | Time in seconds between when a node fails, and when slave high availability mechanism starts relocating shards. If set to 0, will not affect cluster configuration. | *uint32 | 1800 | true |
+[Back to Table of Contents](#table-of-contents)
+
+### StatsArchiver
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| operatingMode | Whether to enable/disable the stats archiver service | [OperatingMode](#operatingmode) |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### UpgradeSpec
@@ -205,6 +289,14 @@ State of the Redis Enterprise Cluster
 | "InvalidUpgrade" | ClusterInvalidUpgrade means an upgrade is not possible at this time |
 | "Upgrade" | ClusterUpgrade |
 | "Deleting" | ClusterDeleting |
+[Back to Table of Contents](#table-of-contents)
+
+### OperatingMode
+
+| Value | Description |
+| ----- | ----------- |
+| "enabled" |  |
+| "disabled" |  |
 [Back to Table of Contents](#table-of-contents)
 
 ### SpecStatusName

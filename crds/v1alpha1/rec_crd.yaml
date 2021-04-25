@@ -135,6 +135,18 @@ spec:
                     value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                   type: object
               type: object
+            clusterCredentialSecretName:
+              description: Secret Name/Path to use for Cluster Credentials.  If left
+                blank, will use cluster name
+              type: string
+            clusterCredentialSecretRole:
+              description: Used only if ClusterCredentialSecretType is vault, to define
+                vault role to be used.  If blank, defaults to "redis-enterprise-operator"
+              type: string
+            clusterCredentialSecretType:
+              description: Type of Secret to use for ClusterCredential, Vault, Kuberetes,...
+                If left blank, will default ot kubernetes secrets
+              type: string
             clusterRecovery:
               description: ClusterRecovery initiates cluster recovery when set to
                 true. Note that this field is cleared automatically after the cluster
@@ -433,6 +445,20 @@ spec:
             serviceAccountName:
               description: Name of the service account to use
               type: string
+            redisEnterpriseServicesConfiguration:
+              description: Cluster optional services settings
+              properties:
+                mdnsServer:
+                  properties:
+                    operatingMode:
+                      enum:
+                      - enabled
+                      - disabled
+                      type: string
+                  required:
+                  - operatingMode
+                  type: object
+              type: object
             servicesRiggerSpec:
               description: Specification for service rigger
               properties:
@@ -1103,6 +1129,10 @@ spec:
               type: object
             username:
               description: Username for the admin user of Redis Enterprise
+              type: string
+            vaultCASecret:
+              description: K8s secret name containing Vault's CA cert - defaults to
+                "vault-ca-cert"
               type: string
             volumes:
               description: additional volumes

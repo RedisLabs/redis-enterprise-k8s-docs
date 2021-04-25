@@ -92,6 +92,7 @@ metadata:
   name: redis-enterprise-database
 spec:
   evictionPolicy: illegal
+  defaultUser: false
 EOF
 ```
 

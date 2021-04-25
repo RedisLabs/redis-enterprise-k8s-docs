@@ -27,9 +27,9 @@ This page describe how to deploy Redis Enterprise on Kubernetes using the Redis 
 The following are the images and tags for this release:
 | Component | k8s | Openshift |
 | --- | --- | --- |
-| Redis Enterprise | `redislabs/redis:6.0.12-57` | `redislabs/redis:6.0.12-57.rhel7-openshift` |
-| Operator | `redislabs/operator:6.0.12-5` | `redislabs/operator:6.0.12-5` |
-| Services Rigger | `redislabs/k8s-controller:6.0.12-5` | `redislabs/k8s-controller:6.0.12-5` |
+| Redis Enterprise | `redislabs/redis:6.0.20-69` | `redislabs/redis:6.0.20-69.rhel7-openshift` |
+| Operator | `redislabs/operator:6.0.20-4` | `redislabs/operator:6.0.20-4` |
+| Services Rigger | `redislabs/k8s-controller:6.0.20-4` | `redislabs/k8s-controller:6.0.20-4` |
 > * RedHat certified images are available on [Redhat Catalog](https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d) </br>
 
 
@@ -115,7 +115,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
          ```shell script
          # save cert
          CERT=`kubectl get secret admission-tls -o jsonpath='{.data.cert}'`
-         sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' admission/webhook.yaml | kubectl create -f -
+         sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' webhook.yaml | kubectl create -f -
    
          # create patch file
          cat > modified-webhook.yaml <<EOF
@@ -130,7 +130,6 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
          kubectl patch ValidatingWebhookConfiguration redb-admission --patch "$(cat modified-webhook.yaml)"
          ```
      * Verify the installation
-     
         In order to verify that the all the components of the Admission Controller are installed correctly, we will try to apply an invalid resource that should force the admission controller to reject it.  If it applies succesfully, it means the admission controller has not been hooked up correctly.
         
         ```shell script
@@ -154,9 +153,6 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
 6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase`
 
    Create a `RedisEnterpriseDatabase` (REDB) by using Custom Resource.
-   
-   > Note: An example REDB.yaml file may be found [HERE] (https://github.com/RedisLabs/redis-enterprise-k8s-docs/tree/master/examples/v1alpha1). This is an alternative to copying and pasting the example code below into the CLI
-   
    The Redis Enterprise Operator can be instructed to manage databases on the Redis Enterprise Cluster using the REDB custom resource.
     Example:
     ```yaml
@@ -311,7 +307,7 @@ The operator deploys a `RedisEnterpriseCluster` with default configurations valu
     redisEnterpriseImageSpec:
       imagePullPolicy:  IfNotPresent
       repository:       redislabs/redis
-      versionTag:       6.0.12-57
+      versionTag:       6.0.20-69
   ```
 
 * Persistence
@@ -413,21 +409,21 @@ For example:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/redis
-    versionTag:       6.0.12-57
+    versionTag:       6.0.20-69
 ```
 
 ```yaml
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       6.0.12-5
+    versionTag:       6.0.20-4
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       6.0.12-5
+    versionTag:       6.0.20-4
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -439,7 +435,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:6.0.12-5
+          image: harbor.corp.local/redisenterprise/operator:6.0.20-4
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).
@@ -490,7 +486,7 @@ spec:
 The Operator automates and simplifies the upgrade process.  
 The Redis Enterprise Cluster Software, and the Redis Enterprise Operator for Kubernetes versions are tightly coupled and should be upgraded together.  
 It is recommended to use the bundle.yaml to upgrade, as it loads all the relevant CRD documents for this version. If the updated CRDs are not loaded, the operator might fail.
-There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.0.12-57
+There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.0.20-69
 
 ```yaml
   autoUpgradeRedisEnterprise: true
@@ -499,7 +495,7 @@ There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within t
 Alternatively:
 ```yaml
   RedisEnterpriseImageSpec:
-    versionTag: redislabs/redis:6.0.12-57
+    versionTag: redislabs/redis:6.0.20-69
 ```
 
 ## Supported K8S Distributions
@@ -508,22 +504,20 @@ Supported versions (platforms/versions that are not listed are not supported):
 | Distribution                    | Support Status |
 |---------------------------------|----------------|
 | Openshift 3.11 (K8s 1.11)       | supported      |
-| Openshift 4.1  (K8s 1.13)       | deprecated*    |
-| Openshift 4.2  (K8s 1.14)       | deprecated*    |
-| Openshift 4.3  (K8s 1.16)       | deprecated*    |
-| Openshift 4.4  (K8s 1.17)       | supported      |
+| Openshift 4.4  (K8s 1.17)       | deprecated     |
 | OpenShift 4.5  (K8s 1.18)       | supported      |
 | OpenShift 4.6  (K8s 1.19)       | supported      |
-| KOPS vanilla 1.13               | deprecated     |
-| KOPS vanilla 1.14               | deprecated      |
-| KOPS vanilla 1.15               | supported      |
+| OpenShift 4.7  (K8s 1.20)       | supported      |
+| KOPS vanilla 1.15               | deprecated     |
 | KOPS vanilla 1.16               | supported      |
 | KOPS vanilla 1.17               | supported      |
 | KOPS vanilla 1.18               | supported      |
 | KOPS vanilla 1.19               | supported      |
-| GKE 1.14                        | deprecated**   |
-| GKE 1.15                        | supported      |
-| GKE 1.16                        | supported      |
+| GKE 1.15                        | deprecated     |
+| GKE 1.16                        | deprecated     |
+| GKE 1.17                        | supported      |
+| GKE 1.18                        | supported      |
+| GKE 1.19                        | supported      |
 | Rancher 2.4 (K8s 1.17)          | supported      |
 | Rancher 2.4 (K8s 1.18)          | supported      |
 | Rancher 2.5 (K8s 1.17)          | supported      |
