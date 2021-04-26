@@ -154,7 +154,6 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
 
    Create a `RedisEnterpriseDatabase` (REDB) by using Custom Resource.
    > Note: An example REDB.yaml file may be found [HERE] (https://github.com/RedisLabs/redis-enterprise-k8s-docs/tree/master/examples/v1alpha1). This is an alternative to copying and pasting the example code below into the CLI
-
    The Redis Enterprise Operator can be instructed to manage databases on the Redis Enterprise Cluster using the REDB custom resource.
     Example:
     ```yaml
