@@ -206,7 +206,7 @@ Other custom configurations are referenced in this repository.
     ```
 
 4. Deploy the OpenShift operator bundle:
-    > NOTE: Update the `storageClassName` setting in `openshift.bundle.yaml` (by default its set to `gp2`).
+    > NOTE: You may need to add the `storageClassName` setting in `openshift/rec_rhel.yaml` (by default its set to `gp2`).
 
     ```bash
     oc apply -f openshift.bundle.yaml
