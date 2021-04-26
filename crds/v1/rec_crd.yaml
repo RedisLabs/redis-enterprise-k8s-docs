@@ -433,6 +433,20 @@ spec:
             serviceAccountName:
               description: Name of the service account to use
               type: string
+            redisEnterpriseServicesConfiguration:
+              description: Cluster optional services settings
+              properties:
+                mdnsServer:
+                  properties:
+                    operatingMode:
+                      enum:
+                        - enabled
+                        - disabled
+                      type: string
+                  required:
+                    - operatingMode
+                  type: object
+              type: object
             servicesRiggerSpec:
               description: Specification for service rigger
               properties:

@@ -14,7 +14,7 @@ spec:
       serviceAccountName: redis-enterprise-admission
       containers:
       - name: admin
-        image: redislabs/operator:6.0.12-5
+        image: redislabs/operator:6.0.20-4
         command:
         - /usr/local/bin/admission
         imagePullPolicy: Always
@@ -41,32 +41,3 @@ spec:
             path: /healthz
             port: 8443
             scheme: HTTPS
-      initContainers:
-      - name: admin-init
-        image: redislabs/operator:6.0.12-5
-        command:
-        - /usr/local/bin/admission
-        args:
-        - '-generate-tls'
-        imagePullPolicy: Always
-        env:
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-                fieldPath: metadata.namespace
-        - name: POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        resources:
-          limits:
-            cpu: 2000m
-            memory: 256Mi
-          requests:
-            cpu: 100m
-            memory: 256Mi
-

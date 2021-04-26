@@ -35,7 +35,7 @@ This document describes the parameters for the Redis Enterprise Database custom 
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| absSecretName | The name of the K8s secret that holds ABS credentials. The secret must contain the keys \"AccountName\" and \"AccountKey\", and these must hold the corresponding credentials | string |  | true |
+| absSecretName | The name of the secret that holds ABS credentials. The secret must contain the keys \"AccountName\" and \"AccountKey\", and these must hold the corresponding credentials | string |  | true |
 | container | Azure Blob Storage container name. | string |  | true |
 | subdir | Optional. Azure Blob Storage subdir under container. | string | empty | false |
 [Back to Table of Contents](#table-of-contents)
@@ -108,7 +108,7 @@ GoogleStorage
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| gcsSecretName | The name of the K8s secret that holds the Google Cloud Storage credentials. The secret must contain the keys \"CLIENT_ID\", \"PRIVATE_KEY\", \"PRIVATE_KEY_ID\", \"CLIENT_EMAIL\" and these must hold the corresponding credentials. The keys should correspond to the values in the key JSON. | string |  | true |
+| gcsSecretName | The name of the secret that holds the Google Cloud Storage credentials. The secret must contain the keys \"CLIENT_ID\", \"PRIVATE_KEY\", \"PRIVATE_KEY_ID\", \"CLIENT_EMAIL\" and these must hold the corresponding credentials. The keys should correspond to the values in the key JSON. | string |  | true |
 | bucketName | Google Storage bucket name. | string |  | true |
 | subdir | Optional. Google Storage subdir under bucket. | string | empty | false |
 [Back to Table of Contents](#table-of-contents)
@@ -168,7 +168,7 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | shardCount | Number of database server-side shards | uint16 | 1 | false |
 | replication | In-memory database replication. When enabled, database will have replica shard for every master - leading to higher availability. | *bool | false | false |
 | persistence | Database on-disk persistence policy | *[DatabasePersistence](#databasepersistence) | disabled | false |
-| databaseSecretName | The name of the K8s secret that holds the password to the database. | string |  | false |
+| databaseSecretName | The name of the secret that holds the password to the database. | string |  | false |
 | evictionPolicy | Database eviction policy. see more https://docs.redislabs.com/latest/rs/administering/database-operations/eviction-policy/ | string | volatile-lru | false |
 | tlsMode | Require SSL authenticated and encrypted connections to the database. enabled - all incoming connections to the Database must use SSL. disabled - no incoming connection to the Database should use SSL. replica_ssl - databases that replicate from this one need to use SSL. | string | disabled | false |
 | clientAuthenticationCertificates | The Secrets containing TLS Client Certificate to use for Authentication | []string |  | false |
@@ -178,6 +178,8 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | modulesList | List of modules associated with database | *[][DbModule](#dbmodule) |  | false |
 | rolesPermissions | List of Redis Enteprise ACL and Role bindings to apply | [][RolePermission](#rolepermission) |  | false |
 | defaultUser | Is connecting with a default user allowed?  If disabled, the DatabaseSecret will not be created or updated | *bool | true | false |
+| ossCluster | OSS Cluster mode option. Note that not all client libraries support OSS cluster mode. | *bool | false | false |
+| proxyPolicy | The policy used for proxy binding to the endpoint. Supported proxy policies are: single/all-master-shards/all-nodes When left blank, the default value will be chosen according to the value of ossCluster - single if disabled, all-master-shards when enabled | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseDatabaseStatus
@@ -205,8 +207,8 @@ RedisEnterpriseDatabaseStatus defines the observed state of RedisEnterpriseDatab
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| replicaSourceType | Determines what Kuberetes resource ReplicaSourceName refers to SECRET - Get URI from secret named in ReplicaSourceName.  The secret will have a uri key that defines the complete, redis:// URI REDB - Determine URI from Kubernetes REDB resource named in ReplicaSourceName | [RepliceSourceType](#replicesourcetype) |  | true |
-| replicaSourceName | Kubernetes resource (SECRET/REDB) name of type ReplicaSourceType | string |  | true |
+| replicaSourceType | Determines what resource ReplicaSourceName refers to SECRET - Get URI from secret named in ReplicaSourceName.  The secret will have a key named 'uri' that defines the complete, redis:// URI.  The type of secret is determined by the secret mechanism used by the underlying REC object REDB - Determine URI from Kubernetes REDB resource named in ReplicaSourceName | [RepliceSourceType](#replicesourcetype) |  | true |
+| replicaSourceName | Resource (SECRET/REDB) name of type ReplicaSourceType | string |  | true |
 | compression | GZIP Compression level (0-9) to use for replication | int |  | false |
 | clientKeySecret | Secret that defines what client key to use.  The secret needs 2 keys in its map, \"cert\" that is the PEM encoded certificate and \"key\" that is the PEM encoded private key | *string |  | false |
 | serverCertSecret | Secret that defines the Server's certificate.  The secret needs 1 key in its map, \"cert\" that is the PEM encoded certificate | *string |  | false |
@@ -242,7 +244,7 @@ Redis Enterprise Role and ACL Binding
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| awsSecretName | The name of the K8s secret that holds the AWS credentials. The secret must contain the keys \"AWS_ACCESS_KEY_ID\" and \"AWS_SECRET_ACCESS_KEY\", and these must hold the corresponding credentials. | string |  | true |
+| awsSecretName | The name of the secret that holds the AWS credentials. The secret must contain the keys \"AWS_ACCESS_KEY_ID\" and \"AWS_SECRET_ACCESS_KEY\", and these must hold the corresponding credentials. | string |  | true |
 | bucketName | Amazon S3 bucket name. | string |  | true |
 | subdir | Optional. Amazon S3 subdir under bucket. | string | empty | false |
 [Back to Table of Contents](#table-of-contents)
@@ -252,7 +254,7 @@ Redis Enterprise Role and ACL Binding
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| sftpSecretName | The name of the K8s secret that holds SFTP credentials. The secret must contain the \"Key\" key, which is the SSH private key for connecting to the sftp server. | string |  | true |
+| sftpSecretName | The name of the secret that holds SFTP credentials. The secret must contain the \"Key\" key, which is the SSH private key for connecting to the sftp server. | string |  | true |
 | sftp_url | SFTP url | string |  | true |
 [Back to Table of Contents](#table-of-contents)
 
@@ -261,7 +263,7 @@ Redis Enterprise Role and ACL Binding
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| swiftSecretName | The name of the K8s secret that holds Swift credentials. The secret must contain the keys \"Key\" and \"User\", and these must hold the corresponding credentials: service access key and service user name (pattern for the latter does not allow special characters &,<,>,\") | string |  | true |
+| swiftSecretName | The name of the secret that holds Swift credentials. The secret must contain the keys \"Key\" and \"User\", and these must hold the corresponding credentials: service access key and service user name (pattern for the latter does not allow special characters &,<,>,\") | string |  | true |
 | auth_url | Swift service authentication URL. | string |  | true |
 | container | Swift object store container for storing the backup files. | string |  | true |
 | prefix | Optional. Prefix (path) of backup files in the swift container. | string | empty | false |

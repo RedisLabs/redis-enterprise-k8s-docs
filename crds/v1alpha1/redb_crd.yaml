@@ -327,6 +327,12 @@ spec:
             defaultUser:
               description: Is connecting with a default user allowed?
               type: boolean
+            ossCluster:
+              description: OSS Cluster mode option
+              type: boolean
+            proxyPolicy:
+              description: The policy used for proxy binding to the endpoint
+              type: string
             evictionPolicy:
               description: Database eviction policy. see more https://docs.redislabs.com/latest/rs/administering/database-operations/eviction-policy/
               type: string

@@ -21,7 +21,7 @@ rules:
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["events"]
-    verbs: ["create"]
+    verbs: ["create", "patch"]
   - apiGroups: ["apps"]
     resources: ["deployments", "statefulsets", "replicasets"]
     verbs: ["*"]
@@ -508,6 +508,20 @@ spec:
             serviceAccountName:
               description: Name of the service account to use
               type: string
+            redisEnterpriseServicesConfiguration:
+              description: Cluster optional services settings
+              properties:
+                mdnsServer:
+                  properties:
+                    operatingMode:
+                      enum:
+                        - enabled
+                        - disabled
+                      type: string
+                  required:
+                    - operatingMode
+                  type: object
+              type: object
             servicesRiggerSpec:
               description: Specification for service rigger
               properties:
@@ -1797,7 +1811,7 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:6.0.12-5
+          image: redislabs/operator:6.0.20-4
           command:
           - redis-enterprise-operator
           imagePullPolicy: Always
@@ -2151,6 +2165,12 @@ spec:
             defaultUser:
               description: Is connecting with a default user allowed?
               type: boolean
+            ossCluster:
+              description: OSS Cluster mode option
+              type: boolean
+            proxyPolicy:
+              description: The policy used for proxy binding to the endpoint
+              type: string
             evictionPolicy:
               description: Database eviction policy. see more https://docs.redislabs.com/latest/rs/administering/database-operations/eviction-policy/
               type: string
