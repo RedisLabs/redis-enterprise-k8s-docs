@@ -69,8 +69,9 @@ spec:
        vault.hashicorp.com/agent-inject-token: "true"
        vault.hashicorp.com/ca-cert: "/vault/tls/vault.ca"
        vault.hashicorp.com/tls-secret: "vault-ca-cert"
-       vault.hashicorp.com/role: "redis-enterprise-operator"
+       vault.hashicorp.com/role: "redis-enterprise-operator-<K8S_NAMESPACE>"
        vault.hashicorp.com/namespace: <VAULT_NAMESPACE>
+       vault.hashicorp.com/auth-path: auth/<AUTH_PATH>
    spec:
      volumes:
      - name: vault-ca-cert
@@ -130,7 +131,7 @@ spec:
       nodes: 3
       clusterCredentialSecretName: rec
       clusterCredentialSecretType: vault
-      clusterCredentialSecretRole: redis-enterprise-rec-<K8S_NAMESPACE
+      clusterCredentialSecretRole: redis-enterprise-rec-<K8S_NAMESPACE>
       vaultCASecret: vault-ca-cert
       podAnnotations:
           vault.hashicorp.com/namespace: <VAULT_NAMESPACE>
@@ -163,8 +164,9 @@ Instead, do a step by step installation.
                 vault.hashicorp.com/agent-inject-token: "true"
                 vault.hashicorp.com/ca-cert: "/vault/tls/vault.ca"
                 vault.hashicorp.com/tls-secret: "vault-ca-cert"
-                vault.hashicorp.com/role: "redis-enterprise-operator"
+                vault.hashicorp.com/role: "redis-enterprise-operator-<K8S_NAMESPACE>"
                 vault.hashicorp.com/namespace: <VAULT_NAMESPACE>
+                vault.hashicorp.com/auth-path: auth/<AUTH_PATH>
             spec:
               serviceAccountName: redis-enterprise-operator
               volumes:
