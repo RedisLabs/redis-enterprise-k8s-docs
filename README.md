@@ -516,11 +516,13 @@ Supported versions (platforms/versions that are not listed are not supported):
 | KOPS vanilla 1.17               | supported      |
 | KOPS vanilla 1.18               | supported      |
 | KOPS vanilla 1.19               | supported      |
+| KOPS vanilla 1.20               | supported      |
 | GKE 1.15                        | deprecated     |
 | GKE 1.16                        | deprecated     |
 | GKE 1.17                        | supported      |
 | GKE 1.18                        | supported      |
 | GKE 1.19                        | supported      |
+| GKE 1.20                        | supported      |
 | Rancher 2.4 (K8s 1.17)          | supported      |
 | Rancher 2.4 (K8s 1.18)          | supported      |
 | Rancher 2.5 (K8s 1.17)          | supported      |
