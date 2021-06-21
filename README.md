@@ -120,10 +120,9 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
          # create patch file
          cat > modified-webhook.yaml <<EOF
          webhooks:
-         - admissionReviewVersions:
+         - name: redb.admission.redislabs:
            clientConfig:
              caBundle: $CERT
-           name: redb.admission.redislabs
            admissionReviewVersions: ["v1beta1"]
          EOF
          # patch webhook with caBundle
