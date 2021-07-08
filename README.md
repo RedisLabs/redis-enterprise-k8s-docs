@@ -224,11 +224,11 @@ Other custom configurations are referenced in this repository.
     Steps to configure the Admission Controller:
     * Install the Admission Controller via a bundle:
     ```shell script
-    kubectl create -f admission.bundle.yaml
+    oc create -f admission.bundle.yaml
     ```
     * Wait for the secret to be created:
     ```shell script
-        kubectl get secret admission-tls
+        oc get secret admission-tls
         NAME            TYPE     DATA   AGE
         admission-tls   Opaque   2      2m43s
    ```
@@ -239,7 +239,7 @@ Other custom configurations are referenced in this repository.
          ```shell script
          # save cert
          CERT=`kubectl get secret admission-tls -o jsonpath='{.data.cert}'`
-         sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' admission/webhook.yaml | kubectl create -f -
+         sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' admission/webhook.yaml | oc create -f -
    
          # create patch file
          cat > modified-webhook.yaml <<EOF
@@ -251,13 +251,13 @@ Other custom configurations are referenced in this repository.
            admissionReviewVersions: ["v1beta1"]
          EOF
          # patch webhook with caBundle
-         kubectl patch ValidatingWebhookConfiguration redb-admission --patch "$(cat modified-webhook.yaml)"
+         oc patch ValidatingWebhookConfiguration redb-admission --patch "$(cat modified-webhook.yaml)"
          ```
      * Verify the installation
         In order to verify that the all the components of the Admission Controller are installed correctly, we will try to apply an invalid resource that should force the admission controller to reject it.  If it applies succesfully, it means the admission controller has not been hooked up correctly.
         
         ```shell script
-        $ kubectl apply -f - << EOF
+        $ oc apply -f - << EOF
         apiVersion: app.redislabs.com/v1alpha1
         kind: RedisEnterpriseDatabase
         metadata:
@@ -289,7 +289,7 @@ Other custom configurations are referenced in this repository.
 
       memorySize: 100MB
     EOF
-    kubectl apply -f /tmp/redis-enterprise-database.yml
+    oc apply -f /tmp/redis-enterprise-database.yml
     ```
     Replace the name of the cluster with the one used on the current namespace.
     All REDB configuration options are documented [here](redis_enterprise_database_api.md).
