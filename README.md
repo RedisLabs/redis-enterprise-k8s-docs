@@ -521,7 +521,7 @@ Note: the default port is 8443.
     kubectl port-forward service/<cluster name>-ui <local port>:<service port>
 ```
 ![Alt text](./images/web_console_6.png?raw=true)
-3. In the web browser on the local machine to see the Redis Enterprise web console go to:
+3. View the web console from the web browser on your local machine: 
 https://localhost:<local port>
 Don't forget to replace the <local port> with the one used in the previous command.
 ![Alt text](./images/web_console_7.png?raw=true)
