@@ -527,7 +527,7 @@ Don't forget to replace the <local port> with the one used in the previous comma
 ![Alt text](./images/web_console_7.png?raw=true)
 
 Method 2: load balancer
-> Note - configuring a load balancer service for the UI will create an external IP address, widely available (when set on cloud providers which support external load balancers). Use with caution. 
+<note> Configuring a load balancer service for the UI will create an external IP address, widely available (when set on cloud providers which support external load balancers). Use with caution. </note>
 1. Run the command below to set the UI service type as load balancer, replace the <cluster name> with the name of your Redis Enterprise Cluster:
 ```bash
     kubectl patch rec <cluster name> --type merge --patch "{\"spec\":{\"uiServiceType\":\"LoadBalancer\"}}"
