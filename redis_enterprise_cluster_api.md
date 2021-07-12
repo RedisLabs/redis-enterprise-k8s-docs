@@ -154,6 +154,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | uiAnnotations | Annotations for Redis Enterprise UI service | map[string]string |  | false |
 | servicesRiggerSpec | Specification for service rigger | *[ServicesRiggerConfigurationSpec](#servicesriggerconfigurationspec) |  | false |
 | license | Redis Enterprise License | string | Empty string which is a [Trial Mode licesne](https://docs.redislabs.com/latest/rs/administering/cluster-operations/settings/license-keys/#trial-mode) | false |
+| licenseSecretName | K8s secret or Vault Secret Name/Path to use for Cluster License. When left blank, the license is read from the \"license\" field. Note that you can't specify non-empty values in both \"license\" and \"licenseSecretName\", only one of these fields can be used to pass the license string. The license needs to be stored under the key \"license\". | string | Empty string | false |
 | username | Username for the admin user of Redis Enterprise | string | demo@redislabs.com | false |
 | nodeSelector | Selector for nodes that could fit Redis Enterprise pod | *map[string]string |  | false |
 | redisEnterpriseImageSpec | Specification for Redis Enterprise container image | *[ImageSpec](#imagespec) | the default Redis Enterprise image for this version | false |
@@ -182,8 +183,8 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | slaveHA | Slave high availability mechanism configuration. | *[SlaveHA](#slaveha) |  | false |
 | clusterCredentialSecretName | Secret Name/Path to use for Cluster Credentials.  If left blank, will use cluster name | string |  | false |
 | clusterCredentialSecretType | Type of Secret to use for ClusterCredential, Vault, Kuberetes,... If left blank, will default ot kubernetes secrets | string |  | true |
-| clusterCredentialSecretRole | Used only if ClusterCredentialSecretType is vault, to define vault role to be used.  If blank, defaults to \"redis-enterprise-operator\" | string |  | true |
-| vaultCASecret | K8s secret name containing Vault's CA cert - defaults to \"vault-ca-cert\" | string |  | true |
+| clusterCredentialSecretRole | Used only if ClusterCredentialSecretType is vault, to define vault role to be used.  If blank, defaults to \"redis-enterprise-rec\" | string |  | true |
+| vaultCASecret | K8s secret name containing Vault's CA cert - defaults to \"vault-ca-cert\" | string |  | false |
 | redisEnterpriseServicesConfiguration | RS Cluster optional services settings | *[RedisEnterpriseServicesConfiguration](#redisenterpriseservicesconfiguration) |  | false |
 [Back to Table of Contents](#table-of-contents)
 

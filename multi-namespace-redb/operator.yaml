@@ -15,11 +15,21 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:6.0.20-4
+          image: redislabs/operator:6.0.20-12
           command:
           - redis-enterprise-operator
           imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: operator-environment-config
+                optional: true
+          ports:
+            - containerPort: 8080
           env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             - name: WATCH_NAMESPACE
               valueFrom:
                 fieldRef:
@@ -30,8 +40,6 @@ spec:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: "redis-enterprise-operator"
-            - name: DATABASE_CONTROLLER_ENABLED
-              value: "true"
             - name: REDB_NAMESPACES
               value: "COMMA,DELIMITED,CONSUMER_NAMESPACE_LIST_TO_WATCH"
           resources:
@@ -41,3 +49,44 @@ spec:
             requests:
               cpu: 500m
               memory: 256Mi
+          readinessProbe:
+            failureThreshold: 3
+            successThreshold: 1
+            periodSeconds: 5
+            timeoutSeconds: 10
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+        - name: admission
+          image: redislabs/operator:6.0.20-12
+          command:
+            - /usr/local/bin/admission
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: operator-environment-config
+                optional: true
+          ports:
+            - containerPort: 443
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          readinessProbe:
+            failureThreshold: 3
+            successThreshold: 1
+            periodSeconds: 5
+            timeoutSeconds: 10
+            httpGet:
+              path: /healthz
+              port: 8443
+              scheme: HTTPS

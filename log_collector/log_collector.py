@@ -527,7 +527,7 @@ def run_shell_command_timeout(args, cwd=None, shell=True, env=None):
     """
 
     def get_process_children(parent):
-        piped_process = subprocess.Popen('ps --no-headers -o pid '
+        piped_process = subprocess.Popen('ps --no-headers -o pid '  # pylint: disable=R1732
                                          '--ppid %d' % parent,
                                          shell=True,
                                          stdout=subprocess.PIPE,
@@ -546,7 +546,7 @@ def run_shell_command_timeout(args, cwd=None, shell=True, env=None):
     def alarm_handler(_, __):
         raise Alarm
 
-    piped_process = subprocess.Popen(args,
+    piped_process = subprocess.Popen(args,  # pylint: disable=R1732
                                      shell=shell,
                                      cwd=cwd,
                                      stdout=subprocess.PIPE,

@@ -1,4 +1,4 @@
-<!-- omit in toc -->
+                <!-- omit in toc -->
 # Deploying Redis Enterprise on Kubernetes
 
 * [Quickstart Guide](#quickstart-guide)
@@ -10,10 +10,15 @@
   * [Private Repositories](#private-repositories)
   * [Pull Secrets](#pull-secrets)
   * [Advanced Configuration](#advanced-configuration)
+* [How to connect to Redis Enterprise Software web console?](#How-to-connect-to-Redis-Enterprise-Software-web-console?)
 * [Upgrade](#upgrade)
 * [Supported K8S Distributions](#supported-k8s-distributions)
 
-This page describe how to deploy Redis Enterprise on Kubernetes using the Redis Enterprise Operator. High level architecture and overview of the solution can be found [HERE](https://docs.redislabs.com/latest/platforms/kubernetes/).
+This page describes how to deploy Redis Enterprise on Kubernetes using the Redis Enterprise Operator. The Redis Enterprise Operator supports two Custom Resource Definitions (CRDs):
+* Redis Enterprise Cluster (REC): an API to create Redis Enterprise clusters. Note that only one cluster is supported per operator deployment.
+* Redis Enterprise Database (REDB): an API to create Redis databases running on the Redis Enterprise cluster.
+Note that the Redis Enterprise Operator is namespaced.
+High level architecture and overview of the solution can be found [HERE](https://docs.redislabs.com/latest/platforms/kubernetes/).
 
 ## Quickstart Guide
 
@@ -27,9 +32,9 @@ This page describe how to deploy Redis Enterprise on Kubernetes using the Redis 
 The following are the images and tags for this release:
 | Component | k8s | Openshift |
 | --- | --- | --- |
-| Redis Enterprise | `redislabs/redis:6.0.20-69` | `redislabs/redis:6.0.20-69.rhel7-openshift` |
-| Operator | `redislabs/operator:6.0.20-4` | `redislabs/operator:6.0.20-4` |
-| Services Rigger | `redislabs/k8s-controller:6.0.20-4` | `redislabs/k8s-controller:6.0.20-4` |
+| Redis Enterprise | `redislabs/redis:6.0.20-97` | `redislabs/redis:6.0.20-97.rhel7-openshift` |
+| Operator | `redislabs/operator:6.0.20-12` | `redislabs/operator:6.0.20-12` |
+| Services Rigger | `redislabs/k8s-controller:6.0.20-12` | `redislabs/k8s-controller:6.0.20-12` |
 > * RedHat certified images are available on [Redhat Catalog](https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d) </br>
 
 
@@ -65,6 +70,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     kubectl apply -f service_account.yaml
     kubectl apply -f crds/v1/rec_crd.yaml
     kubectl apply -f crds/v1alpha1/redb_crd.yaml
+    kubectl apply -f admission-service.yaml
     kubectl apply -f operator.yaml
     ```
 
@@ -98,10 +104,6 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
 5. Redis Enterprise Database (REDB) Admission Controller:
     The Admission Controlller is recommended for use. It uses the Redis Enterprise Cluster to dynamically validate that REDB resources as configured by the operator are valid.
     Steps to configure the Admission Controller:
-    * Install the Admission Controller via a bundle:
-    ```shell script
-    kubectl create -f admission.bundle.yaml
-    ```
     * Wait for the secret to be created:
     ```shell script
         kubectl get secret admission-tls
@@ -115,15 +117,14 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
          ```shell script
          # save cert
          CERT=`kubectl get secret admission-tls -o jsonpath='{.data.cert}'`
-         sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' admission/webhook.yaml | kubectl create -f -
+         sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' webhook.yaml | kubectl create -f -
    
          # create patch file
          cat > modified-webhook.yaml <<EOF
          webhooks:
-         - admissionReviewVersions:
+         - name: redb.admission.redislabs
            clientConfig:
              caBundle: $CERT
-           name: redb.admission.redislabs
            admissionReviewVersions: ["v1beta1"]
          EOF
          # patch webhook with caBundle
@@ -153,9 +154,6 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
 6. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase`
 
    Create a `RedisEnterpriseDatabase` (REDB) by using Custom Resource.
-   
-   > Note: An example REDB.yaml file may be found [HERE] (https://github.com/RedisLabs/redis-enterprise-k8s-docs/tree/master/examples/v1alpha1). This is an alternative to copying and pasting the example code below into the CLI
-
    The Redis Enterprise Operator can be instructed to manage databases on the Redis Enterprise Cluster using the REDB custom resource.
     Example:
     ```yaml
@@ -222,11 +220,7 @@ Other custom configurations are referenced in this repository.
 6. Redis Enterprise Database (REDB) Admission Controller:
     The Admission Controlller is recommended for use. It uses the Redis Enterprise Cluster to dynamically validate that REDB resources as configured by the operator are valid.
     Steps to configure the Admission Controller:
-    * Install the Admission Controller via a bundle:
-    ```shell script
-    kubectl create -f admission.bundle.yaml
-    ```
-    * Wait for the secret to be created:
+    * Wait for the secret to be created by the operator bundle deployment
     ```shell script
         kubectl get secret admission-tls
         NAME            TYPE     DATA   AGE
@@ -298,8 +292,7 @@ Other custom configurations are referenced in this repository.
 
 ### Installation on VMWare Tanzu
   Instruction on how to deploy the Operator on PKS can be found on the [Redis Labs documentation Website](https://docs.redislabs.com/latest/platforms/kubernetes/getting-started/tanzu/)
-
-
+ 
 ## Configuration
 
 ### RedisEnterpriseCluster custom resource
@@ -310,7 +303,7 @@ The operator deploys a `RedisEnterpriseCluster` with default configurations valu
     redisEnterpriseImageSpec:
       imagePullPolicy:  IfNotPresent
       repository:       redislabs/redis
-      versionTag:       6.0.20-69
+      versionTag:       6.0.20-97
   ```
 
 * Persistence
@@ -412,21 +405,21 @@ For example:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/redis
-    versionTag:       6.0.20-69
+    versionTag:       6.0.20-97
 ```
 
 ```yaml
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       6.0.20-4
+    versionTag:       6.0.20-12
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       6.0.20-4
+    versionTag:       6.0.20-12
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -438,7 +431,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:6.0.20-4
+          image: harbor.corp.local/redisenterprise/operator:6.0.20-12
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).
@@ -485,11 +478,82 @@ spec:
 - Full [Redis Enterprise Database Custom Resource Specification](redis_enterprise_database_api.md)
 
 </br> </br>
+
+## How to connect to Redis Enterprise Software web console?
+
+The username and password for the web console are stored in a secret with the Redis Enterprise Cluster name on the k8s.
+in order to connect to the web console the port-forward or load balancer can be used.
+
+First, please follow the below instructions to extract the username and password from the secret: 
+1. Switch to the namespace with the Redis Enterprise Cluster via the command below, replace <namespace> with the relevant namespace:
+```bash
+    kubectl config set-context --current --namespace=<namespace>
+```
+![Alt text](./images/web_console_1.png?raw=true)
+2. List the secrets via the command:
+```bash
+    kubectl get secret
+```
+![Alt text](./images/web_console_2.png?raw=true)
+3. Run the command below to view the secret with the credentials , replace the <cluster name> with the name of your Redis Enterprise Cluster:
+```bash
+    kubectl get secret <cluster name> -o yaml
+```
+![Alt text](./images/web_console_3.png?raw=true)
+4. Extract the username and password via the commands below, replace the <cluster name> with the name of your Redis Enterprise Cluster:
+```bash
+    kubectl get secret <cluster name> -o jsonpath='{.data.username}' | base64 --decode
+    kubectl get secret <cluster name> -o jsonpath='{.data.password}' | base64 --decode
+```
+![Alt text](./images/web_console_4.png?raw=true)
+
+In order to connect to the web console please use one of the following methods:
+
+Method 1: using port-forward
+1. Get the port of the cluster UI service via the command below, replace the <cluster name> with the name of your Redis Enterprise Cluster:
+```bash
+    kubectl get service/<cluster name>-ui -o yaml
+```
+Note: the default port is 8443.
+![Alt text](./images/web_console_5.png?raw=true)
+2. Run the command below to set port-forward, replace the <cluster name> with the name of your Redis Enterprise Cluster, use the port of the service for the service port and the port you want to use on the local machine as the local port:
+```bash
+    kubectl port-forward service/<cluster name>-ui <local port>:<service port>
+```
+![Alt text](./images/web_console_6.png?raw=true)
+3. In the web browser on the local machine to see the Redis Enterprise web console go to:
+https://localhost:<local port>
+Don't forget to replace the <local port> with the one used in the previous command.
+![Alt text](./images/web_console_7.png?raw=true)
+
+Method 2: load balancer
+> Note - configuring a load balancer service for the UI will create an external IP address, widely available (when set on cloud providers which support external load balancers). Use with caution. 
+1. Run the command below to set the UI service type as load balancer, replace the <cluster name> with the name of your Redis Enterprise Cluster:
+```bash
+    kubectl patch rec <cluster name> --type merge --patch "{\"spec\":{\"uiServiceType\":\"LoadBalancer\"}}"
+```
+![Alt text](./images/web_console_8.png?raw=true)
+2. Get the external IP and service port of the service via the command below:
+```bash
+    kubectl get service/<cluster name>-ui
+```
+Note: the default port is 8443.
+![Alt text](./images/web_console_9.png?raw=true)
+3. In the web browser on the local machine to see the Redis Enterprise web console go to:
+https://<external IP>:<service port>
+Don't forget to replace the <external IP> and <service port> with the values from the previous step.
+![Alt text](./images/web_console_10.png?raw=true)
+
+Note: in the  examples above the Redis Enterprise Cluster name is: 'rec' and the namespace is 'demo'.
+
+</br> </br>
+
 ## Upgrade
+
 The Operator automates and simplifies the upgrade process.  
 The Redis Enterprise Cluster Software, and the Redis Enterprise Operator for Kubernetes versions are tightly coupled and should be upgraded together.  
 It is recommended to use the bundle.yaml to upgrade, as it loads all the relevant CRD documents for this version. If the updated CRDs are not loaded, the operator might fail.
-There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.0.20-69
+There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.0.20-97
 
 ```yaml
   autoUpgradeRedisEnterprise: true
@@ -498,7 +562,7 @@ There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within t
 Alternatively:
 ```yaml
   RedisEnterpriseImageSpec:
-    versionTag: redislabs/redis:6.0.20-69
+    versionTag: redislabs/redis:6.0.20-97
 ```
 
 ## Supported K8S Distributions
@@ -507,7 +571,6 @@ Supported versions (platforms/versions that are not listed are not supported):
 | Distribution                    | Support Status |
 |---------------------------------|----------------|
 | Openshift 3.11 (K8s 1.11)       | supported      |
-| Openshift 4.4  (K8s 1.17)       | deprecated     |
 | OpenShift 4.5  (K8s 1.18)       | supported      |
 | OpenShift 4.6  (K8s 1.19)       | supported      |
 | OpenShift 4.7  (K8s 1.20)       | supported      |
@@ -517,9 +580,7 @@ Supported versions (platforms/versions that are not listed are not supported):
 | KOPS vanilla 1.18               | supported      |
 | KOPS vanilla 1.19               | supported      |
 | KOPS vanilla 1.20               | supported      |
-| GKE 1.15                        | deprecated     |
-| GKE 1.16                        | deprecated     |
-| GKE 1.17                        | supported      |
+| GKE 1.17*                       | deprecated     |
 | GKE 1.18                        | supported      |
 | GKE 1.19                        | supported      |
 | GKE 1.20                        | supported      |
@@ -528,9 +589,11 @@ Supported versions (platforms/versions that are not listed are not supported):
 | Rancher 2.5 (K8s 1.17)          | supported      |
 | Rancher 2.5 (K8s 1.18)          | supported      |
 | Rancher 2.5 (K8s 1.19).         | supported      |
-| VMWare TKGIE*** 1.7 (K8s 1.16)  | supported      |
+| VMWare TKGIE** 1.7 (K8s 1.16)   | deprecated     |
+| VMWare TKGIE** 1.8 (K8s 1.17)   | deprecated     |
+| VMWare TKGIE*** 1.10 (K8s 1.19) | supported      |
 | AKS 1.18                        | supported      |
 
-\* No longer supported by Red Hat
-\*\* No longer supported by Google
+\* No longer supported by Google
+\*\* No longer supported by VMware
 \*\*\* Tanzu Kubernetes Grid Integrated Edition

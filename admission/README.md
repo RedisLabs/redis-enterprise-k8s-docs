@@ -1,54 +1,11 @@
-
-
 # REDB Admission Controller
 
 Redis Labs' Redis Enterprise Operator provides an installable admission control that can be used to verify RedisEnterpriseDatabase resources on creation and modification for correctness.  This prevents end users from creating syntatically valid but functionally invalid database configurations.  The admission control leverages Kubernetes' built in [Dynamic Admission Control](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/).
 
 **Note:** Redis Labs' Redis Enterprise Operator can also be installed through the [Gesher Admission Proxy](GESHER.md) 
 
-## Admission Control via Bundle Installation
-
-1. Install the Admission Controller via a bundle into the same namespace the REC was installed into.
-
-```shell script
-kubectl create -f admission.bundle.yaml
-```
-
-## Individual Yaml Installation
-
-1. namespaced Role that allows creation and reading of Secrets
-
-    ```shell script
-    kubectl apply -f role.yaml
-    ```
-
-2. ServiceAccount for admission controller to run as
-
-    ```shell script
-    kubectl apply -f service_account.yaml
-    ```
-
-3. Binding namespaced Role to the service account
-
-    ```shell script
-    kubectl apply -f role_binding.yaml
-    ```
-
-4. Kubernetes Service that is used to access the Admission Control HTTP Server
-
-    ```shell script
-    kubectl apply -f service.yaml
-    ```
-
-5. TLS Key generator + Admission Controller HTTP Server
-
-    ```shell script
-    kubectl apply -f deployment.yaml
-    ```
-
 ## Hooking up the Admission controller directly with Kubernetes
-
-**NOTE**: This only has to be done the first time setting up the admission controller, it can be skipped on update
+**NOTE**: This only has to be done the first time setting up the redis enterprise operator, it can be skipped on update
 
 1. Wait for the secret to be created
 
@@ -58,7 +15,7 @@ kubectl create -f admission.bundle.yaml
     admission-tls   Opaque   2      2m43s
     ```
 
-2. Enable the Kubernetes webhook using the generated certificate
+2. Enable the Kubernetes webhook using the generated certificate stored in a kubernetes secret
 
       **NOTE**: One must replace REPLACE_WITH_NAMESPACE in the following command with the namespace the REC was installed into.
 
@@ -70,10 +27,9 @@ kubectl create -f admission.bundle.yaml
       # create patch file
       cat > modified-webhook.yaml <<EOF
       webhooks:
-      - admissionReviewVersions:
+      - name: redb.admission.redislabs
         clientConfig:
           caBundle: $CERT
-        name: redb.admission.redislabs
         admissionReviewVersions: ["v1beta1"]
       EOF
       # patch webhook with caBundle

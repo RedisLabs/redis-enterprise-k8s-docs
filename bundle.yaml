@@ -38,7 +38,7 @@ rules:
   # needed rbac rules for services controller
   - apiGroups: [""]
     resources: ["pods"]
-    verbs: ["get", "watch", "list", "update", "patch"]
+    verbs: ["get", "watch", "list", "update", "patch", "delete"]
   - apiGroups: [""]
     resources: ["services"]
     verbs: ["get", "watch", "list", "update", "patch", "create", "delete"]
@@ -210,6 +210,21 @@ spec:
                     value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                   type: object
               type: object
+            clusterCredentialSecretName:
+              description: Secret Name/Path to use for Cluster Credentials.  If left
+                blank, will use cluster name
+              type: string
+            clusterCredentialSecretRole:
+              description: Used only if ClusterCredentialSecretType is vault, to define
+                vault role to be used.  If blank, defaults to "redis-enterprise-operator"
+              type: string
+            clusterCredentialSecretType:
+              description: Type of Secret to use for ClusterCredential, Vault, Kuberetes,...
+                If left blank, will default ot kubernetes secrets
+              enum:
+                - vault
+                - kubernetes
+              type: string
             clusterRecovery:
               description: ClusterRecovery initiates cluster recovery when set to
                 true. Note that this field is cleared automatically after the cluster
@@ -1794,6 +1809,18 @@ spec:
       type: object
 
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admission
+spec:
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    name: redis-enterprise-operator
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -1811,11 +1838,21 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:6.0.20-4
+          image: redislabs/operator:6.0.20-12
           command:
           - redis-enterprise-operator
           imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: operator-environment-config
+                optional: true
+          ports:
+            - containerPort: 8080
           env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             - name: WATCH_NAMESPACE
               valueFrom:
                 fieldRef:
@@ -1826,8 +1863,6 @@ spec:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: "redis-enterprise-operator"
-            - name: DATABASE_CONTROLLER_ENABLED
-              value: "true"
           resources:
             limits:
               cpu: 4000m
@@ -1835,12 +1870,75 @@ spec:
             requests:
               cpu: 500m
               memory: 256Mi
+          readinessProbe:
+            failureThreshold: 3
+            successThreshold: 1
+            periodSeconds: 5
+            timeoutSeconds: 10
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+        - name: admission
+          image: redislabs/operator:6.0.20-12
+          command:
+            - /usr/local/bin/admission
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: operator-environment-config
+                optional: true
+          ports:
+            - containerPort: 443
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          readinessProbe:
+            failureThreshold: 3
+            successThreshold: 1
+            periodSeconds: 5
+            timeoutSeconds: 10
+            httpGet:
+              path: /healthz
+              port: 8443
+              scheme: HTTPS
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: redisenterprisedatabases.app.redislabs.com
 spec:
+  additionalPrinterColumns:
+    - JSONPath: .status.version
+      name: Version
+      type: string
+    - JSONPath: .status.internalEndpoints[*].port
+      name: Port
+      type: string
+    - JSONPath: .status.redisEnterpriseCluster
+      name: Cluster
+      type: string
+    - JSONPath: .status.shardStatuses.active
+      name: Shards
+      type: string
+    - JSONPath: .status.status
+      name: Status
+      type: string
+    - JSONPath: .status.specStatus
+      name: Spec Status
+      type: string
+    - JSONPath: .metadata.creationTimestamp
+      name: Age
+      type: date
   group: app.redislabs.com
   names:
     kind: RedisEnterpriseDatabase
