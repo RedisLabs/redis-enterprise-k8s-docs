@@ -510,7 +510,7 @@ First, extract the username and password from the secret:
 Connect to the web console with one of the two following methods:
 
 Method 1: using port-forward
-1. Get the port of the cluster UI service via the command below, replace the <cluster name> with the name of your Redis Enterprise Cluster:
+1. Get the port of the cluster UI service via the command below (replace the <cluster name> with the name of your Redis Enterprise Cluster):
 ```bash
     kubectl get service/<cluster name>-ui -o yaml
 ```
