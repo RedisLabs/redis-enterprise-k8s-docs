@@ -90,7 +90,7 @@ Redis Enterprise Module: https://redislabs.com/redis-enterprise/modules/
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| name | The module's name e.g \"search\" for redissearch | string |  | true |
+| name | The module's name e.g \"ft\" for redissearch | string |  | true |
 | version | Module's semantic version e.g \"1.6.12\" | string |  | true |
 | config | Module command line arguments e.g. VKEY_MAX_ENTITY_COUNT 30 | string |  | false |
 [Back to Table of Contents](#table-of-contents)

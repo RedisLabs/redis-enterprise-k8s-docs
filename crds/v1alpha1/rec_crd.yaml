@@ -146,6 +146,9 @@ spec:
             clusterCredentialSecretType:
               description: Type of Secret to use for ClusterCredential, Vault, Kuberetes,...
                 If left blank, will default ot kubernetes secrets
+              enum:
+                - vault
+                - kubernetes
               type: string
             clusterRecovery:
               description: ClusterRecovery initiates cluster recovery when set to
@@ -180,6 +183,12 @@ spec:
               type: array
             license:
               description: Redis Enterprise License
+              type: string
+            licenseSecretName:
+              description: K8s secret or Vault Secret Name/Path to use for Cluster License. When left blank, the license
+                is read from the "license" field. Note that you can't specify non-empty values in both
+                "license" and "licenseSecretName", only one of these fields can be used to pass the license string.
+                The license needs to be stored under the key "license".
               type: string
             nodeSelector:
               additionalProperties:

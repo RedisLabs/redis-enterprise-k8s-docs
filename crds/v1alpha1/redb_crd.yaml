@@ -3,6 +3,28 @@ kind: CustomResourceDefinition
 metadata:
   name: redisenterprisedatabases.app.redislabs.com
 spec:
+  additionalPrinterColumns:
+    - JSONPath: .status.version
+      name: Version
+      type: string
+    - JSONPath: .status.internalEndpoints[*].port
+      name: Port
+      type: string
+    - JSONPath: .status.redisEnterpriseCluster
+      name: Cluster
+      type: string
+    - JSONPath: .status.shardStatuses.active
+      name: Shards
+      type: string
+    - JSONPath: .status.status
+      name: Status
+      type: string
+    - JSONPath: .status.specStatus
+      name: Spec Status
+      type: string
+    - JSONPath: .metadata.creationTimestamp
+      name: Age
+      type: date
   group: app.redislabs.com
   names:
     kind: RedisEnterpriseDatabase

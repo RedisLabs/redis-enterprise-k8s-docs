@@ -8,4 +8,4 @@ spec:
     protocol: TCP
     targetPort: 8443
   selector:
-    app: redb-admission
+    name: redis-enterprise-operator

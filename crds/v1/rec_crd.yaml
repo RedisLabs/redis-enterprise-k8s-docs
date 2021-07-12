@@ -135,6 +135,21 @@ spec:
                     value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                   type: object
               type: object
+            clusterCredentialSecretName:
+              description: Secret Name/Path to use for Cluster Credentials.  If left
+                blank, will use cluster name
+              type: string
+            clusterCredentialSecretRole:
+              description: Used only if ClusterCredentialSecretType is vault, to define
+                vault role to be used.  If blank, defaults to "redis-enterprise-operator"
+              type: string
+            clusterCredentialSecretType:
+              description: Type of Secret to use for ClusterCredential, Vault, Kuberetes,...
+                If left blank, will default ot kubernetes secrets
+              enum:
+                - vault
+                - kubernetes
+              type: string
             clusterRecovery:
               description: ClusterRecovery initiates cluster recovery when set to
                 true. Note that this field is cleared automatically after the cluster

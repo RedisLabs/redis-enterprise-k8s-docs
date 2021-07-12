@@ -37,7 +37,7 @@ rules:
   # needed rbac rules for services controller
   - apiGroups: [""]
     resources: ["pods"]
-    verbs: ["get", "watch", "list", "update", "patch"]
+    verbs: ["get", "watch", "list", "update", "patch", "delete"]
   - apiGroups: [""]
     resources: ["services"]
     verbs: ["get", "watch", "list", "update", "patch", "create", "delete"]
