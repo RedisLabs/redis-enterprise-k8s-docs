@@ -593,6 +593,7 @@ Supported versions (platforms/versions that are not listed are not supported):
 | VMWare TKGIE** 1.8 (K8s 1.17)   | deprecated     |
 | VMWare TKGIE*** 1.10 (K8s 1.19) | supported      |
 | AKS 1.18                        | supported      |
+| EKS 1.18                        | supported      |
 
 \* No longer supported by Google
 \*\* No longer supported by VMware
