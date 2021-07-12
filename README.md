@@ -516,7 +516,7 @@ Method 1: using port-forward
 ```
 Note: the default port is 8443.
 ![Alt text](./images/web_console_5.png?raw=true)
-2. Run the command below to set port-forward, replace the <cluster name> with the name of your Redis Enterprise Cluster, use the port of the service for the service port and the port you want to use on the local machine as the local port:
+2. Run the kubectl port-forward service to set port-forward. Replace the <cluster name> with the name of your Redis Enterprise Cluster, replace <service port> with the port of the service, and replace <local port> with the port you want to use on the local machine.
 ```bash
     kubectl port-forward service/<cluster name>-ui <local port>:<service port>
 ```
