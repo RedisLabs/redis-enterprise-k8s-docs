@@ -484,7 +484,7 @@ spec:
 The username and password for the web console are stored in a secret with the Redis Enterprise Cluster name on the k8s.
 in order to connect to the web console the port-forward or load balancer can be used.
 
-First, please follow the below instructions to extract the username and password from the secret: 
+First, extract the username and password from the secret: 
 1. Switch to the namespace with the Redis Enterprise Cluster via the command below, replace <namespace> with the relevant namespace:
 ```bash
     kubectl config set-context --current --namespace=<namespace>
