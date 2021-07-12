@@ -479,7 +479,7 @@ spec:
 
 </br> </br>
 
-## How to connect to Redis Enterprise Software web console?
+## Connect to Redis Enterprise Software web console
 
 The username and password for the web console are stored in a secret with the Redis Enterprise Cluster name on the k8s.
 in order to connect to the web console the port-forward or load balancer can be used.
