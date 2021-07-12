@@ -10,7 +10,7 @@
   * [Private Repositories](#private-repositories)
   * [Pull Secrets](#pull-secrets)
   * [Advanced Configuration](#advanced-configuration)
-* [How to connect to Redis Enterprise Software web console?](#How-to-connect-to-Redis-Enterprise-Software-web-console?)
+* [Connect to Redis Enterprise Software web console](#Connect-to-Redis-Enterprise-Software-web-console)
 * [Upgrade](#upgrade)
 * [Supported K8S Distributions](#supported-k8s-distributions)
 
