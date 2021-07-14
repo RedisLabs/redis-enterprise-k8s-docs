@@ -39,7 +39,7 @@ The following are the images and tags for this release:
 
 
 ### Installation
-The "Basic" installation deploys the operator (from the current release) from DockerHub and default settings. Recommended for KOPS, GKE, AKS, Rancher, VMWare Tanzu.
+The "Basic" installation deploys the operator (from the current release) from DockerHub and default settings. Recommended for KOPS, GKE, AKS, EKS, Rancher, VMWare Tanzu.
 This is the fastest way to get up and running with a new Redis Enterprise on Kubernetes.
 
 1. Create a new namespace:
