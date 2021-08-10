@@ -1,4 +1,4 @@
-<!-- omit in toc -->
+                <!-- omit in toc -->
 # Deploying Redis Enterprise on Kubernetes
 
 * [Quickstart Guide](#quickstart-guide)
@@ -10,7 +10,7 @@
   * [Private Repositories](#private-repositories)
   * [Pull Secrets](#pull-secrets)
   * [Advanced Configuration](#advanced-configuration)
-* [Connect to Redis Enterprise Software web console](#Connect-to-Redis-Enterprise-Software-web-console)
+* [How to connect to Redis Enterprise Software web console?](#How-to-connect-to-Redis-Enterprise-Software-web-console?)
 * [Upgrade](#upgrade)
 * [Supported K8S Distributions](#supported-k8s-distributions)
 
@@ -33,13 +33,13 @@ The following are the images and tags for this release:
 | Component | k8s | Openshift |
 | --- | --- | --- |
 | Redis Enterprise | `redislabs/redis:6.0.20-97` | `redislabs/redis:6.0.20-97.rhel7-openshift` |
-| Operator | `redislabs/operator:6.0.20-12` | `redislabs/operator:6.0.20-12` |
-| Services Rigger | `redislabs/k8s-controller:6.0.20-12` | `redislabs/k8s-controller:6.0.20-12` |
+| Operator | `redislabs/operator:6.0.20-11` | `redislabs/operator:6.0.20-11` |
+| Services Rigger | `redislabs/k8s-controller:6.0.20-11` | `redislabs/k8s-controller:6.0.20-11` |
 > * RedHat certified images are available on [Redhat Catalog](https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d) </br>
 
 
 ### Installation
-The "Basic" installation deploys the operator (from the current release) from DockerHub and default settings. Recommended for KOPS, GKE, AKS, EKS, Rancher, VMWare Tanzu.
+The "Basic" installation deploys the operator (from the current release) from DockerHub and default settings. Recommended for KOPS, GKE, AKS, Rancher, VMWare Tanzu.
 This is the fastest way to get up and running with a new Redis Enterprise on Kubernetes.
 
 1. Create a new namespace:
@@ -412,14 +412,14 @@ For example:
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       6.0.20-12
+    versionTag:       6.0.20-11
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       6.0.20-12
+    versionTag:       6.0.20-11
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -431,7 +431,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:6.0.20-12
+          image: harbor.corp.local/redisenterprise/operator:6.0.20-11
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).
@@ -479,13 +479,13 @@ spec:
 
 </br> </br>
 
-## Connect to Redis Enterprise Software web console
+## How to connect to Redis Enterprise Software web console?
 
 The username and password for the web console are stored in a secret with the Redis Enterprise Cluster name on the k8s.
 in order to connect to the web console the port-forward or load balancer can be used.
 
-First, extract the username and password from the secret: 
-1. Switch to the namespace with the Redis Enterprise Cluster via the command below (replace <namespace> with the relevant namespace):
+First, please follow the below instructions to extract the username and password from the secret: 
+1. Switch to the namespace with the Redis Enterprise Cluster via the below command, replace <namespace> with the relevant namespace:
 ```bash
     kubectl config set-context --current --namespace=<namespace>
 ```
@@ -495,45 +495,44 @@ First, extract the username and password from the secret:
     kubectl get secret
 ```
 ![Alt text](./images/web_console_2.png?raw=true)
-3. Run the command below to view the secret with the credentials , replace the <cluster name> with the name of your Redis Enterprise Cluster:
+3. Run the below command to view the secret with the credentials , replase the <cluster name> with the name of your Redis Enterprise Cluster:
 ```bash
     kubectl get secret <cluster name> -o yaml
 ```
 ![Alt text](./images/web_console_3.png?raw=true)
-4. Extract the username and password via the commands below, replace the <cluster name> with the name of your Redis Enterprise Cluster:
+4. Extract the username and password via the below commands, replase the <cluster name> with the name of your Redis Enterprise Cluster:
 ```bash
-    kubectl get secret <cluster name> -o jsonpath='{.data.username}' | base64 --decode
+	kubectl get secret <cluster name> -o jsonpath='{.data.username}' | base64 --decode
     kubectl get secret <cluster name> -o jsonpath='{.data.password}' | base64 --decode
 ```
 ![Alt text](./images/web_console_4.png?raw=true)
 
-Connect to the web console with one of the two following methods:
+In order to connect to the web console please use one of the following methods:
 
 Method 1: using port-forward
-1. Get the port of the cluster UI service via the command below (replace the <cluster name> with the name of your Redis Enterprise Cluster):
+1. Get the port of the cluster UI service via the below command, replase the <cluster name> with the name of your Redis Enterprise Cluster:
 ```bash
     kubectl get service/<cluster name>-ui -o yaml
 ```
 Note: the default port is 8443.
 ![Alt text](./images/web_console_5.png?raw=true)
-2. Run the kubectl port-forward service to set port-forward. Replace the <cluster name> with the name of your Redis Enterprise Cluster, replace <service port> with the port of the service, and replace <local port> with the port you want to use on the local machine.
+2. Run the below command to set port-forward, replase the <cluster name> with the name of your Redis Enterprise Cluster, use the port of the service for the service port and the port you want to use on the local machine as the local port:
 ```bash
     kubectl port-forward service/<cluster name>-ui <local port>:<service port>
 ```
 ![Alt text](./images/web_console_6.png?raw=true)
-3. View the web console from the web browser on your local machine: 
+3. In the web browser on the local machine to see the Redis Enterprise web console go to:
 https://localhost:<local port>
 Don't forget to replace the <local port> with the one used in the previous command.
 ![Alt text](./images/web_console_7.png?raw=true)
 
 Method 2: load balancer
-<note> Configuring a load balancer service for the UI will create an external IP address, widely available (when set on cloud providers which support external load balancers). Use with caution. </note>
-1. Run the command below to set the UI service type as load balancer, replace the <cluster name> with the name of your Redis Enterprise Cluster:
+1. Run the below command to set the UI service type as load balancer, replase the <cluster name> with the name of your Redis Enterprise Cluster:
 ```bash
     kubectl patch rec <cluster name> --type merge --patch "{\"spec\":{\"uiServiceType\":\"LoadBalancer\"}}"
 ```
 ![Alt text](./images/web_console_8.png?raw=true)
-2. Get the external IP and service port of the service via the command below:
+2. Get the external IP and service port of the service via the below command:
 ```bash
     kubectl get service/<cluster name>-ui
 ```
@@ -593,7 +592,6 @@ Supported versions (platforms/versions that are not listed are not supported):
 | VMWare TKGIE** 1.8 (K8s 1.17)   | deprecated     |
 | VMWare TKGIE*** 1.10 (K8s 1.19) | supported      |
 | AKS 1.18                        | supported      |
-| EKS 1.18                        | supported      |
 
 \* No longer supported by Google
 \*\* No longer supported by VMware
