@@ -182,7 +182,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | podTolerations | Tolerations that are added to all managed pods. for more information: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/ | [][v1.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#toleration-v1-core) | empty | false |
 | slaveHA | Slave high availability mechanism configuration. | *[SlaveHA](#slaveha) |  | false |
 | clusterCredentialSecretName | Secret Name/Path to use for Cluster Credentials.  If left blank, will use cluster name | string |  | false |
-| clusterCredentialSecretType | Type of Secret to use for ClusterCredential, Vault, Kuberetes,... If left blank, will default ot kubernetes secrets | string |  | true |
+| clusterCredentialSecretType | Type of Secret to use for ClusterCredential, vault, kubernetes,... If left blank, will default ot kubernetes secrets | string |  | true |
 | clusterCredentialSecretRole | Used only if ClusterCredentialSecretType is vault, to define vault role to be used.  If blank, defaults to \"redis-enterprise-rec\" | string |  | true |
 | vaultCASecret | K8s secret name containing Vault's CA cert - defaults to \"vault-ca-cert\" | string |  | false |
 | redisEnterpriseServicesConfiguration | RS Cluster optional services settings | *[RedisEnterpriseServicesConfiguration](#redisenterpriseservicesconfiguration) |  | false |
