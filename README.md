@@ -1,4 +1,4 @@
-                <!-- omit in toc -->
+<!-- omit in toc -->
 # Deploying Redis Enterprise on Kubernetes
 
 * [Quickstart Guide](#quickstart-guide)
