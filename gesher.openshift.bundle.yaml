@@ -84,7 +84,7 @@ rules:
   - deployments/finalizers
   verbs:
   - update
-- apiGroups: ["extensions"]
+- apiGroups: ["policy"]
   resources: ["podsecuritypolicies"]
   resourceNames:
   - redis-enterprise-psp

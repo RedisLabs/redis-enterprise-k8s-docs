@@ -158,6 +158,12 @@ spec:
             createServiceAccount:
               description: Whether to create service account
               type: boolean
+            dataInternodeEncryption:
+              description: Internode encryption (INE) cluster wide policy. An optional boolean setting.
+                Specifies if INE should be on/off for new created REDBs.
+                May be overridden for specific REDB via similar setting,
+                please view the similar setting for REDB for more info.
+              type: boolean
             enforceIPv4:
               description: Sets ENFORCE_IPV4 environment variable
               type: boolean
@@ -183,6 +189,13 @@ spec:
               type: array
             license:
               description: Redis Enterprise License
+              type: string
+            licenseSecretName:
+              description: K8s secret or Vault Secret Name/Path to use for Cluster
+                License. When left blank, the license is read from the "license" field.
+                Note that you can't specify non-empty values in both "license" and
+                "licenseSecretName", only one of these fields can be used to pass
+                the license string. The license needs to be stored under the key "license".
               type: string
             nodeSelector:
               additionalProperties:
@@ -384,6 +397,88 @@ spec:
                     value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                   type: object
               type: object
+            redisEnterpriseServicesConfiguration:
+              description: RS Cluster optional services settings
+              properties:
+                cmServer:
+                  properties:
+                    operatingMode:
+                      description: Whether to enable/disable the CM server
+                      enum:
+                      - enabled
+                      - disabled
+                      type: string
+                  required:
+                  - operatingMode
+                  type: object
+                crdbCoordinator:
+                  properties:
+                    operatingMode:
+                      description: Whether to enable/disable the crdb coordinator
+                        process
+                      enum:
+                      - enabled
+                      - disabled
+                      type: string
+                  required:
+                  - operatingMode
+                  type: object
+                crdbWorker:
+                  properties:
+                    operatingMode:
+                      description: Whether to enable/disable the crdb worker processes
+                      enum:
+                      - enabled
+                      - disabled
+                      type: string
+                  required:
+                  - operatingMode
+                  type: object
+                mdnsServer:
+                  properties:
+                    operatingMode:
+                      description: Whether to enable/disable the Multicast DNS server
+                      enum:
+                      - enabled
+                      - disabled
+                      type: string
+                  required:
+                  - operatingMode
+                  type: object
+                pdnsServer:
+                  properties:
+                    operatingMode:
+                      description: Whether to enable/disable the pdns server
+                      enum:
+                      - enabled
+                      - disabled
+                      type: string
+                  required:
+                  - operatingMode
+                  type: object
+                saslauthd:
+                  properties:
+                    operatingMode:
+                      description: Whether to enable/disable the saslauthd service
+                      enum:
+                      - enabled
+                      - disabled
+                      type: string
+                  required:
+                  - operatingMode
+                  type: object
+                statsArchiver:
+                  properties:
+                    operatingMode:
+                      description: Whether to enable/disable the stats archiver service
+                      enum:
+                      - enabled
+                      - disabled
+                      type: string
+                  required:
+                  - operatingMode
+                  type: object
+              type: object
             redisEnterpriseServicesRiggerImageSpec:
               description: Specification for Services Rigger container image
               properties:
@@ -448,20 +543,6 @@ spec:
             serviceAccountName:
               description: Name of the service account to use
               type: string
-            redisEnterpriseServicesConfiguration:
-              description: Cluster optional services settings
-              properties:
-                mdnsServer:
-                  properties:
-                    operatingMode:
-                      enum:
-                        - enabled
-                        - disabled
-                      type: string
-                  required:
-                    - operatingMode
-                  type: object
-              type: object
             servicesRiggerSpec:
               description: Specification for service rigger
               properties:
@@ -1106,6 +1187,8 @@ spec:
                     set to 0, will not affect cluster configuration.
                   format: int32
                   type: integer
+              required:
+              - slaveHAGracePeriod
               type: object
             uiAnnotations:
               additionalProperties:
@@ -1132,6 +1215,10 @@ spec:
               type: object
             username:
               description: Username for the admin user of Redis Enterprise
+              type: string
+            vaultCASecret:
+              description: K8s secret name containing Vault's CA cert - defaults to
+                "vault-ca-cert"
               type: string
             volumes:
               description: additional volumes
@@ -1732,4 +1819,3 @@ spec:
               type: array
           type: object
       type: object
-

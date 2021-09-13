@@ -5,7 +5,8 @@ This document is a step-by-step guide for how to do that.<br>
 For users who wish to use Redis Enterprise Operator with Hashicorp Vault this document also contains reference for required steps.
 
 1. [ Installation ](#Installation)
-2. [ Troubleshooting ](#Troubleshooting)
+2. [ Deploying Multi-Namespaced REDB ](#multi_ns_redb)
+3. [ Troubleshooting ](#Troubleshooting)
 
 ### Installation:
 <a name="Installation"></a>
@@ -54,6 +55,12 @@ For users who wish to use Redis Enterprise Operator with Hashicorp Vault this do
       ![Alt text](images/redb.png?raw=true "Title")
       Verify it's status is "Active":<br>
       ![Alt text](images/redb2.png?raw=true "Title")
+
+### Running With Multi-Namespaced REDB
+<a name="multi_ns_redb"></a>
+The Redis Enterprise Operator provides a method for a single deployed operator/cluster combination to listen for REDB objects in multiple specified individual namespaces.<br>
+To support this feature, after installing the REC, follow instructions as detailed [here](../../multi-namespace-redb/README.md#multi-namespaced-redb) starting with step 2.
+
 
 ### Troubleshooting
 <a name="Troubleshooting"></a>

@@ -387,14 +387,15 @@ def collect_pods_logs(namespace, output_dir):
 
     make_dir(logs_dir)
     for pod in pods:
-        cmd = "kubectl logs --all-containers=true -n  {} {}" \
-            .format(namespace, pod)
-        with open(os.path.join(logs_dir, "{}.log".format(pod)),
-                  "w+") as file_handle:
-            _, output = run_shell_command(cmd)
-            file_handle.write(output)
+        for container in get_list_of_containers_from_pod(namespace, pod):
+            cmd = "kubectl logs -c {} -n  {} {}" \
+                .format(container, namespace, pod)
+            with open(os.path.join(logs_dir, "{}.log".format(f'{pod}-{container}')),
+                      "w+") as file_handle:
+                _, output = run_shell_command(cmd)
+                file_handle.write(output)
 
-        logger.info("Namespace '%s':  + %s", namespace, pod)
+            logger.info("Namespace '%s':  + %s-%s", namespace, pod, container)
 
 
 def archive_files(output_dir, output_dir_name):
@@ -426,6 +427,18 @@ def get_pods(namespace, selector=""):
         logger.warning("Failed to get pods: %s", out)
         return None
     return json.loads(out)['items']
+
+
+def get_list_of_containers_from_pod(namespace, pod_name):
+    """
+        Returns list of containers from a given pod
+    """
+    cmd = f"kubectl get pod {pod_name} -o jsonpath='{{.spec.containers[*].name}}' -n {namespace}"
+    return_code, out = run_shell_command(cmd)
+    if return_code:
+        logger.warning("Failed to get pods: %s", out)
+        return None
+    return out.split()
 
 
 def get_pod_names(namespace, selector=""):

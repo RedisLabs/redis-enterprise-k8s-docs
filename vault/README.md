@@ -52,7 +52,7 @@ Hashicorp Vault and the Redis Enterprise Operator can be deployed in multiple sc
     }
     EOF
     ```
-2. Create a role to bind the Redis Enterprise operator service account to the policy configured in the previous step:
+2. Configure a Vault role:
     ```
     vault write -namespace=<VAULT_NAMESPACE> auth/<AUTH_PATH>/role/redis-enterprise-operator-<K8S_NAMESPACE> \
             bound_service_account_names="redis-enterprise-operator"  \
@@ -60,7 +60,7 @@ Hashicorp Vault and the Redis Enterprise Operator can be deployed in multiple sc
             policies=redisenterprise-<K8S_NAMESPACE>
     ```
    > Note - replace `<AUTH_PATH>` with the path kubernetes auth is enabled in Hashicorp Vault. The default is "kubernetes"
-3. Create the operator's configuration in configmap called with the relevant Vault configuration:<br>
+3. Create the operator's configuration in configmap named 'operator-environment-config' with the relevant Vault configuration:<br>
    edit and save this content in a file called `operator-environment-config.yaml`<br>
    run `kubectl apply -f operator-environment-config.yaml`<br>
    see notes on the parameters below.
@@ -75,34 +75,34 @@ Hashicorp Vault and the Redis Enterprise Operator can be deployed in multiple sc
       VAULT_SERVICE_PORT_HTTPS: "8200"
       VAULT_SECRET_ROOT: "secret"
       VAULT_SECRET_PREFIX: "redisenterprise-<K8S_NAMESPACE>"   
-      VAULT_AUTH_PATH: <VAULT_AUTH_PATH>
-      VAULT_NAMESPACE: <VAULT_NAMESPACE>
       VAULT_ROLE: "redis-enterprise-operator-<K8S_NAMESPACE>"
+      VAULT_AUTH_PATH: <AUTH_PATH>
+      VAULT_NAMESPACE: <VAULT_NAMESPACE>
    ```
    * `VAULT_SERVER_FQDN`: Hashicorp Vault server Fully Qualified Domain Name (FQDN). If the Vault server is running with k8s,<br>
   it would typically be `<YOUR_VAULT_SERVICE_NAME>.<YOUR_VAULT_SERVICE_NAMESPACE>)`:
    * `VAULT_SECRET_ROOT`: the path the kv-2 secret engine being used is enabled on.
    * `VAULT_SECRET_PREFIX`: should be unique to the Redis Enterprise Cluster. Here we use `redisenterprise-<K8s_NAMESPACE>`.<br>
      This value has to be consistent with Hashicorp Vault roles and policies.
-   * `VAULT_SERVER_FQDN`: the Fully Qualified Domain Name of the Hashicorp Vault server.
+   * `VAULT_ROLE`: the Vault role you configured in the previous step, defaults to `redis-enterprise-operator`.<br>   
    * `VAULT_AUTH_PATH`: the path kubernetes auth is enabled in Hashicorp Vault,  defaults to `kubernetes` - use no leading/trailing slashes.<br>
-   * `VAULT_NAMESPACE`: should be used when deploying with Hashicorp Vault enterprise.<br>
-   * `VAULT_ROLE`: the Vault role you configured in the previous step, defaults to `redis-enterprise-opertaor`.<br>
-   
+   * `VAULT_NAMESPACE`: supported in Hashicorp Vault enterprise.<br>
+   >  The full secret path would be: <VAULT_SECRET_ROOT>/<VAULT_SECRET_PREFIX>/<secret-name>
+    
 4. Deploy the operator by applying the Redis Labs Kubernetes Operator Bundle as explained [here](../README.md) - steps 1,2 (steps 1-4 on OpenShift).<br>
-   Once operator is running, proceed to the steps below. Avoid creating the Redis Enterprise Cluster custom resource.
-5. Save the admission controller secret to Vault:
-    1. Generate a json file with key/cert pair to be used by admission:
+    The Operator pod would not be ready before you save the admission controller secret to Vault:
+    1. Generate a json file with key/cert pair to be used by admission:<br>
         ```
         kubectl exec -it $(kubectl get pod -l name=redis-enterprise-operator -o jsonpath='{.items[0].metadata.name}') -- /usr/local/bin/generate-tls -infer > output.json
         ```
-    2. Apply the secret to vault - execute the following within the Hashicorp Vault CLI interface (you will need to copy the file from the previous step):
+       * the output.json file is needed for additional steps below (deployment of admission controller)
+    2. Apply the secret to vault - execute the following within the Hashicorp Vault CLI interface (you will need to copy<br> the file from the previous step for example by running `kubectl cp output.json vault-0:/tmp -n vault`):
         ```
         vault kv put <VAULT_SECRET_ROOT>/redisenterprise-<K8S_NAMESPACE>/admission-tls @output.json
         ```
-       > Note - the output.json file is needed for additional steps below (deployment of admission controller)   
+    Once operator is running, proceed to the steps below. Avoid creating the Redis Enterprise Cluster custom resource.
 
-6. Create a K8s secret containing the Certificate Authority Certificate (CACert) used to create the Hashicorp Vault instance server certificate.<br>
+5. Create a K8s secret containing the Certificate Authority Certificate (CACert) used to create the Hashicorp Vault instance server certificate.<br>
    Name the secret `vault-ca-cert` and the key `vault.ca` . Save the CA cert to a file before running the following command:
    ```
    kubectl create secret generic vault-ca-cert \
@@ -143,6 +143,7 @@ Hashicorp Vault and the Redis Enterprise Operator can be deployed in multiple sc
       vaultCASecret: vault-ca-cert
       podAnnotations:
           vault.hashicorp.com/auth-path: auth/<AUTH_PATH>
+          vault.hashicorp.com/namesapce: <VAULT_NAMESPACE>
     ```
    > Note -  the "clusterCredentialSecretName" field as used to query the secret from Hashicorp Vault. See section below for explanation about secret name field values.
 ### Deploy REDB admission controller (for OLM this is not needed)
@@ -179,8 +180,11 @@ An REDB has several secrets associate with it:
 4. [Client Auth](../redis_enterprise_database_api.md#redisenterprisedatabasespec) (optional)
  
 Steps to create an REDB:
-1. Create a password in Vault in this path (change according to the specific configuration, see above) `redisenterprise-<K8S_NAMESPACE>/redb-<REDB_NAME>`: <br>
+1. Create a password in Vault in this path (change according to the specific configuration, see above)<br>
+   `<VAULT_SECRET_ROOT>/<VAULT_SECRET_PREFIX>/redb-<REDB_NAME>`: <br>
+   where VAULT_SECRET_ROOT and VAULT_SECRET_PREFIX are defined in the operator's ConfigMap as explained above (or set to default values).<br>
    e.g. ```vault kv put secret/redisenterprise-<K8S_NAMESPACE>/redb-mydb password=somepassword```
+    
 2. Create the REDB custom resource.  
    Follow the step 6 [here](../README.md). 
    The REC spec indicted you are running with Vault and no further configuration is required. 

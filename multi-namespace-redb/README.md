@@ -9,7 +9,7 @@ In order to do this, there are a few changes from a traditional operator and Red
 Deploy a Redis Enterprise Cluster, see [README](../README.md)
 ### 2. Adjusting role/role_bindings in watched namespaces
 
-Both the operator's and the RedisEnterpriseCluster custom resource's (same name as the REC, unless manually overridden) service accounts have to be given access via a namespaced role and role_binding in each individual namespace that the operator is expected to watch. Apply those documents within the watched namespaces:
+Both the operator's and the RedisEnterpriseCluster custom resource's (same name as the REC, unless manually overridden) service accounts have to be given access via a namespaced role and role_binding in each individual namespace that the operator is expected to watch. Apply those documents within the **watched** namespaces:
 
 ```yaml
 kind: Role
