@@ -603,13 +603,12 @@ Supported versions (platforms/versions that are not listed are not supported):
 | OpenShift 4.6  (K8s 1.19)       | supported      |
 | OpenShift 4.7  (K8s 1.20)       | supported      |
 | OpenShift 4.8  (K8s 1.21)       | supported      |
-| KOPS vanilla 1.15               | deprecated     |
 | KOPS vanilla 1.16               | deprecated     |
 | KOPS vanilla 1.17               | deprecated     |
 | KOPS vanilla 1.18               | supported      |
 | KOPS vanilla 1.19               | supported      |
 | KOPS vanilla 1.20               | supported      |
-| GKE 1.17*                       | deprecated     |
+| KOPS vanilla 1.21               | supported      |
 | GKE 1.18                        | supported      |
 | GKE 1.19                        | supported      |
 | GKE 1.20                        | supported      |
@@ -620,9 +619,9 @@ Supported versions (platforms/versions that are not listed are not supported):
 | Rancher 2.5 (K8s 1.18)          | supported      |
 | Rancher 2.5 (K8s 1.19)          | supported      |
 | Rancher 2.5 (K8s 1.20)          | supported      |
-| VMWare TKGIE** 1.7 (K8s 1.16)   | deprecated     |
-| VMWare TKGIE** 1.8 (K8s 1.17)   | deprecated     |
-| VMWare TKGIE*** 1.10 (K8s 1.19) | supported      |
+| VMWare TKGIE* 1.7 (K8s 1.16)    | deprecated     |
+| VMWare TKGIE* 1.8 (K8s 1.17)    | deprecated     |
+| VMWare TKGIE** 1.10 (K8s 1.19)  | supported      |
 | AKS 1.18                        | supported      |
 | AKS 1.19                        | supported      |
 | AKS 1.20                        | supported      |
@@ -631,6 +630,5 @@ Supported versions (platforms/versions that are not listed are not supported):
 | EKS 1.20                        | supported      |
 | EKS 1.21                        | supported      |
 
-\* No longer supported by Google
-\*\* No longer supported by VMware
-\*\*\* Tanzu Kubernetes Grid Integrated Edition
+\* No longer supported by VMware
+\*\* Tanzu Kubernetes Grid Integrated Edition
