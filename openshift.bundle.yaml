@@ -58,11 +58,7 @@ rules:
   - apiGroups: [""]
     resources: ["services"]
     verbs: ["get", "watch", "list", "update", "patch", "create", "delete"]
-  - apiGroups:
-      - route.openshift.io
-    resources: ["routes", "routes/custom-host"]
-    verbs: ["*"]
-  - apiGroups: ["extensions"]
+  - apiGroups: ["policy"]
     resources: ["podsecuritypolicies"]
     resourceNames:
       - redis-enterprise-psp
@@ -70,6 +66,10 @@ rules:
       - use
   - apiGroups: ["extensions"]
     resources: ["ingresses"]
+    verbs: ["*"]
+  - apiGroups:
+      - route.openshift.io
+    resources: ["routes", "routes/custom-host"]
     verbs: ["*"]
 ---
 apiVersion: v1
@@ -249,6 +249,12 @@ spec:
             createServiceAccount:
               description: Whether to create service account
               type: boolean
+            dataInternodeEncryption:
+              description: Internode encryption (INE) cluster wide policy. An optional boolean setting.
+                Specifies if INE should be on/off for new created REDBs.
+                May be overridden for specific REDB via similar setting,
+                please view the similar setting for REDB for more info.
+              type: boolean
             enforceIPv4:
               description: Sets ENFORCE_IPV4 environment variable
               type: boolean
@@ -274,6 +280,13 @@ spec:
               type: array
             license:
               description: Redis Enterprise License
+              type: string
+            licenseSecretName:
+              description: K8s secret or Vault Secret Name/Path to use for Cluster
+                License. When left blank, the license is read from the "license" field.
+                Note that you can't specify non-empty values in both "license" and
+                "licenseSecretName", only one of these fields can be used to pass
+                the license string. The license needs to be stored under the key "license".
               type: string
             nodeSelector:
               additionalProperties:
@@ -475,6 +488,88 @@ spec:
                     value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
                   type: object
               type: object
+            redisEnterpriseServicesConfiguration:
+              description: RS Cluster optional services settings
+              properties:
+                cmServer:
+                  properties:
+                    operatingMode:
+                      description: Whether to enable/disable the CM server
+                      enum:
+                      - enabled
+                      - disabled
+                      type: string
+                  required:
+                  - operatingMode
+                  type: object
+                crdbCoordinator:
+                  properties:
+                    operatingMode:
+                      description: Whether to enable/disable the crdb coordinator
+                        process
+                      enum:
+                      - enabled
+                      - disabled
+                      type: string
+                  required:
+                  - operatingMode
+                  type: object
+                crdbWorker:
+                  properties:
+                    operatingMode:
+                      description: Whether to enable/disable the crdb worker processes
+                      enum:
+                      - enabled
+                      - disabled
+                      type: string
+                  required:
+                  - operatingMode
+                  type: object
+                mdnsServer:
+                  properties:
+                    operatingMode:
+                      description: Whether to enable/disable the Multicast DNS server
+                      enum:
+                      - enabled
+                      - disabled
+                      type: string
+                  required:
+                  - operatingMode
+                  type: object
+                pdnsServer:
+                  properties:
+                    operatingMode:
+                      description: Whether to enable/disable the pdns server
+                      enum:
+                      - enabled
+                      - disabled
+                      type: string
+                  required:
+                  - operatingMode
+                  type: object
+                saslauthd:
+                  properties:
+                    operatingMode:
+                      description: Whether to enable/disable the saslauthd service
+                      enum:
+                      - enabled
+                      - disabled
+                      type: string
+                  required:
+                  - operatingMode
+                  type: object
+                statsArchiver:
+                  properties:
+                    operatingMode:
+                      description: Whether to enable/disable the stats archiver service
+                      enum:
+                      - enabled
+                      - disabled
+                      type: string
+                  required:
+                  - operatingMode
+                  type: object
+              type: object
             redisEnterpriseServicesRiggerImageSpec:
               description: Specification for Services Rigger container image
               properties:
@@ -539,20 +634,6 @@ spec:
             serviceAccountName:
               description: Name of the service account to use
               type: string
-            redisEnterpriseServicesConfiguration:
-              description: Cluster optional services settings
-              properties:
-                mdnsServer:
-                  properties:
-                    operatingMode:
-                      enum:
-                        - enabled
-                        - disabled
-                      type: string
-                  required:
-                    - operatingMode
-                  type: object
-              type: object
             servicesRiggerSpec:
               description: Specification for service rigger
               properties:
@@ -1197,6 +1278,8 @@ spec:
                     set to 0, will not affect cluster configuration.
                   format: int32
                   type: integer
+              required:
+              - slaveHAGracePeriod
               type: object
             uiAnnotations:
               additionalProperties:
@@ -1223,6 +1306,10 @@ spec:
               type: object
             username:
               description: Username for the admin user of Redis Enterprise
+              type: string
+            vaultCASecret:
+              description: K8s secret name containing Vault's CA cert - defaults to
+                "vault-ca-cert"
               type: string
             volumes:
               description: additional volumes
@@ -1823,7 +1910,6 @@ spec:
               type: array
           type: object
       type: object
-
 ---
 apiVersion: v1
 kind: Service
@@ -1854,7 +1940,7 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.0.20-12
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.2.4-1
           securityContext:
             runAsUser: 1001
           command:
@@ -1867,11 +1953,11 @@ spec:
           ports:
             - containerPort: 8080
           env:
-            - name: WATCH_NAMESPACE
+            - name: POD_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            - name: POD_NAMESPACE
+            - name: WATCH_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
@@ -1879,6 +1965,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: redis-enterprise-operator
             - name: DEPLOY_RHEL7
               value: "true"
           resources:
@@ -1888,7 +1976,7 @@ spec:
             requests:
               cpu: 500m
               memory: 256Mi
-          readinessProbe:
+          livenessProbe:
             failureThreshold: 3
             successThreshold: 1
             periodSeconds: 5
@@ -1898,7 +1986,7 @@ spec:
               port: 8080
               scheme: HTTP
         - name: admission
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.0.20-12
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.2.4-1
           command:
             - /usr/local/bin/admission
           imagePullPolicy: Always
@@ -1927,6 +2015,15 @@ spec:
             timeoutSeconds: 10
             httpGet:
               path: /healthz
+              port: 8443
+              scheme: HTTPS
+          livenessProbe:
+            failureThreshold: 3
+            successThreshold: 1
+            periodSeconds: 5
+            timeoutSeconds: 10
+            httpGet:
+              path: /liveness
               port: 8443
               scheme: HTTPS
 ---
@@ -2001,6 +2098,7 @@ spec:
 #                     description: Threshold for alert going on/off
 #                     type: string
                   x-kubernetes-preserve-unknown-fields: true
+                  type: object
                 bdb_crdt_src_high_syncer_lag:
                   description: "Active-active source - sync lag is higher than specified threshold value [seconds]
                     -Note threshold is commented (allow string/int/float and support backwards compatibility) but is required"
@@ -2012,6 +2110,7 @@ spec:
 #                     description: Threshold for alert going on/off
 #                     type: string
                   x-kubernetes-preserve-unknown-fields: true
+                  type: object
                 bdb_crdt_src_syncer_connection_error:
                   description: "Active-active source - sync has connection error while trying to connect replica source
                     -Note threshold is commented (allow string/int/float and support backwards compatibility) but is required"
@@ -2023,6 +2122,7 @@ spec:
 #                     description: Threshold for alert going on/off
 #                     type: string
                   x-kubernetes-preserve-unknown-fields: true
+                  type: object
                 bdb_crdt_src_syncer_general_error:
                   description: "Active-active source - sync encountered in general error
                     -Note threshold is commented (allow string/int/float and support backwards compatibility) but is required"
@@ -2034,6 +2134,7 @@ spec:
 #                     description: Threshold for alert going on/off
 #                     type: string
                   x-kubernetes-preserve-unknown-fields: true
+                  type: object
                 bdb_high_latency:
                   description: "Latency is higher than specified threshold value [micro-sec]
                     -Note threshold is commented (allow string/int/float and support backwards compatibility) but is required"
@@ -2045,6 +2146,7 @@ spec:
 #                     description: Threshold for alert going on/off
 #                     type: string
                   x-kubernetes-preserve-unknown-fields: true
+                  type: object
                 bdb_high_throughput:
                   description: "Throughput is higher than specified threshold value [requests / sec.]
                     -Note threshold is commented (allow string/int/float and support backwards compatibility) but is required"
@@ -2056,6 +2158,7 @@ spec:
 #                     description: Threshold for alert going on/off
 #                     type: string
                   x-kubernetes-preserve-unknown-fields: true
+                  type: object
                 bdb_long_running_action:
                   description: "An alert for state-machines that are running for too long
                     -Note threshold is commented (allow string/int/float and support backwards compatibility) but is required"
@@ -2067,6 +2170,7 @@ spec:
 #                     description: Threshold for alert going on/off
 #                     type: string
                   x-kubernetes-preserve-unknown-fields: true
+                  type: object
                 bdb_low_throughput:
                   description: "Throughput is lower than specified threshold value [requests / sec.]
                     -Note threshold is commented (allow string/int/float and support backwards compatibility) but is required"
@@ -2078,6 +2182,7 @@ spec:
 #                     description: Threshold for alert going on/off
 #                     type: string
                   x-kubernetes-preserve-unknown-fields: true
+                  type: object
                 bdb_ram_dataset_overhead:
                   description: "Dataset RAM overhead of a shard has reached the threshold value [% of its RAM limit]
                     -Note threshold is commented (allow string/int/float and support backwards compatibility) but is required"
@@ -2089,6 +2194,7 @@ spec:
 #                     description: Threshold for alert going on/off
 #                     type: string
                   x-kubernetes-preserve-unknown-fields: true
+                  type: object
                 bdb_ram_values:
                   description: "Percent of values kept in a shard's RAM is lower than [% of its key count]
                     -Note threshold is commented (allow string/int/float and support backwards compatibility) but is required"
@@ -2100,6 +2206,7 @@ spec:
 #                     description: Threshold for alert going on/off
 #                     type: string
                   x-kubernetes-preserve-unknown-fields: true
+                  type: object
                 bdb_replica_src_high_syncer_lag:
                   description: "Replica-of source - sync lag is higher than specified threshold value [seconds]
                     -Note threshold is commented (allow string/int/float and support backwards compatibility) but is required"
@@ -2111,6 +2218,7 @@ spec:
 #                     description: Threshold for alert going on/off
 #                     type: string
                   x-kubernetes-preserve-unknown-fields: true
+                  type: object
                 bdb_replica_src_syncer_connection_error:
                   description: "Replica-of source - sync has connection error while trying to connect replica source
                     -Note threshold is commented (allow string/int/float and support backwards compatibility) but is required"
@@ -2122,6 +2230,7 @@ spec:
 #                     description: Threshold for alert going on/off
 #                     type: string
                   x-kubernetes-preserve-unknown-fields: true
+                  type: object
                 bdb_shard_num_ram_values:
                   description: "Number of values kept in a shard's RAM is lower than [values]
                     -Note threshold is commented (allow string/int/float and support backwards compatibility) but is required"
@@ -2133,6 +2242,7 @@ spec:
 #                     description: Threshold for alert going on/off
 #                     type: string
                   x-kubernetes-preserve-unknown-fields: true
+                  type: object
                 bdb_size:
                   description: "Dataset size has reached the threshold value [% of the memory limit] expected fields:
                     -Note threshold is commented (allow string/int/float and support backwards compatibility) but is required"
@@ -2144,6 +2254,7 @@ spec:
 #                     description: Threshold for alert going on/off
 #                     type: string
                   x-kubernetes-preserve-unknown-fields: true
+                  type: object
               type: object
             backup:
               description: Target for automatic database backups.
@@ -2274,6 +2385,16 @@ spec:
               items:
                 type: string
               type: array
+            dataInternodeEncryption:
+              description: Internode encryption (INE) setting. An optional boolean setting, overriding
+                a similar cluster-wide policy.
+                If set to False, INE is guaranteed to be turned off for this DB (regardless of cluster-wide policy).
+                If set to True, INE will be turned on, unless the capability is not supported by the DB (
+                in such a case we will get an error and database creation will fail).
+                If left unspecified, will be disabled if internode encryption is not supported by the DB
+                (regardless of cluster default).
+                Deleting this property after explicitly setting its value shall have no effect.
+              type: boolean
             databaseSecretName:
               description: The name of the K8s secret that holds the password to the
                 database.
@@ -2281,12 +2402,6 @@ spec:
             defaultUser:
               description: Is connecting with a default user allowed?
               type: boolean
-            ossCluster:
-              description: OSS Cluster mode option
-              type: boolean
-            proxyPolicy:
-              description: The policy used for proxy binding to the endpoint
-              type: string
             evictionPolicy:
               description: Database eviction policy. see more https://docs.redislabs.com/latest/rs/administering/database-operations/eviction-policy/
               type: string
@@ -2314,6 +2429,10 @@ spec:
                 - version
                 type: object
               type: array
+            ossCluster:
+              description: OSS Cluster mode option. Note that not all client libraries
+                support OSS cluster mode.
+              type: boolean
             persistence:
               description: Database on-disk persistence policy
               enum:
@@ -2323,6 +2442,12 @@ spec:
               - snapshotEvery1Hour
               - snapshotEvery6Hour
               - snapshotEvery12Hour
+              type: string
+            proxyPolicy:
+              description: 'The policy used for proxy binding to the endpoint. Supported
+                proxy policies are: single/all-master-shards/all-nodes When left blank,
+                the default value will be chosen according to the value of ossCluster
+                - single if disabled, all-master-shards when enabled'
               type: string
             rackAware:
               description: 'Whether database should be rack aware. This improves availability

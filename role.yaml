@@ -41,11 +41,7 @@ rules:
   - apiGroups: [""]
     resources: ["services"]
     verbs: ["get", "watch", "list", "update", "patch", "create", "delete"]
-  - apiGroups:
-      - route.openshift.io
-    resources: ["routes", "routes/custom-host"]
-    verbs: ["*"]
-  - apiGroups: ["extensions"]
+  - apiGroups: ["policy"]
     resources: ["podsecuritypolicies"]
     resourceNames:
       - redis-enterprise-psp
