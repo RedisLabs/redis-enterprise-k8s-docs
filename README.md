@@ -114,11 +114,12 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     * Enable the Kubernetes webhook using the generated certificate
    
          **NOTE**: One must replace REPLACE_WITH_NAMESPACE in the following command with the namespace the REC was installed into.
-   
+         * Save the certificate into a local environmental variable
          ```shell script
-         # save cert
          CERT=`kubectl get secret admission-tls -o jsonpath='{.data.cert}'`
-         # create patch file
+         ```
+         * Create a patch file
+         ```shell script
          sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' admission/webhook.yaml | kubectl create -f -
    
          cat > modified-webhook.yaml <<EOF
@@ -128,25 +129,30 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
              caBundle: $CERT
            admissionReviewVersions: ["v1beta1"]
          EOF
-         # patch webhook with caBundle
+         ```
+         * Patch the validating webhook with the certificate (caBundle)
+         ```shell script
          kubectl patch ValidatingWebhookConfiguration redb-admission --patch "$(cat modified-webhook.yaml)"
-        ```
+         ```
    
-   * Limiting the webhook to the relevant namespaces:    
-    Unless limited, webhooks will intercept requests from all namespaces.<br>
-    In case you have several REC objects on your K8S cluster you need to limit the webhook to the relevant namespace.  
-    This is done by adding a `namespaceSelector` to the webhook spec that targets a label found on the namespace.<br>
-    First, make sure you have such a relevant label on the namespace and that it is unique for this namespace. e.g.
-     ```
-     apiVersion: v1
-     kind: Namespace
-     metadata:
-       labels:
-         namespace-name: staging
-       name: staging
-      ```
-        Then patch the webhook with a namespaceSelector. See this example:
-     ```
+    * Limiting the webhook to the relevant namespaces:    
+      Unless limited, webhooks will intercept requests from all namespaces.<br>
+      In case you have several REC objects on your K8S cluster you need to limit the webhook to the relevant namespace.  
+      This is done by adding a `namespaceSelector` to the webhook spec that targets a label found on the namespace.<br>
+    
+         * First, make sure you have such a relevant label on the namespace and that it is unique for this namespace. e.g.
+         
+        ```yaml
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          labels:
+            namespace-name: staging
+        name: staging
+        ```
+        
+        * Then, patch the webhook with a namespaceSelector. See this example:
+        ```shell script
         cat > modified-webhook.yaml <<EOF
         webhooks:
         - name: redb.admission.redislabs
@@ -154,11 +160,13 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
             matchLabels:
               namespace-name: staging
         EOF
-     
-        # apply the patch:
+        ```
+        
+        * apply the patch:
+        ```shell script
         kubectl patch ValidatingWebhookConfiguration redb-admission --patch "$(cat modified-webhook.yaml)"
         ```
-    * Verify the installation
+       * Verify the installation
         In order to verify that the all the components of the Admission Controller are installed correctly, we will try to apply an invalid resource that should force the admission controller to reject it.  If it applies succesfully, it means the admission controller has not been hooked up correctly.
         
         ```shell script
