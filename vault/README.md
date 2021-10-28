@@ -143,7 +143,7 @@ Hashicorp Vault and the Redis Enterprise Operator can be deployed in multiple sc
       vaultCASecret: vault-ca-cert
       podAnnotations:
           vault.hashicorp.com/auth-path: auth/<AUTH_PATH>
-          vault.hashicorp.com/namesapce: <VAULT_NAMESPACE>
+          vault.hashicorp.com/namespace: <VAULT_NAMESPACE>
     ```
    > Note -  the "clusterCredentialSecretName" field as used to query the secret from Hashicorp Vault. See section below for explanation about secret name field values.
 ### Deploy REDB admission controller (for OLM this is not needed)
