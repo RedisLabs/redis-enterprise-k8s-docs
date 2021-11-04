@@ -168,7 +168,7 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | shardCount | Number of database server-side shards | uint16 | 1 | false |
 | replication | In-memory database replication. When enabled, database will have replica shard for every master - leading to higher availability. | *bool | false | false |
 | persistence | Database on-disk persistence policy | *[DatabasePersistence](#databasepersistence) | disabled | false |
-| databaseSecretName | The name of the secret that holds the password to the database. | string |  | false |
+| databaseSecretName | The name of the secret that holds the password to the database. If secret does not exist, it will be created. To define the password, create an opaque secret and set the name in the spec. The password will be taken from the value of the 'password' key. Use an empty string as value to disable authentication for the database. | string |  | false |
 | evictionPolicy | Database eviction policy. see more https://docs.redislabs.com/latest/rs/administering/database-operations/eviction-policy/ | string | volatile-lru | false |
 | tlsMode | Require SSL authenticated and encrypted connections to the database. enabled - all incoming connections to the Database must use SSL. disabled - no incoming connection to the Database should use SSL. replica_ssl - databases that replicate from this one need to use SSL. | string | disabled | false |
 | clientAuthenticationCertificates | The Secrets containing TLS Client Certificate to use for Authentication | []string |  | false |
@@ -181,6 +181,7 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | ossCluster | OSS Cluster mode option. Note that not all client libraries support OSS cluster mode. | *bool | false | false |
 | proxyPolicy | The policy used for proxy binding to the endpoint. Supported proxy policies are: single/all-master-shards/all-nodes When left blank, the default value will be chosen according to the value of ossCluster - single if disabled, all-master-shards when enabled | string |  | false |
 | dataInternodeEncryption | Internode encryption (INE) setting. An optional boolean setting, overriding a similar cluster-wide policy. If set to False, INE is guaranteed to be turned off for this DB (regardless of cluster-wide policy). If set to True, INE will be turned on, unless the capability is not supported by the DB ( in such a case we will get an error and database creation will fail). If left unspecified, will be disabled if internode encryption is not supported by the DB (regardless of cluster default). Deleting this property after explicitly setting its value shall have no effect. | *bool |  | false |
+| databasePort | Database port number. TCP port on which the database is available. Will be generated automatically if omitted. can not be changed after creation | *int |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseDatabaseStatus

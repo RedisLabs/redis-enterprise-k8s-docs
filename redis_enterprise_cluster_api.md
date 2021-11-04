@@ -4,6 +4,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
 ## Table of Contents
 * [Objects](#objects)
   * [ActiveActive](#activeactive)
+  * [ClusterCertificate](#clustercertificate)
   * [CmServer](#cmserver)
   * [CrdbCoordinator](#crdbcoordinator)
   * [CrdbWorker](#crdbworker)
@@ -13,6 +14,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [Module](#module)
   * [PdnsServer](#pdnsserver)
   * [PersistentConfigurationSpec](#persistentconfigurationspec)
+  * [RSClusterCertificates](#rsclustercertificates)
   * [RedisEnterpriseCluster](#redisenterprisecluster)
   * [RedisEnterpriseClusterList](#redisenterpriseclusterlist)
   * [RedisEnterpriseClusterSpec](#redisenterpriseclusterspec)
@@ -21,6 +23,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [Saslauthd](#saslauthd)
   * [ServicesRiggerConfigurationSpec](#servicesriggerconfigurationspec)
   * [SlaveHA](#slaveha)
+  * [StartingPolicy](#startingpolicy)
   * [StatsArchiver](#statsarchiver)
   * [UpgradeSpec](#upgradespec)
 * [Enums](#enums)
@@ -40,6 +43,16 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
 | apiIngressUrl | RS API URL | string |  | true |
 | dbIngressSuffix | DB ENDPOINT SUFFIX - will be used to set the db host ingress <db name><db ingress suffix>. Creates a host name so it should be unique if more than one db is created on the cluster with the same name | string |  | true |
 | ingressAnnotations | Used for ingress controllers such as ha-proxy or nginx in GKE | map[string]string |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### ClusterCertificate
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| name |  | string |  | true |
+| certificate |  | string |  | true |
+| key |  | string |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### CmServer
@@ -123,6 +136,18 @@ Specification for Redis Enterprise Cluster persistence
 | volumeSize |  | resource.Quantity |  | true |
 [Back to Table of Contents](#table-of-contents)
 
+### RSClusterCertificates
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| apiCertificateSecretName | Secret Name/Path to use for Cluster's API Certificate. If left blank, will use certificate provided by the cluster. | string |  | false |
+| cmCertificateSecretName | Secret Name/Path to use for Cluster's CM Certificate. If left blank, will use certificate provided by the cluster. | string |  | false |
+| metricsExporterCertificateSecretName | Secret Name/Path to use for Cluster's Metrics Exporter Certificate. If left blank, will use certificate provided by the cluster. | string |  | false |
+| proxyCertificateSecretName | Secret Name/Path to use for Cluster's Proxy Certificate. If left blank, will use certificate provided by the cluster. | string |  | false |
+| syncerCertificateSecretName | Secret Name/Path to use for Cluster's Syncer Certificate. If left blank, will use certificate provided by the cluster. | string |  | false |
+[Back to Table of Contents](#table-of-contents)
+
 ### RedisEnterpriseCluster
 RedisEnterpriseCluster is the Schema for the redisenterpriseclusters API
 
@@ -153,6 +178,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | uiServiceType | Type of service used to expose Redis Enterprise UI (https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types) | *v1.ServiceType | ClusterIP | false |
 | uiAnnotations | Annotations for Redis Enterprise UI service | map[string]string |  | false |
 | servicesRiggerSpec | Specification for service rigger | *[ServicesRiggerConfigurationSpec](#servicesriggerconfigurationspec) |  | false |
+| redisEnterpriseAdditionalPodSpecAttributes | ADVANCED USAGE USE AT YOUR OWN RISK - specify pod attributes that are required for the statefulset - Redis Enterprise pods. Pod attributes managed by the operator might override these settings. Also make sure the attributes are supported by the K8s version running on the cluster - the operator does not validate that. | *[v1.PodSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#podspec-v1-core) |  | false |
 | license | Redis Enterprise License | string | Empty string which is a [Trial Mode licesne](https://docs.redislabs.com/latest/rs/administering/cluster-operations/settings/license-keys/#trial-mode) | false |
 | licenseSecretName | K8s secret or Vault Secret Name/Path to use for Cluster License. When left blank, the license is read from the \"license\" field. Note that you can't specify non-empty values in both \"license\" and \"licenseSecretName\", only one of these fields can be used to pass the license string. The license needs to be stored under the key \"license\". | string | Empty string | false |
 | username | Username for the admin user of Redis Enterprise | string | demo@redislabs.com | false |
@@ -185,8 +211,11 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | clusterCredentialSecretType | Type of Secret to use for ClusterCredential: vault, kubernetes,... If left blank, will default to kubernetes secrets | string |  | true |
 | clusterCredentialSecretRole | Used only if ClusterCredentialSecretType is vault, to define vault role to be used.  If blank, defaults to \"redis-enterprise-rec\" | string |  | true |
 | vaultCASecret | K8s secret name containing Vault's CA cert - defaults to \"vault-ca-cert\" | string |  | false |
-| redisEnterpriseServicesConfiguration | RS Cluster optional services settings | *[RedisEnterpriseServicesConfiguration](#redisenterpriseservicesconfiguration) |  | false |
+| redisEnterpriseServicesConfiguration | RS Cluster optional services settings. Note that when disabling the CM Server service, the cluster's UI Service will be removed from the k8s cluster | *[RedisEnterpriseServicesConfiguration](#redisenterpriseservicesconfiguration) |  | false |
 | dataInternodeEncryption | Internode encryption (INE) cluster wide policy. An optional boolean setting. Specifies if INE should be on/off for new created REDBs. May be overridden for specific REDB via similar setting, please view the similar setting for REDB for more info. | *bool |  | false |
+| redisUpgradePolicy | Redis upgrade policy to be set on the Redis Enterprise Cluster. Possible values: major/latest This value is used by the cluster to choose the Redis version of the database when an upgrade is performed. The Redis Enterprise Cluster includes multiple versions of OSS Redis that can be used for databases. | string |  | false |
+| certificates | RS Cluster Certificates. Used to modify the certificates used by the cluster. See the \"RSClusterCertificates\" struct described above to see the supported certificates. | *[RSClusterCertificates](#rsclustercertificates) |  | false |
+| podStartingPolicy | Mitigation setting for STS pods stuck in \"ContainerCreating\" | *[StartingPolicy](#startingpolicy) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseClusterStatus
@@ -230,6 +259,7 @@ Specification for service rigger
 | databaseServiceType | Service types for access to databases. should be a comma separated list. The possible values are cluster_ip, headless and load_balancer. | string | cluster_ip,headless | true |
 | serviceNaming |  | string |  | true |
 | extraEnvVars |  | []v1.EnvVar |  | false |
+| servicesRiggerAdditionalPodSpecAttributes | ADVANCED USAGE USE AT YOUR OWN RISK - specify pod attributes that are required for the rigger deployment pod. Pod attributes managed by the operator might override these settings (Containers, serviceAccountName, podTolerations, ImagePullSecrets, nodeSelector, PriorityClassName, PodSecurityContext). Also make sure the attributes are supported by the K8s version running on the cluster - the operator does not validate that. | *[v1.PodSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#podspec-v1-core) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### SlaveHA
@@ -238,6 +268,15 @@ Specification for service rigger
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | slaveHAGracePeriod | Time in seconds between when a node fails, and when slave high availability mechanism starts relocating shards. If set to 0, will not affect cluster configuration. | *uint32 | 1800 | true |
+[Back to Table of Contents](#table-of-contents)
+
+### StartingPolicy
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| enabled | Whether to detect and attempt to mitigate pod startup issues | *bool | False | true |
+| startingThresholdSeconds | Time in seconds to wait for a pod to be stuck while starting up before action is taken. If set to 0, will be treated as if disabled. | *uint32 | 540 | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### StatsArchiver
@@ -291,6 +330,7 @@ State of the Redis Enterprise Cluster
 | "InvalidUpgrade" | ClusterInvalidUpgrade means an upgrade is not possible at this time |
 | "Upgrade" | ClusterUpgrade |
 | "Deleting" | ClusterDeleting |
+| "ClusterRecreating" | ClusterRecreating - similar to ClusterRecoveryReset - delete all pods before recreation of the cluster. |
 [Back to Table of Contents](#table-of-contents)
 
 ### OperatingMode
