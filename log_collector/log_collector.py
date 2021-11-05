@@ -132,6 +132,7 @@ def collect_from_ns(namespace, output_dir):
     collect_api_resources(namespace, ns_output_dir)
     collect_api_resources_description(namespace, ns_output_dir)
     collect_pods_logs(namespace, ns_output_dir)
+    collect_connectivity_check(namespace, ns_output_dir)
 
 
 def run(namespace_input, output_dir):
@@ -396,6 +397,24 @@ def collect_pods_logs(namespace, output_dir):
                 file_handle.write(output)
 
             logger.info("Namespace '%s':  + %s-%s", namespace, pod, container)
+
+
+def collect_connectivity_check(namespace, output_dir):
+    """
+        Collect connectivity checks to files (using certain ns).
+    """
+    # Verify with curl.
+    collect_helper(output_dir,
+                   cmd="APISERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}') \
+                       && curl -k -v ${APISERVER}/api/",
+                   file_name="connectivity_check_via_curl",
+                   resource_name="connectivity check via curl")
+    # Verify with kubectl.
+    collect_helper(output_dir,
+                   cmd="kubectl get all -v=6 -n {}".format(namespace),
+                   file_name="connectivity_check_via_kubectl",
+                   resource_name="connectivity check via kubectl",
+                   namespace=namespace)
 
 
 def archive_files(output_dir, output_dir_name):

@@ -19,13 +19,13 @@ metadata:
 rules:
   - apiGroups:
       - app.redislabs.com
-    resources:
-      - "*"
-    verbs:
-      - "*"
+    resources: ["redisenterpriseclusters", "redisenterpriseclusters/status", "redisenterpriseclusters/finalizers",
+                "redisenterprisedatabases", "redisenterprisedatabases/status", "redisenterprisedatabases/finalizers"]
+    verbs: ["delete", "deletecollection", "get", "list", "patch", "create", "update", "watch"]
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["*"]
+    verbs: ["update", "get", "read", "list", "listallnamespaces", "watch", "watchlist",
+            "watchlistallnamespaces", "create","patch","replace","delete","deletecollection"]
   - apiGroups: [""]
     resources: ["endpoints"]
     verbs: ["get", "list", "watch"]

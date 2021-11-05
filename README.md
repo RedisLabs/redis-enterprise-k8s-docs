@@ -32,9 +32,9 @@ High level architecture and overview of the solution can be found [HERE](https:/
 The following are the images and tags for this release:
 | Component | k8s | Openshift |
 | --- | --- | --- |
-| Redis Enterprise | `redislabs/redis:6.2.4-55` | `redislabs/redis:6.2.4-55.rhel7-openshift` |
-| Operator | `redislabs/operator:6.2.4-1` | `redislabs/operator:6.2.4-1` |
-| Services Rigger | `redislabs/k8s-controller:6.2.4-1` | `redislabs/k8s-controller:6.2.4-1` |
+| Redis Enterprise | `redislabs/redis:6.2.8-41` | `redislabs/redis:6.2.8-41.rhel7-openshift` |
+| Operator | `redislabs/operator:6.2.8-2` | `redislabs/operator:6.2.8-2` |
+| Services Rigger | `redislabs/k8s-controller:6.2.8-2` | `redislabs/k8s-controller:6.2.8-2` |
 > * RedHat certified images are available on [Redhat Catalog](https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d) </br>
 
 
@@ -114,11 +114,12 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     * Enable the Kubernetes webhook using the generated certificate
    
          **NOTE**: One must replace REPLACE_WITH_NAMESPACE in the following command with the namespace the REC was installed into.
-   
+         * Save the certificate into a local environmental variable
          ```shell script
-         # save cert
          CERT=`kubectl get secret admission-tls -o jsonpath='{.data.cert}'`
-         # create patch file
+         ```
+         * Create a patch file
+         ```shell script
          sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' admission/webhook.yaml | kubectl create -f -
    
          cat > modified-webhook.yaml <<EOF
@@ -128,25 +129,30 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
              caBundle: $CERT
            admissionReviewVersions: ["v1beta1"]
          EOF
-         # patch webhook with caBundle
+         ```
+         * Patch the validating webhook with the certificate (caBundle)
+         ```shell script
          kubectl patch ValidatingWebhookConfiguration redb-admission --patch "$(cat modified-webhook.yaml)"
-        ```
+         ```
    
-   * Limiting the webhook to the relevant namespaces:    
-    Unless limited, webhooks will intercept requests from all namespaces.<br>
-    In case you have several REC objects on your K8S cluster you need to limit the webhook to the relevant namespace.  
-    This is done by adding a `namespaceSelector` to the webhook spec that targets a label found on the namespace.<br>
-    First, make sure you have such a relevant label on the namespace and that it is unique for this namespace. e.g.
-     ```
-     apiVersion: v1
-     kind: Namespace
-     metadata:
-       labels:
-         namespace-name: staging
-       name: staging
-      ```
-        Then patch the webhook with a namespaceSelector. See this example:
-     ```
+    * Limiting the webhook to the relevant namespaces:    
+      Unless limited, webhooks will intercept requests from all namespaces.<br>
+      In case you have several REC objects on your K8S cluster you need to limit the webhook to the relevant namespace.  
+      This is done by adding a `namespaceSelector` to the webhook spec that targets a label found on the namespace.<br>
+    
+         * First, make sure you have such a relevant label on the namespace and that it is unique for this namespace. e.g.
+         
+        ```yaml
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          labels:
+            namespace-name: staging
+        name: staging
+        ```
+        
+        * Then, patch the webhook with a namespaceSelector. See this example:
+        ```shell script
         cat > modified-webhook.yaml <<EOF
         webhooks:
         - name: redb.admission.redislabs
@@ -154,11 +160,13 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
             matchLabels:
               namespace-name: staging
         EOF
-     
-        # apply the patch:
+        ```
+        
+        * apply the patch:
+        ```shell script
         kubectl patch ValidatingWebhookConfiguration redb-admission --patch "$(cat modified-webhook.yaml)"
         ```
-    * Verify the installation
+       * Verify the installation
         In order to verify that the all the components of the Admission Controller are installed correctly, we will try to apply an invalid resource that should force the admission controller to reject it.  If it applies succesfully, it means the admission controller has not been hooked up correctly.
         
         ```shell script
@@ -331,7 +339,7 @@ The operator deploys a `RedisEnterpriseCluster` with default configurations valu
     redisEnterpriseImageSpec:
       imagePullPolicy:  IfNotPresent
       repository:       redislabs/redis
-      versionTag:       6.2.4-55
+      versionTag:       6.2.8-41
   ```
 
 * Persistence
@@ -433,21 +441,21 @@ For example:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/redis
-    versionTag:       6.2.4-55
+    versionTag:       6.2.8-41
 ```
 
 ```yaml
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       6.2.4-1
+    versionTag:       6.2.8-2
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       6.2.4-1
+    versionTag:       6.2.8-2
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -459,7 +467,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:6.2.4-1
+          image: harbor.corp.local/redisenterprise/operator:6.2.8-2
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).
@@ -582,7 +590,7 @@ Note: in the  examples above the Redis Enterprise Cluster name is: 'rec' and the
 The Operator automates and simplifies the upgrade process.  
 The Redis Enterprise Cluster Software, and the Redis Enterprise Operator for Kubernetes versions are tightly coupled and should be upgraded together.  
 It is recommended to use the bundle.yaml to upgrade, as it loads all the relevant CRD documents for this version. If the updated CRDs are not loaded, the operator might fail.
-There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.2.4-55
+There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.2.8-41
 
 ```yaml
   autoUpgradeRedisEnterprise: true
@@ -591,7 +599,7 @@ There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within t
 Alternatively:
 ```yaml
   RedisEnterpriseImageSpec:
-    versionTag: redislabs/redis:6.2.4-55
+    versionTag: redislabs/redis:6.2.8-41
 ```
 
 ## Supported K8S Distributions
@@ -603,32 +611,27 @@ Supported versions (platforms/versions that are not listed are not supported):
 | OpenShift 4.6  (K8s 1.19)       | supported      |
 | OpenShift 4.7  (K8s 1.20)       | supported      |
 | OpenShift 4.8  (K8s 1.21)       | supported      |
-| KOPS vanilla 1.16               | deprecated     |
-| KOPS vanilla 1.17               | deprecated     |
 | KOPS vanilla 1.18               | supported      |
 | KOPS vanilla 1.19               | supported      |
 | KOPS vanilla 1.20               | supported      |
 | KOPS vanilla 1.21               | supported      |
-| GKE 1.18                        | supported      |
 | GKE 1.19                        | supported      |
 | GKE 1.20                        | supported      |
 | GKE 1.21                        | supported      |
-| Rancher 2.4 (K8s 1.17)          | supported      |
-| Rancher 2.4 (K8s 1.18)          | supported      |
+| Rancher 2.4 (K8s 1.17)          | deprecated     |
+| Rancher 2.4 (K8s 1.18)          | deprecated     |
 | Rancher 2.5 (K8s 1.17)          | supported      |
 | Rancher 2.5 (K8s 1.18)          | supported      |
 | Rancher 2.5 (K8s 1.19)          | supported      |
 | Rancher 2.5 (K8s 1.20)          | supported      |
-| VMWare TKGIE* 1.7 (K8s 1.16)    | deprecated     |
-| VMWare TKGIE* 1.8 (K8s 1.17)    | deprecated     |
 | VMWare TKGIE** 1.10 (K8s 1.19)  | supported      |
-| AKS 1.18                        | supported      |
 | AKS 1.19                        | supported      |
 | AKS 1.20                        | supported      |
+| AKS 1.21                        | supported      |
 | EKS 1.18                        | supported      |
 | EKS 1.19                        | supported      |
 | EKS 1.20                        | supported      |
 | EKS 1.21                        | supported      |
 
-\* No longer supported by VMware
+\* No longer supported by the vendor
 \*\* Tanzu Kubernetes Grid Integrated Edition

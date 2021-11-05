@@ -5,16 +5,17 @@ metadata:
 rules:
   - apiGroups: ["rbac.authorization.k8s.io", ""]
     resources: ["roles", "serviceaccounts", "rolebindings"]
-    verbs: ["*"]
+    verbs: ["bind", "escalate", "impersonate", "userextras", "create", "get",
+            "list", "watch", "update", "patch", "delete", "deletecollection"]
   - apiGroups:
       - app.redislabs.com
-    resources:
-      - "*"
-    verbs:
-      - "*"
+    resources: ["redisenterpriseclusters", "redisenterpriseclusters/status", "redisenterpriseclusters/finalizers",
+                "redisenterprisedatabases", "redisenterprisedatabases/status", "redisenterprisedatabases/finalizers"]
+    verbs: ["delete", "deletecollection", "get", "list", "patch", "create", "update", "watch"]
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["*"]
+    verbs: ["update", "get", "read", "list", "listallnamespaces", "watch", "watchlist",
+            "watchlistallnamespaces", "create", "patch", "replace", "delete", "deletecollection"]
   - apiGroups: [""]
     resources: ["endpoints"]
     verbs: ["get", "list", "watch"]
@@ -23,7 +24,7 @@ rules:
     verbs: ["create", "patch"]
   - apiGroups: ["apps"]
     resources: ["deployments", "statefulsets", "replicasets"]
-    verbs: ["*"]
+    verbs: ["create", "delete", "deletecollection", "get", "list", "patch", "update", "watch"]
   - apiGroups: ["policy"]
     resources: ["poddisruptionbudgets"]
     verbs: ["create", "delete", "get"]
@@ -49,4 +50,5 @@ rules:
       - use
   - apiGroups: ["extensions"]
     resources: ["ingresses"]
-    verbs: ["*"]
+    verbs: ["create", "patch", "replace", "delete", "deletecollection", "read", "list", "listallnamespaces",
+            "watch", "watchlist", "watchlistallnamespaces", "patchstatus", "readstatus", "replacestatus", "update"]
