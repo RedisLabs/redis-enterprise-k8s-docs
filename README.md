@@ -43,6 +43,8 @@ The "Basic" installation deploys the operator (from the current release) from Do
 This is the fastest way to get up and running with a new Redis Enterprise on Kubernetes.
 
 1. Create a new namespace:
+  > Note:
+For the purpose of this doc, we'll use the name "demo" for our cluster's namespace.
 
     ```bash
     kubectl create namespace demo
@@ -111,16 +113,18 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
             NAME            TYPE     DATA   AGE
             admission-tls   Opaque   2      2m43s
        ```
+
+    > **Note:** If you're not using multiple namespaces you may proceed to step 6.
+    
     * Enable the Kubernetes webhook using the generated certificate
    
-         **NOTE**: One must replace REPLACE_WITH_NAMESPACE in the following command with the namespace the REC was installed into.
          * Save the certificate into a local environmental variable
          ```shell script
          CERT=`kubectl get secret admission-tls -o jsonpath='{.data.cert}'`
          ```
          * Create a patch file
          ```shell script
-         sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' admission/webhook.yaml | kubectl create -f -
+         sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/demo/g' admission/webhook.yaml | kubectl create -f -
    
          cat > modified-webhook.yaml <<EOF
          webhooks:
@@ -264,12 +268,10 @@ Other custom configurations are referenced in this repository.
    ```
     * Enable the Kubernetes webhook using the generated certificate
    
-         **NOTE**: One must replace REPLACE_WITH_NAMESPACE in the following command with the namespace the REC was installed into.
-   
          ```shell script
          # save cert
          CERT=`kubectl get secret admission-tls -o jsonpath='{.data.cert}'`
-         sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' admission/webhook.yaml | kubectl create -f -
+         sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/demo/g' admission/webhook.yaml | kubectl create -f -
    
          # create patch file
          cat > modified-webhook.yaml <<EOF
