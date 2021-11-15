@@ -43,8 +43,8 @@ The "Basic" installation deploys the operator (from the current release) from Do
 This is the fastest way to get up and running with a new Redis Enterprise on Kubernetes.
 
 1. Create a new namespace:
-  > Note:
-For the purpose of this doc, we'll use the name "demo" for our cluster's namespace.
+    > Note:
+    For the purpose of this doc, we'll use the name "demo" for our cluster's namespace.
 
     ```bash
     kubectl create namespace demo
