@@ -113,8 +113,6 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
             NAME            TYPE     DATA   AGE
             admission-tls   Opaque   2      2m43s
        ```
-
-    > **Note:** If you're not using multiple namespaces you may proceed to step 6.
     
     * Enable the Kubernetes webhook using the generated certificate
    
@@ -138,7 +136,9 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
          ```shell script
          kubectl patch ValidatingWebhookConfiguration redb-admission --patch "$(cat modified-webhook.yaml)"
          ```
-   
+    
+    > **Note:** If you're not using multiple namespaces you may skip to ["Verify the installation"](#verify_admission_installation) step.
+
     * Limiting the webhook to the relevant namespaces:    
       Unless limited, webhooks will intercept requests from all namespaces.<br>
       In case you have several REC objects on your K8S cluster you need to limit the webhook to the relevant namespace.  
@@ -170,6 +170,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
         ```shell script
         kubectl patch ValidatingWebhookConfiguration redb-admission --patch "$(cat modified-webhook.yaml)"
         ```
+       <a name="verify_admission_installation"></a>
        * Verify the installation
         In order to verify that the all the components of the Admission Controller are installed correctly, we will try to apply an invalid resource that should force the admission controller to reject it.  If it applies succesfully, it means the admission controller has not been hooked up correctly.
         
