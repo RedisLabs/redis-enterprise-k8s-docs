@@ -388,7 +388,12 @@ def collect_pods_logs(namespace, output_dir):
 
     make_dir(logs_dir)
     for pod in pods:
-        for container in get_list_of_containers_from_pod(namespace, pod):
+        containers = get_list_of_containers_from_pod(namespace, pod)
+        if containers is None:
+            logger.warning("Namespace '%s' Could not get containers for pod: %s list - "
+                           "skipping pods logs collection", namespace, pod)
+            continue
+        for container in containers:
             cmd = "kubectl logs -c {} -n  {} {}" \
                 .format(container, namespace, pod)
             with open(os.path.join(logs_dir, "{}.log".format(f'{pod}-{container}')),
@@ -457,7 +462,7 @@ def get_list_of_containers_from_pod(namespace, pod_name):
     if return_code:
         logger.warning("Failed to get pods: %s", out)
         return None
-    return out.split()
+    return out.replace("'", "").split()
 
 
 def get_pod_names(namespace, selector=""):
