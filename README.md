@@ -284,13 +284,47 @@ Other custom configurations are referenced in this repository.
            admissionReviewVersions: ["v1beta1"]
          EOF
          # patch webhook with caBundle
-         kubectl patch ValidatingWebhookConfiguration redb-admission --patch "$(cat modified-webhook.yaml)"
+         oc patch ValidatingWebhookConfiguration redb-admission --patch "$(cat modified-webhook.yaml)"
          ```
+    > **Note:** If you're not using multiple namespaces you may skip to ["Verify the installation"](#verify_admission_installation_openshift) step.
+   
+    * Limiting the webhook to the relevant namespaces:    
+      Unless limited, webhooks will intercept requests from all namespaces.<br>
+      In case you have several REC objects on your K8S cluster you need to limit the webhook to the relevant namespace.  
+      This is done by adding a `namespaceSelector` to the webhook spec that targets a label found on the namespace.<br>
+    
+         * First, make sure you have such a relevant label on the namespace and that it is unique for this namespace. e.g.
+         
+        ```yaml
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          labels:
+            namespace-name: staging
+        name: staging
+        ```
+        
+        * Then, patch the webhook with a namespaceSelector. See this example:
+        ```shell script
+        cat > modified-webhook.yaml <<EOF
+        webhooks:
+        - name: redb.admission.redislabs
+          namespaceSelector:
+            matchLabels:
+              namespace-name: staging
+        EOF
+        ```
+        
+        * apply the patch:
+        ```shell script
+        oc patch ValidatingWebhookConfiguration redb-admission --patch "$(cat modified-webhook.yaml)"
+        ```
+     <a name="verify_admission_installation_openshift"></a>
      * Verify the installation
         In order to verify that the all the components of the Admission Controller are installed correctly, we will try to apply an invalid resource that should force the admission controller to reject it.  If it applies succesfully, it means the admission controller has not been hooked up correctly.
         
         ```shell script
-        $ kubectl apply -f - << EOF
+        $ oc apply -f - << EOF
         apiVersion: app.redislabs.com/v1alpha1
         kind: RedisEnterpriseDatabase
         metadata:
@@ -322,7 +356,7 @@ Other custom configurations are referenced in this repository.
 
       memorySize: 100MB
     EOF
-    kubectl apply -f /tmp/redis-enterprise-database.yml
+    oc apply -f /tmp/redis-enterprise-database.yml
     ```
     Replace the name of the cluster with the one used on the current namespace.
     All REDB configuration options are documented [here](redis_enterprise_database_api.md).
