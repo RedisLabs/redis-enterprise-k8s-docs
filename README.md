@@ -241,8 +241,10 @@ Other custom configurations are referenced in this repository.
 3. Provide the operator permissions for pods (substitute your project for "my-project"):
 
     ```bash
-    oc adm policy add-scc-to-group redis-enterprise-scc system:serviceaccounts:my-project
+    oc adm policy add-scc-to-user redis-enterprise-scc system:serviceaccount:my-project:redis-enterprise-operator
+    oc adm policy add-scc-to-user redis-enterprise-scc system:serviceaccount:my-project:rec
     ```
+   > Note - change rec in the suffix of the 2nd command with the name of the RedisEnterpriseCluster, if different (see step "Redis Enterprise Cluster custom resource" below).
 
 4. Deploy the OpenShift operator bundle:
     > NOTE: Update the `storageClassName` setting in `openshift.bundle.yaml` (by default its set to `gp2`).
