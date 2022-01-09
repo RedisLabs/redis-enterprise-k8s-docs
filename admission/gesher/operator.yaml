@@ -26,7 +26,7 @@ spec:
           volumeMounts:
           - mountPath: /certs
             name: certs
-          image: redislabs/gesher:0.4
+          image: redislabs/gesher:0.6
           command:
           - "/manager"
           args:
