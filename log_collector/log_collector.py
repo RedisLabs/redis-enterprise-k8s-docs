@@ -52,6 +52,8 @@ API_RESOURCES = [
     "CustomResourceDefinition",
     "CertificateSigningRequest",
     "ValidatingWebhookConfiguration",
+    "NamespacedValidatingType",
+    "NamespacedValidatingRule",
     "ClusterRole",
     "ClusterRoleBinding",
     "ClusterServiceVersion",
@@ -122,9 +124,10 @@ def _get_namespaces_to_run_on(namespace):
 def collect_from_ns(namespace, output_dir):
     "Collect the context of a specific namespace. Typically runs in parallel processes."
     logger.info("Started collecting from namespace '%s'", namespace)
-    ns_output_dir = output_dir + ("/" + namespace if output_dir[-1] != '/' else namespace)
+    ns_output_dir = os.path.join(output_dir, namespace)
     make_dir(ns_output_dir)
 
+    collect_connectivity_check(namespace, ns_output_dir)
     get_redis_enterprise_debug_info(namespace, ns_output_dir)
     collect_pod_rs_logs(namespace, ns_output_dir)
     collect_resources_list(namespace, ns_output_dir)
@@ -132,7 +135,6 @@ def collect_from_ns(namespace, output_dir):
     collect_api_resources(namespace, ns_output_dir)
     collect_api_resources_description(namespace, ns_output_dir)
     collect_pods_logs(namespace, ns_output_dir)
-    collect_connectivity_check(namespace, ns_output_dir)
 
 
 def run(namespace_input, output_dir):
@@ -192,16 +194,20 @@ def collect_pod_rs_logs(namespace, output_dir):
     """
     rs_pod_logs_dir = os.path.join(output_dir, "rs_pod_logs")
     rs_pod_names = get_pod_names(namespace=namespace, selector='redis.io/role=node')
+    if not rs_pod_names:
+        logger.warning("Namespace '%s' Could not get rs pods list - "
+                       "skipping rs pods logs collection", namespace)
+        return
     make_dir(rs_pod_logs_dir)
     # TODO restore usage of get_non_ready_rs_pod_names once RS bug is resolved (RED-51857) # pylint: disable=W0511
     for rs_pod_name in rs_pod_names:
         pod_log_dir = os.path.join(rs_pod_logs_dir, rs_pod_name)
         make_dir(pod_log_dir)
-        cmd = "kubectl -n {} cp {}:{} {} -c {}".format(namespace,
-                                                       rs_pod_name,
-                                                       RS_LOG_FOLDER_PATH,
-                                                       pod_log_dir,
-                                                       RLEC_CONTAINER_NAME)
+        cmd = "cd \"{}\" && kubectl -n {} cp {}:{} ./ -c {}".format(pod_log_dir,
+                                                                    namespace,
+                                                                    rs_pod_name,
+                                                                    RS_LOG_FOLDER_PATH,
+                                                                    RLEC_CONTAINER_NAME)
         return_code, out = run_shell_command(cmd)
         if return_code:
             logger.warning("Failed to copy rs logs from pod "
@@ -213,11 +219,11 @@ def collect_pod_rs_logs(namespace, output_dir):
 
         pod_config_dir = os.path.join(pod_log_dir, "config")
         make_dir(pod_config_dir)
-        cmd = "kubectl -n {} cp {}:{} {} -c {}".format(namespace,
-                                                       rs_pod_name,
-                                                       "/opt/redislabs/config",
-                                                       pod_config_dir,
-                                                       RLEC_CONTAINER_NAME)
+        cmd = "cd \"{}\" && kubectl -n {} cp {}:{} ./ -c {}".format(pod_config_dir,
+                                                                    namespace,
+                                                                    rs_pod_name,
+                                                                    "/opt/redislabs/config",
+                                                                    RLEC_CONTAINER_NAME)
         return_code, out = run_shell_command(cmd)
         if return_code:
             logger.warning("Failed to copy rs config from pod "
@@ -255,11 +261,11 @@ def debuginfo_attempt_on_pod(namespace, output_dir, pod_name, attempt):
         return False
 
     # copy package from RS pod
-    output_path = os.path.join(output_dir, debug_file_name)
-    cmd = "kubectl -n {} cp {}:{} {}".format(namespace,
-                                             pod_name,
-                                             debug_file_path,
-                                             output_path)
+    cmd = "cd \"{}\" && kubectl -n {} cp {}:{} ./{}".format(output_dir,
+                                                            namespace,
+                                                            pod_name,
+                                                            debug_file_path,
+                                                            debug_file_name)
     return_code, out = run_shell_command(cmd)
     if return_code:
         logger.warning("Failed to copy debug info from pod "
@@ -389,6 +395,8 @@ def collect_pods_logs(namespace, output_dir):
     make_dir(logs_dir)
     for pod in pods:
         containers = get_list_of_containers_from_pod(namespace, pod)
+        init_containers = get_list_of_init_containers_from_pod(namespace, pod)
+        containers.extend(init_containers)
         if containers is None:
             logger.warning("Namespace '%s' Could not get containers for pod: %s list - "
                            "skipping pods logs collection", namespace, pod)
@@ -401,6 +409,18 @@ def collect_pods_logs(namespace, output_dir):
                 _, output = run_shell_command(cmd)
                 file_handle.write(output)
 
+            # operator and admission containers restart after changing the operator-environment-configmap
+            # getting the logs of the containers before the restart can help us with debugging potential bugs
+            get_logs_before_restart_cmd = "kubectl logs -c {} -n  {} {} -p" \
+                .format(container, namespace, pod)
+            with open(os.path.join(logs_dir, "{}.log".format(f'{pod}-{container}-instance-before-restart')),
+                      "w+") as file_handle:
+                err_code, output = run_shell_command(get_logs_before_restart_cmd)
+                if err_code == 0:
+                    file_handle.write(output)
+                else:  # no previous container instance found; did not restart
+                    os.unlink(file_handle.name)
+
             logger.info("Namespace '%s':  + %s-%s", namespace, pod, container)
 
 
@@ -409,11 +429,12 @@ def collect_connectivity_check(namespace, output_dir):
         Collect connectivity checks to files (using certain ns).
     """
     # Verify with curl.
-    collect_helper(output_dir,
-                   cmd="APISERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}') \
-                       && curl -k -v ${APISERVER}/api/",
-                   file_name="connectivity_check_via_curl",
-                   resource_name="connectivity check via curl")
+    if sys.platform != 'win32':
+        collect_helper(output_dir,
+                       cmd="APISERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}') \
+                           && curl -k -v ${APISERVER}/api/",
+                       file_name="connectivity_check_via_curl",
+                       resource_name="connectivity check via curl")
     # Verify with kubectl.
     collect_helper(output_dir,
                    cmd="kubectl get all -v=6 -n {}".format(namespace),
@@ -460,7 +481,19 @@ def get_list_of_containers_from_pod(namespace, pod_name):
     cmd = f"kubectl get pod {pod_name} -o jsonpath='{{.spec.containers[*].name}}' -n {namespace}"
     return_code, out = run_shell_command(cmd)
     if return_code:
-        logger.warning("Failed to get pods: %s", out)
+        logger.warning("Failed to get containers from pod: %s", out)
+        return None
+    return out.replace("'", "").split()
+
+
+def get_list_of_init_containers_from_pod(namespace, pod_name):
+    """
+        Returns a list of init containers from a given pod.
+    """
+    cmd = f"kubectl get pod {pod_name} -o jsonpath='{{.spec.initContainers[*].name}}' -n {namespace}"
+    return_code, out = run_shell_command(cmd)
+    if return_code:
+        logger.warning("Failed to get init containers from pod: %s", out)
         return None
     return out.replace("'", "").split()
 
@@ -469,7 +502,11 @@ def get_pod_names(namespace, selector=""):
     """
         Returns list of pod names
     """
-    return [pod['metadata']['name'] for pod in get_pods(namespace, selector)]
+    pods = get_pods(namespace, selector)
+    if not pods:
+        logger.info("Namespace '%s': Cannot find pods", namespace)
+        return None
+    return [pod['metadata']['name'] for pod in pods]
 
 
 def get_namespace_from_config():

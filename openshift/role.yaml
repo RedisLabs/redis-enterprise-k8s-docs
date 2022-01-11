@@ -27,7 +27,7 @@ rules:
     verbs: ["create", "delete", "deletecollection", "get", "list", "patch", "update", "watch"]
   - apiGroups: ["policy"]
     resources: ["poddisruptionbudgets"]
-    verbs: ["create", "delete", "get"]
+    verbs: ["create", "delete", "get", "list", "watch"]
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["create", "delete", "get" , "update", "list", "watch"]
@@ -49,6 +49,10 @@ rules:
     verbs:
       - use
   - apiGroups: ["extensions"]
+    resources: ["ingresses"]
+    verbs: ["create", "patch", "replace", "delete", "deletecollection", "read", "list", "listallnamespaces",
+            "watch", "watchlist", "watchlistallnamespaces", "patchstatus", "readstatus", "replacestatus", "update"]
+  - apiGroups: ["networking.k8s.io"]
     resources: ["ingresses"]
     verbs: ["create", "patch", "replace", "delete", "deletecollection", "read", "list", "listallnamespaces",
             "watch", "watchlist", "watchlistallnamespaces", "patchstatus", "readstatus", "replacestatus", "update"]

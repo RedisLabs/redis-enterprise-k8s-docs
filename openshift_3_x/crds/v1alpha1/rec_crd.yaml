@@ -39,14 +39,14 @@ spec:
   scope: Namespaced
   subresources:
     status: {}
-  version: v1
+  version: v1alpha1
   versions:
-  - name: v1
-    served: true
-    storage: false
   - name: v1alpha1
     served: true
     storage: true
+  - name: v1
+    served: true
+    storage: false
   validation:
     openAPIV3Schema:
       description: RedisEnterpriseCluster is the Schema for the redisenterpriseclusters
@@ -4973,7 +4973,7 @@ spec:
                         - name
                         type: object
                       type: array
-                  type: object              
+                  type: object
               type: object
             sideContainersSpec:
               items:

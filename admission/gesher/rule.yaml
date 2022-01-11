@@ -5,8 +5,10 @@ metadata:
 spec:
   webhooks:
   - name: "redb-admission"
-    failurePolicy: "fail"
+    failurePolicy: Fail
     timeoutSeconds: 25
+    matchPolicy: Exact
+    sideEffects: None
     clientConfig:
       service:
         name: "admission"
@@ -18,4 +20,5 @@ spec:
       apiVersions: ["v1alpha1"]
       resources: ["redisenterprisedatabases"]
       operations: ["*"]
+    admissionReviewVersions: ["v1"]
 

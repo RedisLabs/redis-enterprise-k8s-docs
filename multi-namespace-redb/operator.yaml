@@ -15,7 +15,7 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:6.2.8-2
+          image: redislabs/operator:6.2.8-11
           command:
           - redis-enterprise-operator
           imagePullPolicy: Always
@@ -57,7 +57,7 @@ spec:
               port: 8080
               scheme: HTTP
         - name: admission
-          image: redislabs/operator:6.2.8-2
+          image: redislabs/operator:6.2.8-11
           command:
             - /usr/local/bin/admission
           imagePullPolicy: Always

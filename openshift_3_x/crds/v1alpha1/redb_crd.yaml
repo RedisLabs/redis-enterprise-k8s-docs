@@ -370,7 +370,7 @@ spec:
               description: Database port number. TCP port on which the database is
                 available. Will be generated automatically if omitted. can not be
                 changed after creation
-              type: integer            
+              type: integer
             databaseSecretName:
               description: The name of the K8s secret that holds the password to the
                 database.
@@ -608,4 +608,3 @@ spec:
               type: string
           type: object
       type: object
-
