@@ -1,4 +1,0 @@
-resources:
-- rec.yaml
-patchesStrategicMerge:
-- kustomize_rec.yaml
