@@ -39,14 +39,14 @@ spec:
   scope: Namespaced
   subresources:
     status: {}
-  version: v1alpha1
+  version: v1
   versions:
-  - name: v1alpha1
-    served: true
-    storage: true
   - name: v1
     served: true
     storage: false
+  - name: v1alpha1
+    served: true
+    storage: true
   validation:
     openAPIV3Schema:
       description: RedisEnterpriseCluster is the Schema for the redisenterpriseclusters
@@ -217,10 +217,11 @@ spec:
               description: Redis Enterprise License
               type: string
             licenseSecretName:
-              description: K8s secret or Vault Secret Name/Path to use for Cluster License. When left blank, the license
-                is read from the "license" field. Note that you can't specify non-empty values in both
-                "license" and "licenseSecretName", only one of these fields can be used to pass the license string.
-                The license needs to be stored under the key "license".
+              description: K8s secret or Vault Secret Name/Path to use for Cluster
+                License. When left blank, the license is read from the "license" field.
+                Note that you can't specify non-empty values in both "license" and
+                "licenseSecretName", only one of these fields can be used to pass
+                the license string. The license needs to be stored under the key "license".
               type: string
             nodeSelector:
               additionalProperties:

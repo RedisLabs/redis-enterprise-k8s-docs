@@ -93,7 +93,7 @@ Hashicorp Vault and the Redis Enterprise Operator can be deployed in multiple sc
     The Operator pod would not be ready before you save the admission controller secret to Vault:
     1. Generate a json file with key/cert pair to be used by admission:<br>
         ```
-        kubectl exec -it $(kubectl get pod -l name=redis-enterprise-operator -o jsonpath='{.items[0].metadata.name}') -- /usr/local/bin/generate-tls -infer > output.json
+        kubectl exec -it $(kubectl get pod -l name=redis-enterprise-operator -o jsonpath='{.items[0].metadata.name}') -c redis-enterprise-operator -- /usr/local/bin/generate-tls -infer | tail -4 > output.json
         ```
        * the output.json file is needed for additional steps below (deployment of admission controller)
     2. Apply the secret to vault - execute the following within the Hashicorp Vault CLI interface (you will need to copy<br> the file from the previous step for example by running `kubectl cp output.json vault-0:/tmp -n vault`):

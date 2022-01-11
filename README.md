@@ -32,9 +32,9 @@ High level architecture and overview of the solution can be found [HERE](https:/
 The following are the images and tags for this release:
 | Component | k8s | Openshift |
 | --- | --- | --- |
-| Redis Enterprise | `redislabs/redis:6.2.8-41` | `redislabs/redis:6.2.8-41.rhel7-openshift` |
-| Operator | `redislabs/operator:6.2.8-2` | `redislabs/operator:6.2.8-2` |
-| Services Rigger | `redislabs/k8s-controller:6.2.8-2` | `redislabs/k8s-controller:6.2.8-2` |
+| Redis Enterprise | `redislabs/redis:6.2.8-53` | `redislabs/redis:6.2.8-53.rhel7-openshift` |
+| Operator | `redislabs/operator:6.2.8-11` | `redislabs/operator:6.2.8-11` |
+| Services Rigger | `redislabs/k8s-controller:6.2.8-11` | `redislabs/k8s-controller:6.2.8-11` |
 > * RedHat certified images are available on [Redhat Catalog](https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d) </br>
 
 
@@ -136,9 +136,9 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
          ```shell script
          kubectl patch ValidatingWebhookConfiguration redb-admission --patch "$(cat modified-webhook.yaml)"
          ```
-    
+      
     > **Note:** If you're not using multiple namespaces you may skip to ["Verify the installation"](#verify_admission_installation) step.
-
+   
     * Limiting the webhook to the relevant namespaces:    
       Unless limited, webhooks will intercept requests from all namespaces.<br>
       In case you have several REC objects on your K8S cluster you need to limit the webhook to the relevant namespace.  
@@ -217,11 +217,13 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
 
 ### Installation on OpenShift
 
-The "OpenShift" installations deploys the operator from the current release with the RHEL image from DockerHub and default OpenShift settings.
+The "OpenShift" installation deploys the operator from the current release with the RHEL image from DockerHub and default OpenShift settings.
 This is the fastest way to get up and running with a new cluster on OpenShift 3.x.
 For OpenShift 4.x, you may choose to use OLM deployment from within your OpenShift cluster or follow the steps below.
 Other custom configurations are referenced in this repository.
-> Note: you will need to replace `<my-project>` with your project name
+If you are running on OpenShift 3.x, use the `bundle.yaml` file located under `openshift_3_x` folder (see comment in step 4).
+That folder also contains the custom resource definitions compatible with OpenShift 3.x.
+> Note: you will need to replace `<my-project>` with your project name.
 
 1. Create a new project:
 
@@ -252,6 +254,7 @@ Other custom configurations are referenced in this repository.
     ```bash
     oc apply -f openshift.bundle.yaml
     ``` 
+    > Note: If you are running on OpenShift 3.x, use the `bundle.yaml` file located under `openshift_3_x` folder.
 
 5. Redis Enterprise Cluster custom resource - `RedisEnterpriseCluster`
 
@@ -270,7 +273,7 @@ Other custom configurations are referenced in this repository.
         admission-tls   Opaque   2      2m43s
    ```
     * Enable the Kubernetes webhook using the generated certificate
-   
+      
          ```shell script
          # save cert
          CERT=`kubectl get secret admission-tls -o jsonpath='{.data.cert}'`
@@ -378,7 +381,7 @@ The operator deploys a `RedisEnterpriseCluster` with default configurations valu
     redisEnterpriseImageSpec:
       imagePullPolicy:  IfNotPresent
       repository:       redislabs/redis
-      versionTag:       6.2.8-41
+      versionTag:       6.2.8-53
   ```
 
 * Persistence
@@ -480,21 +483,21 @@ For example:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/redis
-    versionTag:       6.2.8-41
+    versionTag:       6.2.8-53
 ```
 
 ```yaml
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       6.2.8-2
+    versionTag:       6.2.8-11
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       6.2.8-2
+    versionTag:       6.2.8-11
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -506,7 +509,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:6.2.8-2
+          image: harbor.corp.local/redisenterprise/operator:6.2.8-11
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).
@@ -629,7 +632,7 @@ Note: in the  examples above the Redis Enterprise Cluster name is: 'rec' and the
 The Operator automates and simplifies the upgrade process.  
 The Redis Enterprise Cluster Software, and the Redis Enterprise Operator for Kubernetes versions are tightly coupled and should be upgraded together.  
 It is recommended to use the bundle.yaml to upgrade, as it loads all the relevant CRD documents for this version. If the updated CRDs are not loaded, the operator might fail.
-There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.2.8-41
+There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.2.8-53
 
 ```yaml
   autoUpgradeRedisEnterprise: true
@@ -638,7 +641,7 @@ There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within t
 Alternatively:
 ```yaml
   RedisEnterpriseImageSpec:
-    versionTag: redislabs/redis:6.2.8-41
+    versionTag: redislabs/redis:6.2.8-53
 ```
 
 ## Supported K8S Distributions
@@ -650,16 +653,17 @@ Supported versions (platforms/versions that are not listed are not supported):
 | OpenShift 4.6  (K8s 1.19)       | supported      |
 | OpenShift 4.7  (K8s 1.20)       | supported      |
 | OpenShift 4.8  (K8s 1.21)       | supported      |
+| OpenShift 4.9  (K8s 1.22)       | supported      |
 | KOPS vanilla 1.18               | supported      |
 | KOPS vanilla 1.19               | supported      |
 | KOPS vanilla 1.20               | supported      |
 | KOPS vanilla 1.21               | supported      |
+| KOPS vanilla 1.22               | supported      |
 | GKE 1.19                        | supported      |
 | GKE 1.20                        | supported      |
 | GKE 1.21                        | supported      |
-| Rancher 2.4 (K8s 1.17)          | deprecated     |
-| Rancher 2.4 (K8s 1.18)          | deprecated     |
-| Rancher 2.5 (K8s 1.17)          | supported      |
+| GKE 1.22                        | supported      |
+| Rancher 2.5 (K8s 1.17)          | deprecated     |
 | Rancher 2.5 (K8s 1.18)          | supported      |
 | Rancher 2.5 (K8s 1.19)          | supported      |
 | Rancher 2.5 (K8s 1.20)          | supported      |
@@ -667,6 +671,7 @@ Supported versions (platforms/versions that are not listed are not supported):
 | AKS 1.19                        | supported      |
 | AKS 1.20                        | supported      |
 | AKS 1.21                        | supported      |
+| AKS 1.22                        | supported      |
 | EKS 1.18                        | supported      |
 | EKS 1.19                        | supported      |
 | EKS 1.20                        | supported      |

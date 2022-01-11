@@ -1,4 +1,4 @@
-apiVersion: apiextensions.k8s.io/v1beta1
+apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: namespacedvalidatingrules.app.redislabs.com
@@ -14,5 +14,139 @@ spec:
   - name: v1alpha1
     served: true
     storage: true
-  subresources:
-    status: {}
+    subresources:
+      status: {}
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              webhooks:
+                items:
+                  properties:
+                    admissionReviewVersions:
+                      items:
+                        type: string
+                      type: array
+                    clientConfig:
+                      properties:
+                        caBundle:
+                          format: byte
+                          type: string
+                        service:
+                          properties:
+                            name:
+                              type: string
+                            namespace:
+                              type: string
+                            path:
+                              type: string
+                            port:
+                              format: int32
+                              type: integer
+                          required:
+                          - name
+                          - namespace
+                          type: object
+                        url:
+                          type: string
+                      type: object
+                    failurePolicy:
+                      type: string
+                    matchPolicy:
+                      type: string
+                    name:
+                      type: string
+                    namespaceSelector:
+                      properties:
+                        matchExpressions:
+                          items:
+                            properties:
+                              key:
+                                type: string
+                              operator:
+                                type: string
+                              values:
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - key
+                            - operator
+                            type: object
+                          type: array
+                        matchLabels:
+                          additionalProperties:
+                            type: string
+                          type: object
+                      type: object
+                    objectSelector:
+                      properties:
+                        matchExpressions:
+                          items:
+                            properties:
+                              key:
+                                type: string
+                              operator:
+                                type: string
+                              values:
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - key
+                            - operator
+                            type: object
+                          type: array
+                        matchLabels:
+                          additionalProperties:
+                            type: string
+                          type: object
+                      type: object
+                    rules:
+                      items:
+                        properties:
+                          apiGroups:
+                            items:
+                              type: string
+                            type: array
+                          apiVersions:
+                            items:
+                              type: string
+                            type: array
+                          operations:
+                            items:
+                              type: string
+                            type: array
+                          resources:
+                            items:
+                              type: string
+                            type: array
+                          scope:
+                            type: string
+                        type: object
+                      type: array
+                    sideEffects:
+                      type: string
+                    timeoutSeconds:
+                      format: int32
+                      type: integer
+                  required:
+                  - clientConfig
+                  - name
+                  type: object
+                type: array
+            type: object
+          status:
+            properties:
+              observedGeneration:
+                format: int64
+                type: integer
+            type: object
+        type: object

@@ -24,6 +24,8 @@ Please follow the following steps:
     REC_USER="`cat /opt/redislabs/credentials/username`"; REC_PASSWORD="`cat /opt/redislabs/credentials/password`";curl -k --request POST --url https://localhost:9443/v1/users/password -u "$REC_USER:$REC_PASSWORD" --header 'Content-Type: application/json' --data "{\"username\":\"$REC_USER\",\"old_password\":\"$REC_PASSWORD\", \"new_password\":\"<NEW PASSWORD>\"}"
     ```
 4. Update the cluster credential secret: using the commands ran outside of the Redis Enterprise Cluster node pod:
+    > Note: For Vault users, see the instruction described [below](./cluster_credentials.md#creds_with_vault) and proceed to the next step.
+
     a. Save the existing username to a text file (replace <current username> with actual).
     ```
     echo -n "<current username>" > username
@@ -50,6 +52,8 @@ Please follow the following steps:
 2. Add another admin user, choose a password
 3. Set the new username with the Redis Enterprise Cluster spec (username field)
 4. Update the cluster credential secret:
+    > Note: For Vault users, see the instruction described [below](#creds_with_vault) and proceed to the next step.
+    
     a. Save the new username to a text file (replace <new username> with actual).
     ```
     echo -n "<new username>" > username
@@ -68,4 +72,7 @@ Please follow the following steps:
    > Note: this procedure is only supported for version 6.0.20-5 or above
    > Note: the operator might log errors in the time period between updating the username in the REC spec and the secret update
 
-
+<a name="creds_with_vault"></a>
+### Updating the credentials secret in Vault
+For users who store secrets in Vault, update the Vault secret containing the Redis Enterprise Cluster's credentials with the following key-value pairs: username:<desired_username>, password:<desired_password>.
+For more information about Vault integration with the Redis Enterprise Cluster see [README](vault/README.md#deployment_rec).
