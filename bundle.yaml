@@ -89,6 +89,7 @@ spec:
     shortNames:
       - redb
   scope: Namespaced
+  preserveUnknownFields: false
   versions:
   - name: v1alpha1
     served: true
@@ -446,7 +447,7 @@ spec:
                 description: Database port number. TCP port on which the database is
                   available. Will be generated automatically if omitted. can not be
                   changed after creation
-                type: integer            
+                type: integer
               databaseSecretName:
                 description: The name of the K8s secret that holds the password to the
                   database.
@@ -684,7 +685,6 @@ spec:
                 type: string
             type: object
         type: object
-
 ---
 apiVersion: v1
 kind: Service
@@ -715,7 +715,7 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:6.2.8-11
+          image: redislabs/operator:6.2.8-15
           command:
           - redis-enterprise-operator
           imagePullPolicy: Always
@@ -757,7 +757,7 @@ spec:
               port: 8080
               scheme: HTTP
         - name: admission
-          image: redislabs/operator:6.2.8-11
+          image: redislabs/operator:6.2.8-15
           command:
             - /usr/local/bin/admission
           imagePullPolicy: Always
@@ -812,6 +812,7 @@ spec:
     shortNames:
       - rec
   scope: Namespaced
+  preserveUnknownFields: false
   versions:
   - name: v1
     served: true

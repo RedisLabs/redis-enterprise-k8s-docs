@@ -32,9 +32,9 @@ High level architecture and overview of the solution can be found [HERE](https:/
 The following are the images and tags for this release:
 | Component | k8s | Openshift |
 | --- | --- | --- |
-| Redis Enterprise | `redislabs/redis:6.2.8-53` | `redislabs/redis:6.2.8-53.rhel7-openshift` |
-| Operator | `redislabs/operator:6.2.8-11` | `redislabs/operator:6.2.8-11` |
-| Services Rigger | `redislabs/k8s-controller:6.2.8-11` | `redislabs/k8s-controller:6.2.8-11` |
+| Redis Enterprise | `redislabs/redis:6.2.8-64` | `redislabs/redis:6.2.8-64.rhel7-openshift` |
+| Operator | `redislabs/operator:6.2.8-15` | `redislabs/operator:6.2.8-15` |
+| Services Rigger | `redislabs/k8s-controller:6.2.8-15` | `redislabs/k8s-controller:6.2.8-15` |
 > * RedHat certified images are available on [Redhat Catalog](https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d) </br>
 
 
@@ -381,7 +381,7 @@ The operator deploys a `RedisEnterpriseCluster` with default configurations valu
     redisEnterpriseImageSpec:
       imagePullPolicy:  IfNotPresent
       repository:       redislabs/redis
-      versionTag:       6.2.8-53
+      versionTag:       6.2.8-64
   ```
 
 * Persistence
@@ -483,21 +483,21 @@ For example:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/redis
-    versionTag:       6.2.8-53
+    versionTag:       6.2.8-64
 ```
 
 ```yaml
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       6.2.8-11
+    versionTag:       6.2.8-15
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       6.2.8-11
+    versionTag:       6.2.8-15
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -509,7 +509,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:6.2.8-11
+          image: harbor.corp.local/redisenterprise/operator:6.2.8-15
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).
@@ -632,7 +632,7 @@ Note: in the  examples above the Redis Enterprise Cluster name is: 'rec' and the
 The Operator automates and simplifies the upgrade process.  
 The Redis Enterprise Cluster Software, and the Redis Enterprise Operator for Kubernetes versions are tightly coupled and should be upgraded together.  
 It is recommended to use the bundle.yaml to upgrade, as it loads all the relevant CRD documents for this version. If the updated CRDs are not loaded, the operator might fail.
-There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.2.8-53
+There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.2.8-64
 
 ```yaml
   autoUpgradeRedisEnterprise: true
@@ -641,7 +641,7 @@ There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within t
 Alternatively:
 ```yaml
   RedisEnterpriseImageSpec:
-    versionTag: redislabs/redis:6.2.8-53
+    versionTag: redislabs/redis:6.2.8-64
 ```
 
 ## Supported K8S Distributions
@@ -663,7 +663,9 @@ Supported versions (platforms/versions that are not listed are not supported):
 | GKE 1.20                        | supported      |
 | GKE 1.21                        | supported      |
 | GKE 1.22                        | supported      |
-| Rancher 2.5 (K8s 1.17)          | deprecated     |
+| Rancher 2.4 (K8s 1.17)          | deprecated     |
+| Rancher 2.4 (K8s 1.18)          | deprecated     |
+| Rancher 2.5 (K8s 1.17)          | supported      |
 | Rancher 2.5 (K8s 1.18)          | supported      |
 | Rancher 2.5 (K8s 1.19)          | supported      |
 | Rancher 2.5 (K8s 1.20)          | supported      |
