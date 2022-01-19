@@ -663,9 +663,7 @@ Supported versions (platforms/versions that are not listed are not supported):
 | GKE 1.20                        | supported      |
 | GKE 1.21                        | supported      |
 | GKE 1.22                        | supported      |
-| Rancher 2.4 (K8s 1.17)          | deprecated     |
-| Rancher 2.4 (K8s 1.18)          | deprecated     |
-| Rancher 2.5 (K8s 1.17)          | supported      |
+| Rancher 2.5 (K8s 1.17)          | deprecated     |
 | Rancher 2.5 (K8s 1.18)          | supported      |
 | Rancher 2.5 (K8s 1.19)          | supported      |
 | Rancher 2.5 (K8s 1.20)          | supported      |
