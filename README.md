@@ -104,7 +104,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     ```
     > Note: Once the cluster is up, the cluster GUI and API could be used to configure databases. It is recommended to use the K8s REDB API that is configured through the following steps. To configure the cluster using the cluster GUI/API, use the ui service created by the operator and the default credentials as set in a secret. The secret name is the same as the cluster name within the namespace.
 5. Redis Enterprise Database (REDB) Admission Controller:
-    The Admission Controlller is recommended for use. It uses the Redis Enterprise Cluster to dynamically validate that REDB resources as configured by the operator are valid.
+    The Admission Controller is recommended for use. It uses the Redis Enterprise Cluster to dynamically validate that REDB resources as configured by the operator are valid.
     Steps to configure the Admission Controller:
    > **Note:** Redis Labs' Redis Enterprise Operator can also be installed through the [Gesher Admission Proxy](admission/GESHER.md)
     * Wait for the secret to be created:
@@ -172,7 +172,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
         ```
        <a name="verify_admission_installation"></a>
        * Verify the installation
-        In order to verify that the all the components of the Admission Controller are installed correctly, we will try to apply an invalid resource that should force the admission controller to reject it.  If it applies succesfully, it means the admission controller has not been hooked up correctly.
+        In order to verify that the all the components of the Admission Controller are installed correctly, we will try to apply an invalid resource that should force the admission controller to reject it.  If it applies successfully, it means the admission controller has not been hooked up correctly.
         
         ```shell script
         $ kubectl apply -f - << EOF
@@ -264,7 +264,7 @@ That folder also contains the custom resource definitions compatible with OpenSh
     oc apply -f openshift/rec_rhel.yaml
     ```
 6. Redis Enterprise Database (REDB) Admission Controller:
-    The Admission Controlller is recommended for use. It uses the Redis Enterprise Cluster to dynamically validate that REDB resources as configured by the operator are valid.
+    The Admission Controller is recommended for use. It uses the Redis Enterprise Cluster to dynamically validate that REDB resources as configured by the operator are valid.
     Steps to configure the Admission Controller:
     * Wait for the secret to be created by the operator bundle deployment
     ```shell script
@@ -326,7 +326,7 @@ That folder also contains the custom resource definitions compatible with OpenSh
         ```
      <a name="verify_admission_installation_openshift"></a>
      * Verify the installation
-        In order to verify that the all the components of the Admission Controller are installed correctly, we will try to apply an invalid resource that should force the admission controller to reject it.  If it applies succesfully, it means the admission controller has not been hooked up correctly.
+        In order to verify that the all the components of the Admission Controller are installed correctly, we will try to apply an invalid resource that should force the admission controller to reject it.  If it applies successfully, it means the admission controller has not been hooked up correctly.
         
         ```shell script
         $ oc apply -f - << EOF
