@@ -472,7 +472,7 @@ The operator deploys a `RedisEnterpriseCluster` with default configurations valu
 
 Whenever images are not pulled from DockerHub, the following configuration must be specified:
 
-In *RedisEnterpriseClusterSpec* (redis_enterprise_cluster.yaml):
+In *RedisEnterpriseClusterSpec* :
 - *redisEnterpriseImageSpec*
 - *redisEnterpriseServicesRiggerImageSpec*
 - *bootstrapperImageSpec*
