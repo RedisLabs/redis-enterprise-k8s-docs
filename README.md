@@ -139,6 +139,8 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
       
     > **Note:** If you're not using multiple namespaces you may skip to ["Verify the installation"](#verify_admission_installation) step.
    
+    > **Note:** If you're not using multiple namespaces you may proceed to step 6.
+    
     * Limiting the webhook to the relevant namespaces:    
       Unless limited, webhooks will intercept requests from all namespaces.<br>
       In case you have several REC objects on your K8S cluster you need to limit the webhook to the relevant namespace.  
