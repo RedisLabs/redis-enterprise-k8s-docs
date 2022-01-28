@@ -346,7 +346,7 @@ That folder also contains the custom resource definitions compatible with OpenSh
         ```shell script
         Error from server: error when creating "STDIN": admission webhook "redb.admission.redislabs" denied the request: eviction_policy: u'illegal' is not one of [u'volatile-lru', u'volatile-ttl', u'volatile-random', u'allkeys-lru', u'allkeys-random', u'noeviction', u'volatile-lfu', u'allkeys-lfu']
         ```
-      > Note: procedure to enable admission is documented with further detail [here](admission/README.md
+      > Note: procedure to enable admission is documented with further detail [here](admission/README.md)
 
 7. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase`
 
