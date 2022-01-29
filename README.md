@@ -266,7 +266,7 @@ That folder also contains the custom resource definitions compatible with OpenSh
     oc apply -f openshift/rec_rhel.yaml
     ```
 6. Redis Enterprise Database (REDB) Admission Controller:
-    The Admission Controlller is recommended for use. It uses the Redis Enterprise Cluster to dynamically validate that REDB resources as configured by the operator are valid.
+    The Admission Controller is recommended for use. It uses the Redis Enterprise Cluster to dynamically validate that REDB resources as configured by the operator are valid.
     Steps to configure the Admission Controller:
     * Wait for the secret to be created by the operator bundle deployment
     ```shell script
