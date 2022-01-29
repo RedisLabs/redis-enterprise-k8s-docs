@@ -251,7 +251,7 @@ That folder also contains the custom resource definitions compatible with OpenSh
    > Note - change rec in the suffix of the 2nd command with the name of the RedisEnterpriseCluster, if different (see step "Redis Enterprise Cluster custom resource" below).
 
 4. Deploy the OpenShift operator bundle:
-    > NOTE: Update the `storageClassName` setting in `openshift.bundle.yaml` (by default its set to `gp2`).
+    > NOTE: You may need to add the `storageClassName` setting in `openshift/rec_rhel.yaml` (by default its set to `gp2`).
 
     ```bash
     oc apply -f openshift.bundle.yaml
