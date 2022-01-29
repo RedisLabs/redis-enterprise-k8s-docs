@@ -24,7 +24,7 @@ High level architecture and overview of the solution can be found [HERE](https:/
 
 ### Prerequisites
 
-- A Kubernetes cluster version of 1.11 or higher, with a minimum of 3 worker nodes.
+- A Kubernetes cluster version of 1.11 or higher, with a minimum of 3 worker nodes with time synchronized (via NTP). 
 - A Kubernetes client (kubectl) with a matching version. For OpenShift, an OpenShift client (oc).
 - Access to DockerHub, RedHat Container Catalog or a private repository that can serve the required images.
 
