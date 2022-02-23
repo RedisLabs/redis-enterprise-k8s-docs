@@ -8,8 +8,10 @@ allowedCapabilities:
 runAsUser:
   type: MustRunAs
   uid: 1001
-FSGroup:
+fsGroup:
   type: MustRunAs
-  ranges: 1001,1001
+  ranges:
+  - min: 1001
+    max: 1001
 seLinuxContext:
   type: RunAsAny
