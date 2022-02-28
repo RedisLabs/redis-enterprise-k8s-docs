@@ -28,6 +28,9 @@ logger = logging.getLogger("log collector")
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
 
+KUBCTL_DESCRIBE_RETRIES = 3
+KUBCTL_GET_YAML_RETRIES = 3
+
 timeout = 180
 
 API_RESOURCES = [
@@ -560,10 +563,11 @@ def run_kubectl_get_yaml(namespace, resource_type):
         Runs kubectl get command with yaml format
     """
     cmd = "kubectl get -n {} {} -o yaml".format(namespace, resource_type)
-    return_code, out = run_shell_command(cmd)
-    if return_code == 0:
-        return out
-    logger.warning("Namespace '%s': Failed to get %s resource %s.", namespace, resource_type, out.rstrip())
+    for _ in range(KUBCTL_GET_YAML_RETRIES):
+        return_code, out = run_shell_command(cmd)
+        if return_code == 0:
+            return out
+        logger.warning("Namespace '%s': Failed to get %s resource %s.", namespace, resource_type, out.rstrip())
     return None
 
 
@@ -654,10 +658,11 @@ def run_kubectl_describe(namespace, resource_type):
         Runs kubectl describe command
     """
     cmd = "kubectl describe -n {} {}".format(namespace, resource_type)
-    return_code, out = run_shell_command(cmd)
-    if return_code == 0:
-        return out
-    logger.warning("Namespace: '%s': Failed to describe %s resource: %s", namespace, resource_type, out)
+    for _ in range(KUBCTL_DESCRIBE_RETRIES):
+        return_code, out = run_shell_command(cmd)
+        if return_code == 0:
+            return out
+        logger.warning("Namespace: '%s': Failed to describe %s resource: %s", namespace, resource_type, out)
     return None
 
 
