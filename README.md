@@ -32,9 +32,9 @@ High level architecture and overview of the solution can be found [HERE](https:/
 The following are the images and tags for this release:
 | Component | k8s | Openshift |
 | --- | --- | --- |
-| Redis Enterprise | `redislabs/redis:6.2.8-64` | `redislabs/redis:6.2.8-64.rhel7-openshift` |
-| Operator | `redislabs/operator:6.2.8-15` | `redislabs/operator:6.2.8-15` |
-| Services Rigger | `redislabs/k8s-controller:6.2.8-15` | `redislabs/k8s-controller:6.2.8-15` |
+| Redis Enterprise | `redislabs/redis:6.2.10-90` | `redislabs/redis:6.2.10-90.rhel7-openshift` |
+| Operator | `redislabs/operator:6.2.10-4` | `redislabs/operator:6.2.10-4` |
+| Services Rigger | `redislabs/k8s-controller:6.2.10-4` | `redislabs/k8s-controller:6.2.10-4` |
 > * RedHat certified images are available on [Redhat Catalog](https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d) </br>
 
 
@@ -139,8 +139,6 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
       
     > **Note:** If you're not using multiple namespaces you may skip to ["Verify the installation"](#verify_admission_installation) step.
    
-    > **Note:** If you're not using multiple namespaces you may proceed to step 6.
-    
     * Limiting the webhook to the relevant namespaces:    
       Unless limited, webhooks will intercept requests from all namespaces.<br>
       In case you have several REC objects on your K8S cluster you need to limit the webhook to the relevant namespace.  
@@ -383,7 +381,7 @@ The operator deploys a `RedisEnterpriseCluster` with default configurations valu
     redisEnterpriseImageSpec:
       imagePullPolicy:  IfNotPresent
       repository:       redislabs/redis
-      versionTag:       6.2.8-64
+      versionTag:       6.2.10-90
   ```
 
 * Persistence
@@ -485,21 +483,21 @@ For example:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/redis
-    versionTag:       6.2.8-64
+    versionTag:       6.2.10-90
 ```
 
 ```yaml
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       6.2.8-15
+    versionTag:       6.2.10-4
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       6.2.8-15
+    versionTag:       6.2.10-4
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -511,7 +509,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:6.2.8-15
+          image: harbor.corp.local/redisenterprise/operator:6.2.10-4
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).
@@ -634,7 +632,7 @@ Note: in the  examples above the Redis Enterprise Cluster name is: 'rec' and the
 The Operator automates and simplifies the upgrade process.  
 The Redis Enterprise Cluster Software, and the Redis Enterprise Operator for Kubernetes versions are tightly coupled and should be upgraded together.  
 It is recommended to use the bundle.yaml to upgrade, as it loads all the relevant CRD documents for this version. If the updated CRDs are not loaded, the operator might fail.
-There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.2.8-64
+There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.2.10-90
 
 ```yaml
   autoUpgradeRedisEnterprise: true
@@ -643,7 +641,7 @@ There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within t
 Alternatively:
 ```yaml
   RedisEnterpriseImageSpec:
-    versionTag: redislabs/redis:6.2.8-64
+    versionTag: redislabs/redis:6.2.10-90
 ```
 
 ## Supported K8S Distributions
@@ -665,12 +663,17 @@ Supported versions (platforms/versions that are not listed are not supported):
 | GKE 1.20                        | supported      |
 | GKE 1.21                        | supported      |
 | GKE 1.22                        | supported      |
-| Rancher 2.5 (K8s 1.17)          | deprecated     |
-| Rancher 2.5 (K8s 1.18)          | supported      |
-| Rancher 2.5 (K8s 1.19)          | supported      |
-| Rancher 2.5 (K8s 1.20)          | supported      |
+| Rancher 2.5 (K8s 1.17)          | *deprecated    |
+| Rancher 2.5 (K8s 1.18)          | *deprecated    |
+| Rancher 2.5 (K8s 1.19)          | *deprecated    |
+| Rancher 2.5 (K8s 1.20)          | *deprecated    |
+| Rancher 2.6 (K8s 1.18)          | supported      |
+| Rancher 2.6 (K8s 1.19)          | supported      |
+| Rancher 2.6 (K8s 1.20)          | supported      |
+| Rancher 2.6 (K8s 1.21)          | supported      |
 | VMWare TKGIE** 1.10 (K8s 1.19)  | supported      |
-| AKS 1.19                        | supported      |
+| VMWare TKGIE 1.11 (K8s 1.20).   | supported |
+| AKS 1.19                        | deprecated     |
 | AKS 1.20                        | supported      |
 | AKS 1.21                        | supported      |
 | AKS 1.22                        | supported      |

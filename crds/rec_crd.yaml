@@ -75,6 +75,33 @@ spec:
                       type: array
                       items:
                         type: string
+              ocspStatus:
+                description: An API object that represents the cluster's OCSP status
+                properties:
+                  certStatus:
+                    description: Indicates the proxy certificate status - GOOD/REVOKED/UNKNOWN.
+                    type: string
+                  nextUpdate:
+                    description: The time at or before which newer information will
+                      be available about the status of the certificate (if available)
+                    type: string
+                  producedAt:
+                    description: The time at which the OCSP responder signed this
+                      response.
+                    type: string
+                  responderUrl:
+                    description: The OCSP responder url from which this status came
+                      from.
+                    type: string
+                  revocationTime:
+                    description: The time at which the certificate was revoked or
+                      placed on hold.
+                    type: string
+                  thisUpdate:
+                    description: The most recent time at which the status being indicated
+                      is known by the responder to have been correct.
+                    type: string
+                type: object
               licenseStatus:
                 type: object
                 properties:
@@ -86,6 +113,22 @@ spec:
                     type: string
                   shardsLimit:
                     type: integer
+              bundledDatabaseVersions:
+                description: Versions of open source databases bundled by Redis Enterprise
+                  Software - please note that in order to use a specific version it
+                  should be supported by the ‘upgradePolicy’ - ‘major’ or ‘latest’ according
+                  to the desired version (major/minor)
+                items:
+                  properties:
+                    dbType:
+                      type: string
+                    version:
+                      type: string
+                  required:
+                  - dbType
+                  - version
+                  type: object
+                type: array
           spec:
             description: RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
             properties:
@@ -192,6 +235,11 @@ spec:
                   May be overridden for specific REDB via similar setting,
                   please view the similar setting for REDB for more info.
                 type: boolean
+              encryptPkeys:
+                description: 'Private key encryption - in order to enable, first need
+                  to mount ${ephemeralconfdir}/secrets/pem/passphrase and add the passphrase
+                  and then set fields value to ''true'' Possible values: true/false'
+                type: boolean      
               certificates:
                 description: RS Cluster Certificates.
                   Used to modify the certificates used by the cluster.
@@ -255,6 +303,39 @@ spec:
                 additionalProperties:
                   type: string
                 description: Selector for nodes that could fit Redis Enterprise pod
+                type: object
+              ocspConfiguration:
+                description: An API object that represents the cluster's OCSP configuration.
+                  To enable OCSP, the cluster's proxy certificate should contain the
+                  OCSP responder URL.
+                properties:
+                  ocspFunctionality:
+                    description: Whether to enable/disable OCSP mechanism for the
+                      cluster.
+                    type: boolean
+                  queryFrequency:
+                    description: Determines the interval (in seconds) in which the
+                      control plane will poll the OCSP responder for a new status
+                      for the server certificate. Minimum value is 60. Maximum value
+                      is 86400.
+                    type: integer
+                  recoveryFrequency:
+                    description: Determines the interval (in seconds) in which the
+                      control plane will poll the OCSP responder for a new status
+                      for the server certificate when the current staple is invalid.
+                      Minimum value is 60. Maximum value is 86400.
+                    type: integer
+                  recoveryMaxTries:
+                    description: Determines the maximum number for the OCSP recovery
+                      attempts. After max number of tries passed, the control plane
+                      will revert back to the regular frequency. Minimum value is
+                      1. Maximum value is 100.
+                    type: integer
+                  responseTimeout:
+                    description: Determines the time interval (in seconds) for which
+                      the request waits for a response from the OCSP responder. Minimum
+                      value is 1. Maximum value is 60.
+                    type: integer
                 type: object
               nodes:
                 description: Number of Redis Enterprise nodes (pods)
@@ -6125,6 +6206,29 @@ spec:
                 - LoadBalancer
                 - ExternalName
                 type: string
+              redisOnFlashSpec:
+                description: Stores configurations specific to redis on flash. If provided, the cluster will be capable of
+                  creating redis on flash databases
+                properties:
+                  enabled:
+                    type: boolean
+                  flashStorageEngine:
+                    type: string
+                    enum:
+                    - rocksdb
+                  storageClassName:
+                    type: string
+                  flashDiskSize:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                    x-kubernetes-int-or-string: true
+                required:
+                - enabled
+                - flashStorageEngine
+                - storageClassName
+                type: object
               upgradeSpec:
                 description: Specification for upgrades of Redis Enterprise
                 properties:
@@ -6802,6 +6906,33 @@ spec:
                       type: array
                       items:
                         type: string
+              ocspStatus:
+                description: An API object that represents the cluster's OCSP status
+                properties:
+                  certStatus:
+                    description: Indicates the proxy certificate status - GOOD/REVOKED/UNKNOWN.
+                    type: string
+                  nextUpdate:
+                    description: The time at or before which newer information will
+                      be available about the status of the certificate (if available)
+                    type: string
+                  producedAt:
+                    description: The time at which the OCSP responder signed this
+                      response.
+                    type: string
+                  responderUrl:
+                    description: The OCSP responder url from which this status came
+                      from.
+                    type: string
+                  revocationTime:
+                    description: The time at which the certificate was revoked or
+                      placed on hold.
+                    type: string
+                  thisUpdate:
+                    description: The most recent time at which the status being indicated
+                      is known by the responder to have been correct.
+                    type: string
+                type: object
               licenseStatus:
                 type: object
                 properties:
@@ -6813,6 +6944,22 @@ spec:
                     type: string
                   shardsLimit:
                     type: integer
+              bundledDatabaseVersions:
+                description: Versions of open source databases bundled by Redis Enterprise
+                  Software - please note that in order to use a specific version it
+                  should be supported by the ‘upgradePolicy’ - ‘major’ or ‘latest’ according
+                  to the desired version (major/minor)
+                items:
+                  properties:
+                    dbType:
+                      type: string
+                    version:
+                      type: string
+                  required:
+                  - dbType
+                  - version
+                  type: object
+                type: array
           spec:
             description: RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
             properties:
@@ -6919,6 +7066,11 @@ spec:
                   May be overridden for specific REDB via similar setting,
                   please view the similar setting for REDB for more info.
                 type: boolean
+              encryptPkeys:
+                description: 'Private key encryption - in order to enable, first need
+                  to mount ${ephemeralconfdir}/secrets/pem/passphrase and add the passphrase
+                  and then set fields value to ''true'' Possible values: true/false'
+                type: boolean
               certificates:
                 description: RS Cluster Certificates.
                   Used to modify the certificates used by the cluster.
@@ -6982,6 +7134,39 @@ spec:
                 additionalProperties:
                   type: string
                 description: Selector for nodes that could fit Redis Enterprise pod
+                type: object
+              ocspConfiguration:
+                description: An API object that represents the cluster's OCSP configuration.
+                  To enable OCSP, the cluster's proxy certificate should contain the
+                  OCSP responder URL.
+                properties:
+                  ocspFunctionality:
+                    description: Whether to enable/disable OCSP mechanism for the
+                      cluster.
+                    type: boolean
+                  queryFrequency:
+                    description: Determines the interval (in seconds) in which the
+                      control plane will poll the OCSP responder for a new status
+                      for the server certificate. Minimum value is 60. Maximum value
+                      is 86400.
+                    type: integer
+                  recoveryFrequency:
+                    description: Determines the interval (in seconds) in which the
+                      control plane will poll the OCSP responder for a new status
+                      for the server certificate when the current staple is invalid.
+                      Minimum value is 60. Maximum value is 86400.
+                    type: integer
+                  recoveryMaxTries:
+                    description: Determines the maximum number for the OCSP recovery
+                      attempts. After max number of tries passed, the control plane
+                      will revert back to the regular frequency. Minimum value is
+                      1. Maximum value is 100.
+                    type: integer
+                  responseTimeout:
+                    description: Determines the time interval (in seconds) for which
+                      the request waits for a response from the OCSP responder. Minimum
+                      value is 1. Maximum value is 60.
+                    type: integer
                 type: object
               nodes:
                 description: Number of Redis Enterprise nodes (pods)
@@ -12853,6 +13038,29 @@ spec:
                 - LoadBalancer
                 - ExternalName
                 type: string
+              redisOnFlashSpec:
+                description: Stores configurations specific to redis on flash. If provided, the cluster will be capable of
+                  creating redis on flash databases
+                properties:
+                  enabled:
+                    type: boolean
+                  flashStorageEngine:
+                    type: string
+                    enum:
+                    - rocksdb
+                  storageClassName:
+                    type: string
+                  flashDiskSize:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                    x-kubernetes-int-or-string: true
+                required:
+                - enabled
+                - flashStorageEngine
+                - storageClassName
+                type: object
               upgradeSpec:
                 description: Specification for upgrades of Redis Enterprise
                 properties:
