@@ -4,6 +4,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
 ## Table of Contents
 * [Objects](#objects)
   * [ActiveActive](#activeactive)
+  * [BundledDatabaseVersions](#bundleddatabaseversions)
   * [ClusterCertificate](#clustercertificate)
   * [CmServer](#cmserver)
   * [CrdbCoordinator](#crdbcoordinator)
@@ -12,6 +13,8 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [LicenseStatus](#licensestatus)
   * [MdnsServer](#mdnsserver)
   * [Module](#module)
+  * [OcspConfiguration](#ocspconfiguration)
+  * [OcspStatus](#ocspstatus)
   * [PdnsServer](#pdnsserver)
   * [PersistentConfigurationSpec](#persistentconfigurationspec)
   * [RSClusterCertificates](#rsclustercertificates)
@@ -20,6 +23,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [RedisEnterpriseClusterSpec](#redisenterpriseclusterspec)
   * [RedisEnterpriseClusterStatus](#redisenterpriseclusterstatus)
   * [RedisEnterpriseServicesConfiguration](#redisenterpriseservicesconfiguration)
+  * [RedisOnFlashSpec](#redisonflashspec)
   * [Saslauthd](#saslauthd)
   * [ServicesRiggerConfigurationSpec](#servicesriggerconfigurationspec)
   * [SlaveHA](#slaveha)
@@ -43,6 +47,15 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
 | apiIngressUrl | RS API URL | string |  | true |
 | dbIngressSuffix | DB ENDPOINT SUFFIX - will be used to set the db host ingress <db name><db ingress suffix>. Creates a host name so it should be unique if more than one db is created on the cluster with the same name | string |  | true |
 | ingressAnnotations | Used for ingress controllers such as ha-proxy or nginx in GKE | map[string]string |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### BundledDatabaseVersions
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| dbType |  | string |  | true |
+| version |  | string |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### ClusterCertificate
@@ -116,6 +129,31 @@ Image specification
 | name |  | string |  | true |
 | displayName |  | string |  | true |
 | versions |  | []string |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### OcspConfiguration
+An API object that represents the cluster's OCSP configuration
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| ocspFunctionality | Whether to enable/disable OCSP mechanism for the cluster. | *bool |  | false |
+| queryFrequency | Determines the interval (in seconds) in which the control plane will poll the OCSP responder for a new status for the server certificate. Minimum value is 60. Maximum value is 86400. | *int |  | false |
+| responseTimeout | Determines the time interval (in seconds) for which the request waits for a response from the OCSP responder. Minimum value is 1. Maximum value is 60. | *int |  | false |
+| recoveryFrequency | Determines the interval (in seconds) in which the control plane will poll the OCSP responder for a new status for the server certificate when the current staple is invalid. Minimum value is 60. Maximum value is 86400. | *int |  | false |
+| recoveryMaxTries | Determines the maximum number for the OCSP recovery attempts. After max number of tries passed, the control plane will revert back to the regular frequency. Minimum value is 1. Maximum value is 100. | *int |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### OcspStatus
+An API object that represents the cluster's OCSP status
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| responderUrl | The OCSP responder url from which this status came from. | string |  | false |
+| certStatus | Indicates the proxy certificate status - GOOD/REVOKED/UNKNOWN. | string |  | false |
+| producedAt | The time at which the OCSP responder signed this response. | string |  | false |
+| thisUpdate | The most recent time at which the status being indicated is known by the responder to have been correct. | string |  | false |
+| nextUpdate | The time at or before which newer information will be available about the status of the certificate (if available) | string |  | false |
+| revocationTime | The time at which the certificate was revoked or placed on hold. | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### PdnsServer
@@ -217,6 +255,9 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | certificates | RS Cluster Certificates. Used to modify the certificates used by the cluster. See the \"RSClusterCertificates\" struct described above to see the supported certificates. | *[RSClusterCertificates](#rsclustercertificates) |  | false |
 | podStartingPolicy | Mitigation setting for STS pods stuck in \"ContainerCreating\" | *[StartingPolicy](#startingpolicy) |  | false |
 | redisEnterpriseTerminationGracePeriodSeconds | The TerminationGracePeriodSeconds value for the (STS created) REC pods. Note that pods should not be taken down intentionally by force. Because clean pod shutdown is essential to prevent data loss, the default value is intentionally large (1 year). When data loss is acceptable (such as pure caching configurations), a value of a few minutes may be acceptable. | *int64 | 31536000 | false |
+| redisOnFlashSpec | Stores configurations specific to redis on flash. If provided, the cluster will be capable of creating redis on flash databases. | *[RedisOnFlashSpec](#redisonflashspec) |  | false |
+| ocspConfiguration | An API object that represents the cluster's OCSP configuration. To enable OCSP, the cluster's proxy certificate should contain the OCSP responder URL. Note: This is an ALPHA Feature. For this feature to take effect, set a boolean environment variable with the name \"ENABLE_ALPHA_FEATURES\" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. | *[OcspConfiguration](#ocspconfiguration) |  | false |
+| encryptPkeys | Private key encryption - in order to enable, first need to mount ${ephemeralconfdir}/secrets/pem/passphrase and add the passphrase and then set fields value to 'true' Possible values: true/false Note: This is an ALPHA Feature. For this feature to take effect, set a boolean environment variable with the name \"ENABLE_ALPHA_FEATURES\" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. | *bool |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseClusterStatus
@@ -228,6 +269,8 @@ RedisEnterpriseClusterStatus defines the observed state of RedisEnterpriseCluste
 | specStatus | Validity of Redis Enterprise Cluster specification | [SpecStatusName](#specstatusname) |  | true |
 | modules | Modules Available in Cluster | [][Module](#module) |  | false |
 | licenseStatus | State of the Cluster's License | *[LicenseStatus](#licensestatus) |  | false |
+| bundledDatabaseVersions | Versions of open source databases bundled by Redis Enterprise Software - please note that in order to use a specific version it should be supported by the ‘upgradePolicy’ - ‘major’ or ‘latest’ according to the desired version (major/minor) | []*[BundledDatabaseVersions](#bundleddatabaseversions) |  | false |
+| ocspStatus | An API object that represents the cluster's OCSP status | *[OcspStatus](#ocspstatus) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseServicesConfiguration
@@ -242,6 +285,17 @@ RedisEnterpriseClusterStatus defines the observed state of RedisEnterpriseCluste
 | pdnsServer |  | *[PdnsServer](#pdnsserver) |  | false |
 | crdbCoordinator |  | *[CrdbCoordinator](#crdbcoordinator) |  | false |
 | crdbWorker |  | *[CrdbWorker](#crdbworker) |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### RedisOnFlashSpec
+RedisOnFlashSpec contains all the parameters needed to configure in order to enable creation of redis on flash databases.
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| enabled | Indicates whether RoF is turned on or not. | bool |  | true |
+| flashStorageEngine | The type of DB engine used on flash. Currently the only supported value is \"rocksdb\", but this will change in the figure. | string |  | true |
+| storageClassName | Used to identify the storage class name of the corresponding volume claim template. | string |  | true |
+| flashDiskSize | Required flash disk size. | resource.Quantity |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### Saslauthd

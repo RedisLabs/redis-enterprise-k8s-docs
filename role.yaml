@@ -33,7 +33,7 @@ rules:
     verbs: ["create", "delete", "get" , "update", "list", "watch"]
   - apiGroups: [""]
     resources: ["persistentvolumeclaims"]
-    verbs: ["create", "delete", "get" , "update"]
+    verbs: ["create", "delete", "get" , "update", "list", "watch"]
 
   # needed rbac rules for services controller
   - apiGroups: [""]

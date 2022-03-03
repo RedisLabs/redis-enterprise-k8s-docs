@@ -4,6 +4,7 @@ This document describes the parameters for the Redis Enterprise Database custom 
 ## Table of Contents
 * [Objects](#objects)
   * [AzureBlobStorage](#azureblobstorage)
+  * [BackupInfo](#backupinfo)
   * [BackupSpec](#backupspec)
   * [BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold)
   * [DbAlertsSettings](#dbalertssettings)
@@ -38,6 +39,20 @@ This document describes the parameters for the Redis Enterprise Database custom 
 | absSecretName | The name of the secret that holds ABS credentials. The secret must contain the keys \"AccountName\" and \"AccountKey\", and these must hold the corresponding credentials | string |  | true |
 | container | Azure Blob Storage container name. | string |  | true |
 | subdir | Optional. Azure Blob Storage subdir under container. | string | empty | false |
+[Back to Table of Contents](#table-of-contents)
+
+### BackupInfo
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| backupFailureReason | Reason of last failed backup process | string |  | false |
+| backupHistory | Backup history retention policy (number of days, 0 is forever) | int |  | true |
+| backupInterval | Interval in seconds in which automatic backup will be initiated | int |  | false |
+| backupIntervalOffset | Offset (in seconds) from round backup interval when automatic backup will be initiated (should be less than backup_interval) | int |  | false |
+| backupProgressPercentage | Database scheduled periodic backup progress (percentage) | int |  | false |
+| backupStatus | Status of scheduled periodic backup process | string |  | false |
+| lastBackupTime | Time of last successful backup | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### BackupSpec
@@ -182,6 +197,7 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | proxyPolicy | The policy used for proxy binding to the endpoint. Supported proxy policies are: single/all-master-shards/all-nodes When left blank, the default value will be chosen according to the value of ossCluster - single if disabled, all-master-shards when enabled | string |  | false |
 | dataInternodeEncryption | Internode encryption (INE) setting. An optional boolean setting, overriding a similar cluster-wide policy. If set to False, INE is guaranteed to be turned off for this DB (regardless of cluster-wide policy). If set to True, INE will be turned on, unless the capability is not supported by the DB ( in such a case we will get an error and database creation will fail). If left unspecified, will be disabled if internode encryption is not supported by the DB (regardless of cluster default). Deleting this property after explicitly setting its value shall have no effect. | *bool |  | false |
 | databasePort | Database port number. TCP port on which the database is available. Will be generated automatically if omitted. can not be changed after creation | *int |  | false |
+| shardsPlacement | Control the density of shards - should they reside on as few or as many nodes as possible. Available options are \"dense\" or \"sparse\". If left unset, defaults to \"dense\". | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseDatabaseStatus
@@ -202,6 +218,7 @@ RedisEnterpriseDatabaseStatus defines the observed state of RedisEnterpriseDatab
 | internalEndpoints | Endpoints listed internally by the Redis Enterprise Cluster. Can be used to correlate a ReplicaSourceStatus entry. | [][InternalEndpoint](#internalendpoint) |  | false |
 | redisEnterpriseCluster | The Redis Enterprise Cluster Object this Resource is associated with | string |  | false |
 | observedGeneration | The generation (built in update counter of K8s) of the REDB resource that was fully acted upon, meaning that all changes were handled and sent as an API call to the Redis Enterprise Cluster (REC). This field value should equal the current generation when the resource changes were handled. Note: the lastActionStatus field tracks actions handled asynchronously by the Redis Enterprise Cluster. | int64 |  | false |
+| backupInfo | Information on the database's periodic backup | *[BackupInfo](#backupinfo) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ReplicaSource

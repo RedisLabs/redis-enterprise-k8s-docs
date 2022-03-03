@@ -1,0 +1,31 @@
+Install Python packages for Redis Gears
+
+Disclaimer:
+This instructions are provided as a work around and not considered official, any use of this is the user responsibility.
+
+Notes:
+This doc is assuming the following:
+•	Redis Gears is already installed on the Redis enterprise cluster.
+•	The Redis gears Python version is 3.7 (if not the sidecar container image should be changed).
+
+Instructions:
+a.	edit the gears.yaml, replace the <Python packages> with the Python packages that should be installed.
+The packages must be separated by a ' ' (space).
+For example to install the packages pytz version 2021.3 and kubernetes the yaml should be:
+```
+...
+      - name: "GEARS_PACKAGES"
+        value: "pytz==2021.3 kubernetes"
+...
+```
+b.	Run the kubectl patch command  on your cluster with the modified gears.yaml from the previous step, replace the <REC name> with the name of your Redis enterprise cluster:
+kubectl patch rec  <REC name> --type merge --patch "$(cat gears.yaml)"
+c.	Wait until all the Redis enterprise nodes are restarted with the new configurations.
+d.	Add the below code snippet in the top of your Redis gears Python function that wants to use the installed package/s:
+```
+import sys
+if '/opt/redislabs/gears-packages' not in sys.path:
+    sys.path.append('/opt/redislabs/gears-packages')
+# Your code below...
+```
+                

@@ -1,0 +1,30 @@
+spec:
+  redisEnterpriseAdditionalPodSpecAttributes:
+    initContainers:
+    - name: initcontainer
+      volumeMounts:
+      - mountPath: /opt/redislabs/gears-packages
+        name: gears-volume
+      image: python:3.7
+      imagePullPolicy: IfNotPresent
+      env:
+      - name: "GEARS_PACKAGES"
+        value: "<Python packages>"
+      command:
+      - "/bin/bash"
+      args:
+      - "-c"
+      - "for package in ${GEARS_PACKAGES}; do echo $package >>/tmp/requirements.txt; done; pip install -r /tmp/requirements.txt -t /opt/redislabs/gears-packages"
+      resources:
+        limits:
+          memory: 4Gi
+          cpu: 2
+        requests:
+          memory: 4Gi
+          cpu: 2
+  redisEnterpriseVolumeMounts:
+  - mountPath: /opt/redislabs/gears-packages
+    name: gears-volume
+  volumes:
+  - emptyDir: {}
+    name: gears-volume
