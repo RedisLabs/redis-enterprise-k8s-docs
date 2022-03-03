@@ -672,7 +672,8 @@ Supported versions (platforms/versions that are not listed are not supported):
 | Rancher 2.6 (K8s 1.20)          | supported      |
 | Rancher 2.6 (K8s 1.21)          | supported      |
 | VMWare TKGIE** 1.10 (K8s 1.19)  | supported      |
-| AKS 1.19                        | supported      |
+| VMWare TKGIE 1.11 (K8s 1.20).   | supported |
+| AKS 1.19                        | deprecated     |
 | AKS 1.20                        | supported      |
 | AKS 1.21                        | supported      |
 | AKS 1.22                        | supported      |
