@@ -255,11 +255,9 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | certificates | RS Cluster Certificates. Used to modify the certificates used by the cluster. See the \"RSClusterCertificates\" struct described above to see the supported certificates. | *[RSClusterCertificates](#rsclustercertificates) |  | false |
 | podStartingPolicy | Mitigation setting for STS pods stuck in \"ContainerCreating\" | *[StartingPolicy](#startingpolicy) |  | false |
 | redisEnterpriseTerminationGracePeriodSeconds | The TerminationGracePeriodSeconds value for the (STS created) REC pods. Note that pods should not be taken down intentionally by force. Because clean pod shutdown is essential to prevent data loss, the default value is intentionally large (1 year). When data loss is acceptable (such as pure caching configurations), a value of a few minutes may be acceptable. | *int64 | 31536000 | false |
-| redisOnFlashSpec | Stores configurations specific to redis on flash. If provided, the cluster will be capable of creating redis on flash databases. | *[RedisOnFlashSpec](#redisonflashspec) |  | false |
-| ocspConfiguration | An API object that represents the cluster's OCSP configuration. To enable OCSP, the cluster's proxy certificate should contain the OCSP responder URL. Note: This feature is currently unsupported. | *[OcspConfiguration](#ocspconfiguration) |  | false |
-| encryptPkeys | Private key encryption - in order to enable, first need to mount ${ephemeralconfdir}/secrets/pem/passphrase and add the passphrase and then set fields value to 'true' Possible values: true/false Note: This feature is currently unsupported. | *bool |  | false |
-[Back to Table of Contents](#table-of-contents)
-
+| redisOnFlashSpec | Stores configurations specific to redis on flash. Note: this feature is currently unsupported. | *[RedisOnFlashSpec](#redisonflashspec) |  | false |
+| ocspConfiguration | An API object that represents the cluster's OCSP configuration. To enable OCSP, the cluster's proxy certificate should contain the OCSP responder URL. Note: this feature is currently unsupported. | *[OcspConfiguration](#ocspconfiguration) |  | false |
+| encryptPkeys | Private key encryption - in order to enable, first need to mount ${ephemeralconfdir}/secrets/pem/passphrase and add the passphrase and then set fields value to 'true' Possible values: true/false. Note: this feature is currently unsupported. | *bool |  | false |
 ### RedisEnterpriseClusterStatus
 RedisEnterpriseClusterStatus defines the observed state of RedisEnterpriseCluster
 
