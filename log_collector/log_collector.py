@@ -124,7 +124,7 @@ def _get_namespaces_to_run_on(namespace):
     return existing_namespaces
 
 
-def collect_from_ns(namespace, output_dir, logs_from_all_pods=False):
+def collect_from_ns(namespace, output_dir):
     "Collect the context of a specific namespace. Typically runs in parallel processes."
     logger.info("Started collecting from namespace '%s'", namespace)
     ns_output_dir = os.path.join(output_dir, namespace)
@@ -137,10 +137,10 @@ def collect_from_ns(namespace, output_dir, logs_from_all_pods=False):
     collect_events(namespace, ns_output_dir)
     collect_api_resources(namespace, ns_output_dir)
     collect_api_resources_description(namespace, ns_output_dir)
-    collect_pods_logs(namespace, ns_output_dir, logs_from_all_pods)
+    collect_pods_logs(namespace, ns_output_dir)
 
 
-def run(namespace_input, output_dir, logs_from_all_pods=False):
+def run(namespace_input, output_dir):
     """
         Collect logs
     """
@@ -157,7 +157,7 @@ def run(namespace_input, output_dir, logs_from_all_pods=False):
 
     processes = []
     for namespace in namespaces:
-        p = Process(target=collect_from_ns, args=[namespace, output_dir, logs_from_all_pods])
+        p = Process(target=collect_from_ns, args=[namespace, output_dir])
         p.start()
         processes.append(p)
 
@@ -382,29 +382,49 @@ def collect_api_resources_description(namespace, output_dir):
             file_handle.write(out)
 
 
-def collect_pods_logs(namespace, output_dir, logs_from_all_pods=False):
+def collect_pods_logs(namespace, output_dir):
     """
         Collects all the pods logs from given namespace
     """
     logger.info("Namespace '%s': Collecting pods' logs:", namespace)
     logs_dir = os.path.join(output_dir, "pods")
 
-    if logs_from_all_pods:
-        pods = get_pod_names(namespace)
-    else:
-        pods = []
-        for selector in ["app=redis-enterprise", "name=redis-enterprise-operator"]:
-            pods.extend(get_pod_names(namespace, selector))
-
+    pods = get_pod_names(namespace)
     if not pods:
         logger.warning("Namespace '%s' Could not get pods list - "
                        "skipping pods logs collection", namespace)
         return
 
     make_dir(logs_dir)
-
     for pod in pods:
-        collect_logs_from_pod(namespace, pod, logs_dir)
+        containers = get_list_of_containers_from_pod(namespace, pod)
+        init_containers = get_list_of_init_containers_from_pod(namespace, pod)
+        containers.extend(init_containers)
+        if containers is None:
+            logger.warning("Namespace '%s' Could not get containers for pod: %s list - "
+                           "skipping pods logs collection", namespace, pod)
+            continue
+        for container in containers:
+            cmd = "kubectl logs -c {} -n  {} {}" \
+                .format(container, namespace, pod)
+            with open(os.path.join(logs_dir, "{}.log".format(f'{pod}-{container}')),
+                      "w+") as file_handle:
+                _, output = run_shell_command(cmd)
+                file_handle.write(output)
+
+            # operator and admission containers restart after changing the operator-environment-configmap
+            # getting the logs of the containers before the restart can help us with debugging potential bugs
+            get_logs_before_restart_cmd = "kubectl logs -c {} -n  {} {} -p" \
+                .format(container, namespace, pod)
+            with open(os.path.join(logs_dir, "{}.log".format(f'{pod}-{container}-instance-before-restart')),
+                      "w+") as file_handle:
+                err_code, output = run_shell_command(get_logs_before_restart_cmd)
+                if err_code == 0:
+                    file_handle.write(output)
+                else:  # no previous container instance found; did not restart
+                    os.unlink(file_handle.name)
+
+            logger.info("Namespace '%s':  + %s-%s", namespace, pod, container)
 
 
 def collect_connectivity_check(namespace, output_dir):
@@ -479,40 +499,6 @@ def get_list_of_init_containers_from_pod(namespace, pod_name):
         logger.warning("Failed to get init containers from pod: %s", out)
         return None
     return out.replace("'", "").split()
-
-
-def collect_logs_from_pod(namespace, pod, logs_dir):
-    """
-        Helper function getting logs of a pod
-    """
-    containers = get_list_of_containers_from_pod(namespace, pod)
-    init_containers = get_list_of_init_containers_from_pod(namespace, pod)
-    containers.extend(init_containers)
-    if containers is None:
-        logger.warning("Namespace '%s' Could not get containers for pod: %s list - "
-                       "skipping pods logs collection", namespace, pod)
-        return
-    for container in containers:
-        cmd = "kubectl logs -c {} -n  {} {}" \
-            .format(container, namespace, pod)
-        with open(os.path.join(logs_dir, "{}.log".format(f'{pod}-{container}')),
-                  "w+") as file_handle:
-            _, output = run_shell_command(cmd)
-            file_handle.write(output)
-
-        # operator and admission containers restart after changing the operator-environment-configmap
-        # getting the logs of the containers before the restart can help us with debugging potential bugs
-        get_logs_before_restart_cmd = "kubectl logs -c {} -n  {} {} -p" \
-            .format(container, namespace, pod)
-        with open(os.path.join(logs_dir, "{}.log".format(f'{pod}-{container}-instance-before-restart')),
-                  "w+") as file_handle:
-            err_code, output = run_shell_command(get_logs_before_restart_cmd)
-            if err_code == 0:
-                file_handle.write(output)
-            else:  # no previous container instance found; did not restart
-                os.unlink(file_handle.name)
-
-        logger.info("Namespace '%s':  + %s-%s", namespace, pod, container)
 
 
 def get_pod_names(namespace, selector=""):
@@ -692,8 +678,6 @@ if __name__ == "__main__":
                         help="pass namespace name or comma separated list or 'all' "
                              "when left empty will use namespace from kube config")
     parser.add_argument('-o', '--output_dir', action="store", type=str)
-    parser.add_argument('-a', '--logs_from_all_pods', action="store_true",
-                        help="collect logs from all pods, not only the operator and pods run by the operator")
     parser.add_argument('-t', '--timeout', action="store",
                         type=int, default=timeout,
                         help="time to wait for external commands to "
@@ -711,4 +695,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     logger.info("Started Redis Enterprise k8s log collector")
-    run(results.namespace, results.output_dir, results.logs_from_all_pods)
+    run(results.namespace, results.output_dir)
