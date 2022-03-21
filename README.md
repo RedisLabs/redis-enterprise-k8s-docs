@@ -667,7 +667,6 @@ Supported versions (platforms/versions that are not listed are not supported):
 | Rancher 2.5 (K8s 1.18)          | *deprecated    |
 | Rancher 2.5 (K8s 1.19)          | *deprecated    |
 | Rancher 2.5 (K8s 1.20)          | *deprecated    |
-| Rancher 2.6 (K8s 1.18)          | supported      |
 | Rancher 2.6 (K8s 1.19)          | supported      |
 | Rancher 2.6 (K8s 1.20)          | supported      |
 | Rancher 2.6 (K8s 1.21)          | supported      |
