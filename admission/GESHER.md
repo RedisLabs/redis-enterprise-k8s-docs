@@ -1,4 +1,4 @@
-# Admission Conrol with Gesher Installation for Redis Enterprise Operator
+# Admission Control with Gesher Installation for Redis Enterprise Operator
 
 ## Gesher Background
 

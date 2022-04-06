@@ -11,6 +11,7 @@
 - [Side Cars](#side-cars)
 - [Resource Limits and Quotas](#resource-limits-and-quotas)
 - [Custom Resource Deletion](#custom-resource-deletion)
+- [Operator Deployment Spec](#operator-deployment-spec)
 
 ## Guaranteed Quality of Service
 
@@ -189,3 +190,25 @@ For example, if the REC name is `redis-enterprise`, here is a command to remove 
 kubectl patch rec redis-enterprise --type=json -p '[{"op":"remove","path":"/metadata/finalizers","value":"redbfinalizer.redisenterpriseclusters.app.redislabs.com"}]'
 ```
 note: In this case the REDB resources that were attached to the REC may still exist. see [REDB Deletion](#redb-deletion) for details on how to delete these REDBs.
+
+### Operator Deployment Spec  
+* To increase the time before admission's liveness performing the first probe, you need to edit the deployment by running:
+```
+kubectl edit deployment redis-enterprise-operator
+```
+under the `spec` find the `admission` container - `livenessProbe` and edit the value of `initialDelaySeconds`:
+```yaml
+livenessProbe:
+  ...
+  ...
+  initialDelaySeconds: <VALUE_YOU_CHOOSE>
+  ...
+```
+Or you can run patch command -(here it sets its value to 20s, replace with the value you need)
+> Note: Here the admission container's index is 1, replace with the admission container's index in your deployment.  
+> You can run the command  
+```kubectl get pod <REDIS_ENTERPRISE_OPERATOR_POD_NAME> -o jsonpath='{.spec.containers[*].name}' ```  
+> and get the containers list
+```
+kubectl patch deployment redis-enterprise-operator  --type json   -p='[{"op": "replace", "path": "/spec/template/spec/containers/1/livenessProbe/initialDelaySeconds", "value":20}]'
+```

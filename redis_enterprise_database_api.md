@@ -27,6 +27,7 @@ This document describes the parameters for the Redis Enterprise Database custom 
 * [Enums](#enums)
   * [DatabasePersistence](#databasepersistence)
   * [DatabaseStatus](#databasestatus)
+  * [DatabaseType](#databasetype)
   * [RepliceSourceType](#replicesourcetype)
   * [RolePermissionType](#rolepermissiontype)
 ## Objects
@@ -178,7 +179,7 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | redisEnterpriseCluster | Connection to Redis Enterprise Cluster | *[RedisEnterpriseConnection](#redisenterpriseconnection) |  | false |
-| memorySize | memory size of database. use formats like 100MB, 0.1GB. minimum value in 100MB. | string | 100MB | false |
+| memorySize | memory size of database. use formats like 100MB, 0.1GB. minimum value in 100MB. When redis on flash (RoF) is enabled, this value refers to RAM+Flash memory, and it must not be below 1GB. | string | 100MB | false |
 | rackAware | Whether database should be rack aware. This improves availability - more information: https://docs.redislabs.com/latest/rs/concepts/high-availability/rack-zone-awareness/ | *bool |  | false |
 | shardCount | Number of database server-side shards | uint16 | 1 | false |
 | replication | In-memory database replication. When enabled, database will have replica shard for every master - leading to higher availability. | *bool | false | false |
@@ -198,6 +199,8 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | dataInternodeEncryption | Internode encryption (INE) setting. An optional boolean setting, overriding a similar cluster-wide policy. If set to False, INE is guaranteed to be turned off for this DB (regardless of cluster-wide policy). If set to True, INE will be turned on, unless the capability is not supported by the DB ( in such a case we will get an error and database creation will fail). If left unspecified, will be disabled if internode encryption is not supported by the DB (regardless of cluster default). Deleting this property after explicitly setting its value shall have no effect. | *bool |  | false |
 | databasePort | Database port number. TCP port on which the database is available. Will be generated automatically if omitted. can not be changed after creation | *int |  | false |
 | shardsPlacement | Control the density of shards - should they reside on as few or as many nodes as possible. Available options are \"dense\" or \"sparse\". If left unset, defaults to \"dense\". | string |  | false |
+| databaseType | The type of the database (RAM vs FLASH). Defaults to \"RAM\". | [DatabaseType](#databasetype) | RAM | false |
+| rofRamSize | The size of the RAM portion of an RoF database. Similarly to \"memorySize\" use formats like 100MB, 0.1GB It must be at least 10% of combined memory size (RAM+Flash), as specified by \"memorySize\". | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseDatabaseStatus
@@ -315,6 +318,14 @@ State of the Redis Enterprise Database
 | "creation-failed" | Database creation has failed |
 | "recovery" | Database creation has failed |
 | "" | Database status unknown |
+[Back to Table of Contents](#table-of-contents)
+
+### DatabaseType
+
+| Value | Description |
+| ----- | ----------- |
+| "RAM" |  |
+| "FLASH" |  |
 [Back to Table of Contents](#table-of-contents)
 
 ### RepliceSourceType

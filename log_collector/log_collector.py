@@ -65,6 +65,7 @@ API_RESOURCES = [
     "CatalogSource"
     "PodSecurityPolicy",
     "ReplicaSet",
+    "StorageClass",
 ]
 
 

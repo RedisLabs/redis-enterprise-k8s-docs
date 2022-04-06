@@ -207,8 +207,9 @@ spec:
                     type: object
                 type: object
               clusterCredentialSecretName:
-                description: Secret Name/Path to use for Cluster Credentials.  If left
-                  blank, will use cluster name
+                description: Secret Name/Path to use for Cluster Credentials. To be
+                  used only if ClusterCredentialSecretType is vault. If left blank,
+                  will use cluster name.
                 type: string
               clusterCredentialSecretRole:
                 description: Used only if ClusterCredentialSecretType is vault, to define
@@ -7038,8 +7039,9 @@ spec:
                     type: object
                 type: object
               clusterCredentialSecretName:
-                description: Secret Name/Path to use for Cluster Credentials.  If left
-                  blank, will use cluster name
+                description: Secret Name/Path to use for Cluster Credentials. To be
+                  used only if ClusterCredentialSecretType is vault. If left blank,
+                  will use cluster name.
                 type: string
               clusterCredentialSecretRole:
                 description: Used only if ClusterCredentialSecretType is vault, to define

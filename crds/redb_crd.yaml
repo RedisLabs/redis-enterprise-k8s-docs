@@ -383,7 +383,8 @@ spec:
                 type: string
               memorySize:
                 description: memory size of database. use formats like 100MB, 0.1GB.
-                  minimum value in 100MB.
+                  minimum value in 100MB. When redis on flash (RoF) is enabled, this value refers to RAM+Flash memory,
+                  and it must not be below 1GB.
                 type: string
               modulesList:
                 description: List of modules associated with database
@@ -518,6 +519,18 @@ spec:
                 - disabled
                 - enabled
                 - replica_ssl
+                type: string
+              databaseType:
+                description: The type of the database (RAM vs FLASH). Defaults to "RAM".
+                enum:
+                - RAM
+                - FLASH
+                type: string
+              rofRamSize:
+                description: The size of the RAM portion of an RoF database.
+                  Similarly to "memorySize" use formats like 100MB, 0.1GB.
+                  It must be at least 10% of combined memory
+                  size (RAM and Flash), as specified by "memorySize".
                 type: string
             type: object
           status:
