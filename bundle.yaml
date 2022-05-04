@@ -116,12 +116,6 @@ spec:
       - jsonPath: .metadata.creationTimestamp
         name: Age
         type: date
-      - jsonPath: .status.activeActiveName
-        name: Active active name
-        type: string
-      - jsonPath: .status.globalConfigurations
-        name: Global configurations
-        type: boolean
     subresources:
       status: {}
     schema:
@@ -7132,7 +7126,11 @@ spec:
                 type: string
               redisOnFlashSpec:
                 description: Stores configurations specific to redis on flash. If provided, the cluster will be capable of
-                  creating redis on flash databases
+                  creating redis on flash databases. Note - This is an ALPHA Feature. For this feature
+                  to take effect, set a boolean environment variable with the name
+                  "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the
+                  redis-enterprise-operator pod spec, or through the operator-environment-config
+                  Config Map.
                 properties:
                   enabled:
                     type: boolean
@@ -13979,7 +13977,11 @@ spec:
                 type: string
               redisOnFlashSpec:
                 description: Stores configurations specific to redis on flash. If provided, the cluster will be capable of
-                  creating redis on flash databases
+                  creating redis on flash databases. Note - This is an ALPHA Feature. For this feature
+                  to take effect, set a boolean environment variable with the name
+                  "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the
+                  redis-enterprise-operator pod spec, or through the operator-environment-config
+                  Config Map.
                 properties:
                   enabled:
                     type: boolean

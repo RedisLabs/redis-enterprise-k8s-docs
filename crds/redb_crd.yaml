@@ -39,12 +39,6 @@ spec:
       - jsonPath: .metadata.creationTimestamp
         name: Age
         type: date
-      - jsonPath: .status.activeActiveName
-        name: Active active name
-        type: string
-      - jsonPath: .status.globalConfigurations
-        name: Global configurations
-        type: boolean
     subresources:
       status: {}
     schema:
