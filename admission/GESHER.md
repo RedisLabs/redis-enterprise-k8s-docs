@@ -1,8 +1,8 @@
-# Admission Conrol with Gesher Installation for Redis Enterprise Operator
+# Admission Control with Gesher Installation for Redis Enterprise Operator
 
 ## Gesher Background
 
-Gesher is an operator that enables Kubernetes administrator to delegate the ability to setup webhook validating admisison controllers to users for running within their own namespace.
+Gesher is an operator that enables Kubernetes administrator to delegate the ability to setup webhook validating admission controllers to users for running within their own namespace.
 
 Gesher is configured by two custom resources.
  
@@ -11,7 +11,7 @@ Gesher is configured by two custom resources.
 
 ### Choosing Traditional Cluster or Gesher's Delegated installation methods.
 
-Redis Labs provides two methods for integrating admission control into one's system, what we refer to as *cluster* and *delegated* configurations.
+Redis provides two methods for integrating admission control into one's system, what we refer to as *cluster* and *delegated* configurations.
 
 *Cluster* configuration integrates admission via the standard Kubernetes **ValidatingWebhookConfiguration** resource.  This is a cluster-scoped kubernetes resource that can only be configured by a cluster administrator.
 

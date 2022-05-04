@@ -27,7 +27,8 @@ This document describes the parameters for the Redis Enterprise Database custom 
 * [Enums](#enums)
   * [DatabasePersistence](#databasepersistence)
   * [DatabaseStatus](#databasestatus)
-  * [RepliceSourceType](#replicesourcetype)
+  * [DatabaseType](#databasetype)
+  * [ReplicaSourceType](#replicasourcetype)
   * [RolePermissionType](#rolepermissiontype)
 ## Objects
 
@@ -178,12 +179,12 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | redisEnterpriseCluster | Connection to Redis Enterprise Cluster | *[RedisEnterpriseConnection](#redisenterpriseconnection) |  | false |
-| memorySize | memory size of database. use formats like 100MB, 0.1GB. minimum value in 100MB. | string | 100MB | false |
+| memorySize | memory size of database. use formats like 100MB, 0.1GB. minimum value in 100MB. When redis on flash (RoF) is enabled, this value refers to RAM+Flash memory, and it must not be below 1GB. | string | 100MB | false |
 | rackAware | Whether database should be rack aware. This improves availability - more information: https://docs.redislabs.com/latest/rs/concepts/high-availability/rack-zone-awareness/ | *bool |  | false |
 | shardCount | Number of database server-side shards | uint16 | 1 | false |
 | replication | In-memory database replication. When enabled, database will have replica shard for every master - leading to higher availability. | *bool | false | false |
 | persistence | Database on-disk persistence policy | *[DatabasePersistence](#databasepersistence) | disabled | false |
-| databaseSecretName | The name of the secret that holds the password to the database. If secret does not exist, it will be created. To define the password, create an opaque secret and set the name in the spec. The password will be taken from the value of the 'password' key. Use an empty string as value to disable authentication for the database. | string |  | false |
+| databaseSecretName | The name of the secret that holds the password to the database (redis databases only). If secret does not exist, it will be created. To define the password, create an opaque secret and set the name in the spec. The password will be taken from the value of the 'password' key. Use an empty string as value within the secret to disable authentication for the database. Note - memcached databases must not be set with a value, and a secret/password will not be automatically created for them. Use the memcachedSaslSecretName field to set authentication parameters for memcached databases. | string |  | false |
 | evictionPolicy | Database eviction policy. see more https://docs.redislabs.com/latest/rs/administering/database-operations/eviction-policy/ | string | volatile-lru | false |
 | tlsMode | Require SSL authenticated and encrypted connections to the database. enabled - all incoming connections to the Database must use SSL. disabled - no incoming connection to the Database should use SSL. replica_ssl - databases that replicate from this one need to use SSL. | string | disabled | false |
 | clientAuthenticationCertificates | The Secrets containing TLS Client Certificate to use for Authentication | []string |  | false |
@@ -198,6 +199,11 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | dataInternodeEncryption | Internode encryption (INE) setting. An optional boolean setting, overriding a similar cluster-wide policy. If set to False, INE is guaranteed to be turned off for this DB (regardless of cluster-wide policy). If set to True, INE will be turned on, unless the capability is not supported by the DB ( in such a case we will get an error and database creation will fail). If left unspecified, will be disabled if internode encryption is not supported by the DB (regardless of cluster default). Deleting this property after explicitly setting its value shall have no effect. | *bool |  | false |
 | databasePort | Database port number. TCP port on which the database is available. Will be generated automatically if omitted. can not be changed after creation | *int |  | false |
 | shardsPlacement | Control the density of shards - should they reside on as few or as many nodes as possible. Available options are \"dense\" or \"sparse\". If left unset, defaults to \"dense\". | string |  | false |
+| type | The type of the database. | *[DatabaseType](#databasetype) | redis | false |
+| isRof | Whether it is an RoF database or not. Applicable only for databases of type \"REDIS\". Assumed to be false if left blank. | *bool |  | false |
+| rofRamSize | The size of the RAM portion of an RoF database. Similarly to \"memorySize\" use formats like 100MB, 0.1GB It must be at least 10% of combined memory size (RAM+Flash), as specified by \"memorySize\". | string |  | false |
+| memcachedSaslSecretName | Credentials used for binary authentication in memcached databases. The credentials should be saved as an opaque secret and the name of that secret should be configured using this field. For username, use 'username' as the key and the actual username as the value. For password, use 'password' as the key and the actual password as the value. Note that connections are not encrypted. | string |  | false |
+| redisVersion | Redis OSS version. For existing databases - Upgrade Redis OSS version. For new databases - the version which the database will be created with. If set to 'major' - will always upgrade to the most recent major Redis version. If set to 'latest' - will always upgrade to the most recent Redis version. Depends on 'redisUpgradePolicy' - if you want to set the value to 'latest' for some databases, you must set redisUpgradePolicy on the cluster before. Possible values are 'major' or 'latest' When using upgrade - make sure to backup the database before. This value is used only for database type 'redis' | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseDatabaseStatus
@@ -226,7 +232,7 @@ RedisEnterpriseDatabaseStatus defines the observed state of RedisEnterpriseDatab
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| replicaSourceType | Determines what resource ReplicaSourceName refers to SECRET - Get URI from secret named in ReplicaSourceName.  The secret will have a key named 'uri' that defines the complete, redis:// URI.  The type of secret is determined by the secret mechanism used by the underlying REC object REDB - Determine URI from Kubernetes REDB resource named in ReplicaSourceName | [RepliceSourceType](#replicesourcetype) |  | true |
+| replicaSourceType | Determines what resource ReplicaSourceName refers to SECRET - Get URI from secret named in ReplicaSourceName.  The secret will have a key named 'uri' that defines the complete, redis:// URI.  The type of secret is determined by the secret mechanism used by the underlying REC object REDB - Determine URI from Kubernetes REDB resource named in ReplicaSourceName | [ReplicaSourceType](#replicasourcetype) |  | true |
 | replicaSourceName | Resource (SECRET/REDB) name of type ReplicaSourceType | string |  | true |
 | compression | GZIP Compression level (0-9) to use for replication | int |  | false |
 | clientKeySecret | Secret that defines what client key to use.  The secret needs 2 keys in its map, \"cert\" that is the PEM encoded certificate and \"key\" that is the PEM encoded private key | *string |  | false |
@@ -317,7 +323,15 @@ State of the Redis Enterprise Database
 | "" | Database status unknown |
 [Back to Table of Contents](#table-of-contents)
 
-### RepliceSourceType
+### DatabaseType
+
+| Value | Description |
+| ----- | ----------- |
+| "redis" |  |
+| "memcached" |  |
+[Back to Table of Contents](#table-of-contents)
+
+### ReplicaSourceType
 
 | Value | Description |
 | ----- | ----------- |
