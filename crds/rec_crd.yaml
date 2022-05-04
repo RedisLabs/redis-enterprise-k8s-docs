@@ -207,8 +207,9 @@ spec:
                     type: object
                 type: object
               clusterCredentialSecretName:
-                description: Secret Name/Path to use for Cluster Credentials.  If left
-                  blank, will use cluster name
+                description: Secret Name/Path to use for Cluster Credentials. To be
+                  used only if ClusterCredentialSecretType is vault. If left blank,
+                  will use cluster name.
                 type: string
               clusterCredentialSecretRole:
                 description: Used only if ClusterCredentialSecretType is vault, to define
@@ -226,6 +227,16 @@ spec:
                   true. Note that this field is cleared automatically after the cluster
                   is recovered
                 type: boolean
+              containerTimezone:
+                description: Container timezone configuration. While the default timezone
+                  on all containers is UTC, this setting can be used to set the timezone
+                  on services rigger/bootstrapper/RS containers. Currently the only
+                  supported value is to propagate the host timezone to all containers.
+                properties:
+                  propagateHost:
+                    description: Identifies that container timezone should be in sync with the host.
+                    type: object
+                type: object
               createServiceAccount:
                 description: Whether to create service account
                 type: boolean
@@ -236,9 +247,10 @@ spec:
                   please view the similar setting for REDB for more info.
                 type: boolean
               encryptPkeys:
-                description: 'Private key encryption - in order to enable, first need
+                description: "Private key encryption - in order to enable, first need
                   to mount ${ephemeralconfdir}/secrets/pem/passphrase and add the passphrase
-                  and then set fields value to ''true'' Possible values: true/false'
+                  and then set fields value to ''true'' Possible values: true/false'. Note: this feature
+                  is currently unsupported."
                 type: boolean      
               certificates:
                 description: RS Cluster Certificates.
@@ -307,7 +319,11 @@ spec:
               ocspConfiguration:
                 description: An API object that represents the cluster's OCSP configuration.
                   To enable OCSP, the cluster's proxy certificate should contain the
-                  OCSP responder URL.
+                  OCSP responder URL. Note - This is an ALPHA Feature. For this feature
+                  to take effect, set a boolean environment variable with the name
+                  "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the
+                  redis-enterprise-operator pod spec, or through the operator-environment-config
+                  Config Map.
                 properties:
                   ocspFunctionality:
                     description: Whether to enable/disable OCSP mechanism for the
@@ -7038,8 +7054,9 @@ spec:
                     type: object
                 type: object
               clusterCredentialSecretName:
-                description: Secret Name/Path to use for Cluster Credentials.  If left
-                  blank, will use cluster name
+                description: Secret Name/Path to use for Cluster Credentials. To be
+                  used only if ClusterCredentialSecretType is vault. If left blank,
+                  will use cluster name.
                 type: string
               clusterCredentialSecretRole:
                 description: Used only if ClusterCredentialSecretType is vault, to define
@@ -7057,6 +7074,16 @@ spec:
                   true. Note that this field is cleared automatically after the cluster
                   is recovered
                 type: boolean
+              containerTimezone:
+                description: Container timezone configuration. While the default timezone
+                  on all containers is UTC, this setting can be used to set the timezone
+                  on services rigger/bootstrapper/RS containers. Currently the only
+                  supported value is to propagate the host timezone to all containers.
+                properties:
+                  propagateHost:
+                    description: Identifies that container timezone should be in sync with the host.
+                    type: object
+                type: object
               createServiceAccount:
                 description: Whether to create service account
                 type: boolean
@@ -7138,7 +7165,11 @@ spec:
               ocspConfiguration:
                 description: An API object that represents the cluster's OCSP configuration.
                   To enable OCSP, the cluster's proxy certificate should contain the
-                  OCSP responder URL.
+                  OCSP responder URL. Note - This is an ALPHA Feature. For this feature
+                  to take effect, set a boolean environment variable with the name
+                  "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the
+                  redis-enterprise-operator pod spec, or through the operator-environment-config
+                  Config Map.
                 properties:
                   ocspFunctionality:
                     description: Whether to enable/disable OCSP mechanism for the

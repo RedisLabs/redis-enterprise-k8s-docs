@@ -15,7 +15,7 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:6.2.10-4
+          image: redislabs/operator:6.2.10-31
           command:
           - redis-enterprise-operator
           imagePullPolicy: Always
@@ -50,14 +50,14 @@ spec:
           livenessProbe:
             failureThreshold: 3
             successThreshold: 1
-            periodSeconds: 5
-            timeoutSeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
             httpGet:
               path: /healthz
               port: 8080
               scheme: HTTP
         - name: admission
-          image: redislabs/operator:6.2.10-4
+          image: redislabs/operator:6.2.10-31
           command:
             - /usr/local/bin/admission
           imagePullPolicy: Always
@@ -66,7 +66,7 @@ spec:
                 name: operator-environment-config
                 optional: true
           ports:
-            - containerPort: 443
+            - containerPort: 8443
           env:
             - name: POD_NAMESPACE
               valueFrom:
@@ -82,8 +82,8 @@ spec:
           readinessProbe:
             failureThreshold: 3
             successThreshold: 1
-            periodSeconds: 5
-            timeoutSeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
             httpGet:
               path: /healthz
               port: 8443
@@ -91,8 +91,9 @@ spec:
           livenessProbe:
             failureThreshold: 3
             successThreshold: 1
-            periodSeconds: 5
-            timeoutSeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            initialDelaySeconds: 15
             httpGet:
               path: /liveness
               port: 8443

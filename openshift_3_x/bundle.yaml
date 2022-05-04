@@ -6,12 +6,20 @@ metadata:
 allowPrivilegedContainer: false
 allowedCapabilities:
   - SYS_RESOURCE
+allowHostDirVolumePlugin: false
+allowHostIPC : false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
 runAsUser:
   type: MustRunAs
   uid: 1001
-FSGroup:
+readOnlyRootFilesystem: false
+fsGroup:
   type: MustRunAs
-  ranges: 1001,1001
+  ranges:
+  - min: 1001
+    max: 1001
 seLinuxContext:
   type: RunAsAny
 ---
@@ -50,7 +58,7 @@ rules:
     verbs: ["create", "delete", "get" , "update", "list", "watch"]
   - apiGroups: [""]
     resources: ["persistentvolumeclaims"]
-    verbs: ["create", "delete", "get" , "update"]
+    verbs: ["create", "delete", "get" , "update", "list", "watch"]
 
   # needed rbac rules for services controller
   - apiGroups: [""]
@@ -6276,7 +6284,7 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:6.2.8-15
+          image: redislabs/operator:6.2.10-31
           securityContext:
             runAsUser: 1001
           command:
@@ -6303,7 +6311,7 @@ spec:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: redis-enterprise-operator
-            - name: DEPLOY_RHEL7
+            - name: DEPLOY_RHEL
               value: "true"
           resources:
             limits:
@@ -6315,14 +6323,14 @@ spec:
           livenessProbe:
             failureThreshold: 3
             successThreshold: 1
-            periodSeconds: 5
-            timeoutSeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
             httpGet:
               path: /healthz
               port: 8080
               scheme: HTTP
         - name: admission
-          image: redislabs/operator:6.2.8-15
+          image: redislabs/operator:6.2.10-31
           command:
             - /usr/local/bin/admission
           imagePullPolicy: Always
@@ -6331,7 +6339,7 @@ spec:
                 name: operator-environment-config
                 optional: true
           ports:
-            - containerPort: 443
+            - containerPort: 8443
           env:
             - name: POD_NAMESPACE
               valueFrom:
@@ -6347,8 +6355,8 @@ spec:
           readinessProbe:
             failureThreshold: 3
             successThreshold: 1
-            periodSeconds: 5
-            timeoutSeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
             httpGet:
               path: /healthz
               port: 8443
@@ -6356,8 +6364,9 @@ spec:
           livenessProbe:
             failureThreshold: 3
             successThreshold: 1
-            periodSeconds: 5
-            timeoutSeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            initialDelaySeconds: 15
             httpGet:
               path: /liveness
               port: 8443
