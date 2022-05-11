@@ -15,7 +15,7 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.2.10-4
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.2.10-34
           securityContext:
             runAsUser: 1001
           command:
@@ -42,7 +42,7 @@ spec:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: redis-enterprise-operator
-            - name: DEPLOY_RHEL7
+            - name: DEPLOY_RHEL
               value: "true"
           resources:
             limits:
@@ -54,14 +54,14 @@ spec:
           livenessProbe:
             failureThreshold: 3
             successThreshold: 1
-            periodSeconds: 5
-            timeoutSeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
             httpGet:
               path: /healthz
               port: 8080
               scheme: HTTP
         - name: admission
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.2.10-4
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.2.10-34
           command:
             - /usr/local/bin/admission
           imagePullPolicy: Always
@@ -70,7 +70,7 @@ spec:
                 name: operator-environment-config
                 optional: true
           ports:
-            - containerPort: 443
+            - containerPort: 8443
           env:
             - name: POD_NAMESPACE
               valueFrom:
@@ -86,8 +86,8 @@ spec:
           readinessProbe:
             failureThreshold: 3
             successThreshold: 1
-            periodSeconds: 5
-            timeoutSeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
             httpGet:
               path: /healthz
               port: 8443
@@ -95,8 +95,9 @@ spec:
           livenessProbe:
             failureThreshold: 3
             successThreshold: 1
-            periodSeconds: 5
-            timeoutSeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            initialDelaySeconds: 15
             httpGet:
               path: /liveness
               port: 8443
