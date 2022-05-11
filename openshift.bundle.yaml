@@ -6,12 +6,20 @@ metadata:
 allowPrivilegedContainer: false
 allowedCapabilities:
   - SYS_RESOURCE
+allowHostDirVolumePlugin: false
+allowHostIPC : false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
 runAsUser:
   type: MustRunAs
   uid: 1001
-FSGroup:
+readOnlyRootFilesystem: false
+fsGroup:
   type: MustRunAs
-  ranges: 1001,1001
+  ranges:
+  - min: 1001
+    max: 1001
 seLinuxContext:
   type: RunAsAny
 ---
@@ -137,6 +145,12 @@ spec:
       - jsonPath: .metadata.creationTimestamp
         name: Age
         type: date
+      - jsonPath: .status.activeActiveName
+        name: Active active name
+        type: string
+      - jsonPath: .status.globalConfigurations
+        name: Global configurations
+        type: boolean
     subresources:
       status: {}
     schema:
@@ -479,9 +493,14 @@ spec:
               evictionPolicy:
                 description: Database eviction policy. see more https://docs.redislabs.com/latest/rs/administering/database-operations/eviction-policy/
                 type: string
+              isRof:
+                description: Whether it is an RoF database or not. Applicable only for
+                  databases of type "REDIS". Assumed to be false if left blank.
+                type: boolean
               memorySize:
                 description: memory size of database. use formats like 100MB, 0.1GB.
-                  minimum value in 100MB.
+                  minimum value in 100MB. When redis on flash (RoF) is enabled, this value refers to RAM+Flash memory,
+                  and it must not be below 1GB.
                 type: string
               modulesList:
                 description: List of modules associated with database
@@ -617,6 +636,55 @@ spec:
                 - enabled
                 - replica_ssl
                 type: string
+              type:
+                description: The type of the database (redis or memcached). Defaults to "redis".
+                enum:
+                - redis
+                - memcached
+                type: string
+              rofRamSize:
+                description: The size of the RAM portion of an RoF database.
+                  Similarly to "memorySize" use formats like 100MB, 0.1GB.
+                  It must be at least 10% of combined memory
+                  size (RAM and Flash), as specified by "memorySize".
+                type: string
+              redisVersion:
+                description: Redis OSS version. For existing databases - Upgrade Redis
+                  OSS version. For new databases - the version which the database will
+                  be created with. If set to 'major' - will always upgrade to the most
+                  recent major Redis version. If set to 'latest' - will always upgrade
+                  to the most recent Redis version. Depends on 'redisUpgradePolicy'
+                  - if you want to set the value to 'latest' for some databases, you
+                  must set redisUpgradePolicy on the cluster before. Possible values
+                  are 'major' or 'latest' When using upgrade - make sure to backup the
+                  database before. This value is used only for database type 'redis'
+                enum:
+                - major
+                - latest
+                type: string
+              activeActiveName:
+                description: 'The Redis Enterprise Active Active Peering custom resource name this Resource is associated
+                  with, also, the corresponding active active database name.
+                  In case this resource is created manually
+                  at the active active database creation this field must be filled via the user,
+                  otherwise, the operator will assign this field automatically.
+                  Note: this feature is currently unsupported.'
+                type: string
+              globalConfigurations:
+                description: 'Flag that determines if this is the default global configurations
+                  for active active database.
+                  In case this resource is created manually
+                  at the active active database creation this field must be filled via the user
+                  otherwise the operator will create the global configurations REDB automatically with default values.
+                  Note: this feature is currently unsupported.'
+                type: boolean
+              memcachedSaslSecretName:
+                description: 'Credentials used for binary authentication in memcached databases. 
+                  The credentials should be saved as an opaque secret and the name of that secret should be configured using this field. 
+                  For username, use ''username'' as the key and the actual username as the value.
+                  For password, use ''password'' as the key and the actual password as the value.
+                  Note that connections are not encrypted.'
+                type: string
             type: object
           status:
             description: RedisEnterpriseDatabaseStatus defines the observed state of
@@ -741,6 +809,16 @@ spec:
               version:
                 description: Database compatibility version
                 type: string
+              activeActiveName:
+                description: 'The Redis Enterprise Active Active Peering custom resource this Resource is associated
+                  with, also, the corresponding active active database name.
+                  Note: this feature is currently unsupported.'
+                type: string
+              globalConfigurations:
+                description: 'Flag to determine if this is the default global configurations
+                  for active active database.
+                  Note: this feature is currently unsupported.'
+                type: boolean
             type: object
         type: object
 ---
@@ -773,7 +851,7 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.2.10-4
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.2.10-34
           securityContext:
             runAsUser: 1001
           command:
@@ -800,7 +878,7 @@ spec:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: redis-enterprise-operator
-            - name: DEPLOY_RHEL7
+            - name: DEPLOY_RHEL
               value: "true"
           resources:
             limits:
@@ -812,14 +890,14 @@ spec:
           livenessProbe:
             failureThreshold: 3
             successThreshold: 1
-            periodSeconds: 5
-            timeoutSeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
             httpGet:
               path: /healthz
               port: 8080
               scheme: HTTP
         - name: admission
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.2.10-4
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.2.10-34
           command:
             - /usr/local/bin/admission
           imagePullPolicy: Always
@@ -828,7 +906,7 @@ spec:
                 name: operator-environment-config
                 optional: true
           ports:
-            - containerPort: 443
+            - containerPort: 8443
           env:
             - name: POD_NAMESPACE
               valueFrom:
@@ -844,8 +922,8 @@ spec:
           readinessProbe:
             failureThreshold: 3
             successThreshold: 1
-            periodSeconds: 5
-            timeoutSeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
             httpGet:
               path: /healthz
               port: 8443
@@ -853,8 +931,9 @@ spec:
           livenessProbe:
             failureThreshold: 3
             successThreshold: 1
-            periodSeconds: 5
-            timeoutSeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            initialDelaySeconds: 15
             httpGet:
               path: /liveness
               port: 8443
@@ -1069,8 +1148,9 @@ spec:
                     type: object
                 type: object
               clusterCredentialSecretName:
-                description: Secret Name/Path to use for Cluster Credentials.  If left
-                  blank, will use cluster name
+                description: Secret Name/Path to use for Cluster Credentials. To be
+                  used only if ClusterCredentialSecretType is vault. If left blank,
+                  will use cluster name.
                 type: string
               clusterCredentialSecretRole:
                 description: Used only if ClusterCredentialSecretType is vault, to define
@@ -1088,6 +1168,16 @@ spec:
                   true. Note that this field is cleared automatically after the cluster
                   is recovered
                 type: boolean
+              containerTimezone:
+                description: Container timezone configuration. While the default timezone
+                  on all containers is UTC, this setting can be used to set the timezone
+                  on services rigger/bootstrapper/RS containers. Currently the only
+                  supported value is to propagate the host timezone to all containers.
+                properties:
+                  propagateHost:
+                    description: Identifies that container timezone should be in sync with the host.
+                    type: object
+                type: object
               createServiceAccount:
                 description: Whether to create service account
                 type: boolean
@@ -1098,9 +1188,10 @@ spec:
                   please view the similar setting for REDB for more info.
                 type: boolean
               encryptPkeys:
-                description: 'Private key encryption - in order to enable, first need
+                description: "Private key encryption - in order to enable, first need
                   to mount ${ephemeralconfdir}/secrets/pem/passphrase and add the passphrase
-                  and then set fields value to ''true'' Possible values: true/false'
+                  and then set fields value to ''true'' Possible values: true/false'. Note: this feature
+                  is currently unsupported."
                 type: boolean      
               certificates:
                 description: RS Cluster Certificates.
@@ -1169,7 +1260,11 @@ spec:
               ocspConfiguration:
                 description: An API object that represents the cluster's OCSP configuration.
                   To enable OCSP, the cluster's proxy certificate should contain the
-                  OCSP responder URL.
+                  OCSP responder URL. Note - This is an ALPHA Feature. For this feature
+                  to take effect, set a boolean environment variable with the name
+                  "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the
+                  redis-enterprise-operator pod spec, or through the operator-environment-config
+                  Config Map.
                 properties:
                   ocspFunctionality:
                     description: Whether to enable/disable OCSP mechanism for the
@@ -7900,8 +7995,9 @@ spec:
                     type: object
                 type: object
               clusterCredentialSecretName:
-                description: Secret Name/Path to use for Cluster Credentials.  If left
-                  blank, will use cluster name
+                description: Secret Name/Path to use for Cluster Credentials. To be
+                  used only if ClusterCredentialSecretType is vault. If left blank,
+                  will use cluster name.
                 type: string
               clusterCredentialSecretRole:
                 description: Used only if ClusterCredentialSecretType is vault, to define
@@ -7919,6 +8015,16 @@ spec:
                   true. Note that this field is cleared automatically after the cluster
                   is recovered
                 type: boolean
+              containerTimezone:
+                description: Container timezone configuration. While the default timezone
+                  on all containers is UTC, this setting can be used to set the timezone
+                  on services rigger/bootstrapper/RS containers. Currently the only
+                  supported value is to propagate the host timezone to all containers.
+                properties:
+                  propagateHost:
+                    description: Identifies that container timezone should be in sync with the host.
+                    type: object
+                type: object
               createServiceAccount:
                 description: Whether to create service account
                 type: boolean
@@ -8000,7 +8106,11 @@ spec:
               ocspConfiguration:
                 description: An API object that represents the cluster's OCSP configuration.
                   To enable OCSP, the cluster's proxy certificate should contain the
-                  OCSP responder URL.
+                  OCSP responder URL. Note - This is an ALPHA Feature. For this feature
+                  to take effect, set a boolean environment variable with the name
+                  "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the
+                  redis-enterprise-operator pod spec, or through the operator-environment-config
+                  Config Map.
                 properties:
                   ocspFunctionality:
                     description: Whether to enable/disable OCSP mechanism for the

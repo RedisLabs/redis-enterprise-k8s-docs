@@ -24,7 +24,7 @@ High level architecture and overview of the solution can be found [HERE](https:/
 
 ### Prerequisites
 
-- A Kubernetes cluster version of 1.11 or higher, with a minimum of 3 worker nodes.
+- A Kubernetes cluster with a supported version (see below) with a minimum of 3 worker nodes.
 - A Kubernetes client (kubectl) with a matching version. For OpenShift, an OpenShift client (oc).
 - Access to DockerHub, RedHat Container Catalog or a private repository that can serve the required images.
 
@@ -32,9 +32,9 @@ High level architecture and overview of the solution can be found [HERE](https:/
 The following are the images and tags for this release:
 | Component | k8s | Openshift |
 | --- | --- | --- |
-| Redis Enterprise | `redislabs/redis:6.2.10-90` | `redislabs/redis:6.2.10-90.rhel7-openshift` |
-| Operator | `redislabs/operator:6.2.10-4` | `redislabs/operator:6.2.10-4` |
-| Services Rigger | `redislabs/k8s-controller:6.2.10-4` | `redislabs/k8s-controller:6.2.10-4` |
+| Redis Enterprise | `redislabs/redis:6.2.10-107` | `redislabs/redis:6.2.10-107.rhel8-openshift` |
+| Operator | `redislabs/operator:6.2.10-34` | `redislabs/operator:6.2.10-34` |
+| Services Rigger | `redislabs/k8s-controller:6.2.10-34` | `redislabs/k8s-controller:6.2.10-34` |
 > * RedHat certified images are available on [Redhat Catalog](https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d) </br>
 
 
@@ -185,7 +185,7 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
         EOF
         ```
         
-        This must fail with an error output by the admission webhook redb.admisison.redislabs that is being denied because it can't get the login credentials for the Redis Enterprise Cluster as none were specified.
+        This must fail with an error output by the admission webhook redb.admisison.redislabs that is being denied because 'illegal' is not a valid eviction policy.
         
         ```shell script
         Error from server: error when creating "STDIN": admission webhook "redb.admission.redislabs" denied the request: eviction_policy: u'illegal' is not one of [u'volatile-lru', u'volatile-ttl', u'volatile-random', u'allkeys-lru', u'allkeys-random', u'noeviction', u'volatile-lfu', u'allkeys-lfu']
@@ -208,7 +208,6 @@ This is the fastest way to get up and running with a new Redis Enterprise on Kub
     EOF
     kubectl apply -f /tmp/redis-enterprise-database.yml
     ```
-    Replace the name of the cluster with the one used on the current namespace.
     All REDB configuration options are documented [here](redis_enterprise_database_api.md).
 
 
@@ -249,7 +248,6 @@ That folder also contains the custom resource definitions compatible with OpenSh
    > Note - change rec in the suffix of the 2nd command with the name of the RedisEnterpriseCluster, if different (see step "Redis Enterprise Cluster custom resource" below).
 
 4. Deploy the OpenShift operator bundle:
-    > NOTE: Update the `storageClassName` setting in `openshift.bundle.yaml` (by default its set to `gp2`).
 
     ```bash
     oc apply -f openshift.bundle.yaml
@@ -257,8 +255,9 @@ That folder also contains the custom resource definitions compatible with OpenSh
     > Note: If you are running on OpenShift 3.x, use the `bundle.yaml` file located under `openshift_3_x` folder.
 
 5. Redis Enterprise Cluster custom resource - `RedisEnterpriseCluster`
+    > Note: Define a `storageClassName` setting in `openshift/rec_rhel.yaml` as required (it's set to `gp2` by default).
 
-    Apply the `RedisEnterpriseCluster` resource with RHEL7 based images:
+    Apply the `RedisEnterpriseCluster` resource with RHEL8 based images:
 
     ```bash
     oc apply -f openshift/rec_rhel.yaml
@@ -339,12 +338,12 @@ That folder also contains the custom resource definitions compatible with OpenSh
         EOF
         ```
         
-        This must fail with an error output by the admission webhook redb.admisison.redislabs that is being denied because it can't get the login credentials for the Redis Enterprise Cluster as none were specified.
+        This must fail with an error output by the admission webhook redb.admisison.redislabs that is being denied because 'illegal' is not a valid eviction policy.
         
         ```shell script
         Error from server: error when creating "STDIN": admission webhook "redb.admission.redislabs" denied the request: eviction_policy: u'illegal' is not one of [u'volatile-lru', u'volatile-ttl', u'volatile-random', u'allkeys-lru', u'allkeys-random', u'noeviction', u'volatile-lfu', u'allkeys-lfu']
         ```
-      > Note: procedure to enable admission is documented with further detail [here](admission/README.md
+      > Note: procedure to enable admission is documented with further detail [here](admission/README.md).
 
 7. Redis Enterprise Database custom resource - `RedisEnterpriseDatabase`
 
@@ -363,7 +362,6 @@ That folder also contains the custom resource definitions compatible with OpenSh
     EOF
     oc apply -f /tmp/redis-enterprise-database.yml
     ```
-    Replace the name of the cluster with the one used on the current namespace.
     All REDB configuration options are documented [here](redis_enterprise_database_api.md).
 
 
@@ -381,7 +379,7 @@ The operator deploys a `RedisEnterpriseCluster` with default configurations valu
     redisEnterpriseImageSpec:
       imagePullPolicy:  IfNotPresent
       repository:       redislabs/redis
-      versionTag:       6.2.10-90
+      versionTag:       6.2.10-107
   ```
 
 * Persistence
@@ -470,7 +468,7 @@ The operator deploys a `RedisEnterpriseCluster` with default configurations valu
 
 Whenever images are not pulled from DockerHub, the following configuration must be specified:
 
-In *RedisEnterpriseClusterSpec* (redis_enterprise_cluster.yaml):
+In *RedisEnterpriseClusterSpec* :
 - *redisEnterpriseImageSpec*
 - *redisEnterpriseServicesRiggerImageSpec*
 - *bootstrapperImageSpec*
@@ -483,21 +481,21 @@ For example:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/redis
-    versionTag:       6.2.10-90
+    versionTag:       6.2.10-107
 ```
 
 ```yaml
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       6.2.10-4
+    versionTag:       6.2.10-34
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       6.2.10-4
+    versionTag:       6.2.10-34
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -509,7 +507,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:6.2.10-4
+          image: harbor.corp.local/redisenterprise/operator:6.2.10-34
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).
@@ -632,7 +630,7 @@ Note: in the  examples above the Redis Enterprise Cluster name is: 'rec' and the
 The Operator automates and simplifies the upgrade process.  
 The Redis Enterprise Cluster Software, and the Redis Enterprise Operator for Kubernetes versions are tightly coupled and should be upgraded together.  
 It is recommended to use the bundle.yaml to upgrade, as it loads all the relevant CRD documents for this version. If the updated CRDs are not loaded, the operator might fail.
-There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.2.10-90
+There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.2.10-107
 
 ```yaml
   autoUpgradeRedisEnterprise: true
@@ -641,7 +639,7 @@ There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within t
 Alternatively:
 ```yaml
   RedisEnterpriseImageSpec:
-    versionTag: redislabs/redis:6.2.10-90
+    versionTag: redislabs/redis:6.2.10-107
 ```
 
 ## Supported K8S Distributions
@@ -649,37 +647,36 @@ Each release of the Redis Enterprise Operator deployment is thoroughly tested ag
 Supported versions (platforms/versions that are not listed are not supported): 
 | Distribution                    | Support Status |
 |---------------------------------|----------------|
-| Openshift 3.11 (K8s 1.11)       | deprecated     |
-| OpenShift 4.6  (K8s 1.19)       | supported      |
+| OpenShift 4.6  (K8s 1.19)       | deprecated     |
 | OpenShift 4.7  (K8s 1.20)       | supported      |
 | OpenShift 4.8  (K8s 1.21)       | supported      |
 | OpenShift 4.9  (K8s 1.22)       | supported      |
-| KOPS vanilla 1.18               | supported      |
-| KOPS vanilla 1.19               | supported      |
+| OpenShift 4.10  (K8s 1.23)      | supported      |
+| KOPS vanilla 1.18               | deprecated     |
+| KOPS vanilla 1.19               | deprecated     |
 | KOPS vanilla 1.20               | supported      |
 | KOPS vanilla 1.21               | supported      |
 | KOPS vanilla 1.22               | supported      |
-| GKE 1.19                        | supported      |
+| KOPS vanilla 1.23               | supported      |
+| GKE 1.19                        | deprecated     |
 | GKE 1.20                        | supported      |
 | GKE 1.21                        | supported      |
 | GKE 1.22                        | supported      |
-| Rancher 2.5 (K8s 1.17)          | *deprecated    |
-| Rancher 2.5 (K8s 1.18)          | *deprecated    |
-| Rancher 2.5 (K8s 1.19)          | *deprecated    |
-| Rancher 2.5 (K8s 1.20)          | *deprecated    |
+| Rancher 2.6 (K8s 1.18)          | deprecated     |
 | Rancher 2.6 (K8s 1.19)          | supported      |
 | Rancher 2.6 (K8s 1.20)          | supported      |
 | Rancher 2.6 (K8s 1.21)          | supported      |
 | VMWare TKGIE** 1.10 (K8s 1.19)  | supported      |
-| VMWare TKGIE 1.11 (K8s 1.20).   | supported |
-| AKS 1.19                        | deprecated     |
-| AKS 1.20                        | supported      |
-| AKS 1.21                        | supported      |
+| VMWare TKGIE 1.11 (K8s 1.20)    | supported      |
+| AKS 1.20                        | deprecated     |
+| AKS 1.21                        | deprecated     |
 | AKS 1.22                        | supported      |
-| EKS 1.18                        | supported      |
-| EKS 1.19                        | supported      |
+| AKS 1.23                        | supported      |
+| EKS 1.18                        | deprecated     |
+| EKS 1.19                        | deprecated     |
 | EKS 1.20                        | supported      |
 | EKS 1.21                        | supported      |
+| EKS 1.22                        | supported      |
 
 \* No longer supported by the vendor
 \*\* Tanzu Kubernetes Grid Integrated Edition

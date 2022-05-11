@@ -4,9 +4,11 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
 ## Table of Contents
 * [Objects](#objects)
   * [ActiveActive](#activeactive)
+  * [BundledDatabaseRedisVersions](#bundleddatabaseredisversions)
   * [BundledDatabaseVersions](#bundleddatabaseversions)
   * [ClusterCertificate](#clustercertificate)
   * [CmServer](#cmserver)
+  * [ContainerTimezoneSpec](#containertimezonespec)
   * [CrdbCoordinator](#crdbcoordinator)
   * [CrdbWorker](#crdbworker)
   * [ImageSpec](#imagespec)
@@ -17,6 +19,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [OcspStatus](#ocspstatus)
   * [PdnsServer](#pdnsserver)
   * [PersistentConfigurationSpec](#persistentconfigurationspec)
+  * [PropagateHost](#propagatehost)
   * [RSClusterCertificates](#rsclustercertificates)
   * [RedisEnterpriseCluster](#redisenterprisecluster)
   * [RedisEnterpriseClusterList](#redisenterpriseclusterlist)
@@ -35,6 +38,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [ClusterEventReason](#clustereventreason)
   * [ClusterState](#clusterstate)
   * [OperatingMode](#operatingmode)
+  * [RedisOnFlashsStorageEngine](#redisonflashsstorageengine)
   * [SpecStatusName](#specstatusname)
 ## Objects
 
@@ -47,6 +51,14 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
 | apiIngressUrl | RS API URL | string |  | true |
 | dbIngressSuffix | DB ENDPOINT SUFFIX - will be used to set the db host ingress <db name><db ingress suffix>. Creates a host name so it should be unique if more than one db is created on the cluster with the same name | string |  | true |
 | ingressAnnotations | Used for ingress controllers such as ha-proxy or nginx in GKE | map[string]string |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### BundledDatabaseRedisVersions
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| version |  | string |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### BundledDatabaseVersions
@@ -74,6 +86,14 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | operatingMode | Whether to enable/disable the CM server | [OperatingMode](#operatingmode) |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### ContainerTimezoneSpec
+Used to set the timezone across all redis enterprise containers.
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| propagateHost | Identifies that container timezone should be in sync with the host. | *[PropagateHost](#propagatehost) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### CrdbCoordinator
@@ -170,8 +190,15 @@ Specification for Redis Enterprise Cluster persistence
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | enabled | Whether to add persistent volume to Redis Enterprise pods | *bool | True | true |
-| storageClassName | Storage class for persistent volume in Redis Enterprise pods Leave empty to use the default | string |  | true |
+| storageClassName | Storage class for persistent volume in Redis Enterprise pods. Leave empty to use the default. If using the default this way, make sure the Kubernetes Cluster has a default Storage Class configured. This can be done by running a `kubectl get storageclass` and see if one of the Storage Classes' names contains a `(default)` mark. | string |  | true |
 | volumeSize |  | resource.Quantity |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### PropagateHost
+Used to specify that the timezone is configured to match the host machine timezone.
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
 [Back to Table of Contents](#table-of-contents)
 
 ### RSClusterCertificates
@@ -245,7 +272,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | podAnnotations | pod annotations | map[string]string |  | false |
 | podTolerations | Tolerations that are added to all managed pods. for more information: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/ | [][v1.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#toleration-v1-core) | empty | false |
 | slaveHA | Slave high availability mechanism configuration. | *[SlaveHA](#slaveha) |  | false |
-| clusterCredentialSecretName | Secret Name/Path to use for Cluster Credentials.  If left blank, will use cluster name | string |  | false |
+| clusterCredentialSecretName | Secret Name/Path to use for Cluster Credentials. To be used only if ClusterCredentialSecretType is vault. If left blank, will use cluster name. | string |  | false |
 | clusterCredentialSecretType | Type of Secret to use for ClusterCredential: vault, kubernetes,... If left blank, will default to kubernetes secrets | string |  | true |
 | clusterCredentialSecretRole | Used only if ClusterCredentialSecretType is vault, to define vault role to be used.  If blank, defaults to \"redis-enterprise-rec\" | string |  | true |
 | vaultCASecret | K8s secret name containing Vault's CA cert - defaults to \"vault-ca-cert\" | string |  | false |
@@ -255,9 +282,12 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | certificates | RS Cluster Certificates. Used to modify the certificates used by the cluster. See the \"RSClusterCertificates\" struct described above to see the supported certificates. | *[RSClusterCertificates](#rsclustercertificates) |  | false |
 | podStartingPolicy | Mitigation setting for STS pods stuck in \"ContainerCreating\" | *[StartingPolicy](#startingpolicy) |  | false |
 | redisEnterpriseTerminationGracePeriodSeconds | The TerminationGracePeriodSeconds value for the (STS created) REC pods. Note that pods should not be taken down intentionally by force. Because clean pod shutdown is essential to prevent data loss, the default value is intentionally large (1 year). When data loss is acceptable (such as pure caching configurations), a value of a few minutes may be acceptable. | *int64 | 31536000 | false |
-| redisOnFlashSpec | Stores configurations specific to redis on flash. Note: this feature is currently unsupported. | *[RedisOnFlashSpec](#redisonflashspec) |  | false |
-| ocspConfiguration | An API object that represents the cluster's OCSP configuration. To enable OCSP, the cluster's proxy certificate should contain the OCSP responder URL. Note: this feature is currently unsupported. | *[OcspConfiguration](#ocspconfiguration) |  | false |
-| encryptPkeys | Private key encryption - in order to enable, first need to mount ${ephemeralconfdir}/secrets/pem/passphrase and add the passphrase and then set fields value to 'true' Possible values: true/false. Note: this feature is currently unsupported. | *bool |  | false |
+| redisOnFlashSpec | Stores configurations specific to redis on flash. If provided, the cluster will be capable of creating redis on flash databases. | *[RedisOnFlashSpec](#redisonflashspec) |  | false |
+| ocspConfiguration | An API object that represents the cluster's OCSP configuration. To enable OCSP, the cluster's proxy certificate should contain the OCSP responder URL. Note - This is an ALPHA Feature. For this feature to take effect, set a boolean environment variable with the name \"ENABLE_ALPHA_FEATURES\" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. | *[OcspConfiguration](#ocspconfiguration) |  | false |
+| encryptPkeys | Private key encryption - in order to enable, first need to mount ${ephemeralconfdir}/secrets/pem/passphrase and add the passphrase and then set fields value to 'true' Possible values: true/false Note: This is an ALPHA Feature. For this feature to take effect, set a boolean environment variable with the name \"ENABLE_ALPHA_FEATURES\" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. | *bool |  | false |
+| containerTimezone | Container timezone configuration. While the default timezone on all containers is UTC, this setting can be used to set the timezone on services rigger/bootstrapper/RS containers. Currently the only supported value is to propagate the host timezone to all containers. | *[ContainerTimezoneSpec](#containertimezonespec) |  | false |
+[Back to Table of Contents](#table-of-contents)
+
 ### RedisEnterpriseClusterStatus
 RedisEnterpriseClusterStatus defines the observed state of RedisEnterpriseCluster
 
@@ -291,7 +321,7 @@ RedisOnFlashSpec contains all the parameters needed to configure in order to ena
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | enabled | Indicates whether RoF is turned on or not. | bool |  | true |
-| flashStorageEngine | The type of DB engine used on flash. Currently the only supported value is \"rocksdb\", but this will change in the figure. | string |  | true |
+| flashStorageEngine | The type of DB engine used on flash. Currently the only supported value is \"rocksdb\", but this will change in the future. | [RedisOnFlashsStorageEngine](#redisonflashsstorageengine) |  | true |
 | storageClassName | Used to identify the storage class name of the corresponding volume claim template. | string |  | true |
 | flashDiskSize | Required flash disk size. | resource.Quantity |  | false |
 [Back to Table of Contents](#table-of-contents)
@@ -392,6 +422,13 @@ State of the Redis Enterprise Cluster
 | ----- | ----------- |
 | "enabled" |  |
 | "disabled" |  |
+[Back to Table of Contents](#table-of-contents)
+
+### RedisOnFlashsStorageEngine
+
+| Value | Description |
+| ----- | ----------- |
+| "rocksdb" |  |
 [Back to Table of Contents](#table-of-contents)
 
 ### SpecStatusName
