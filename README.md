@@ -33,8 +33,8 @@ The following are the images and tags for this release:
 | Component | k8s | Openshift |
 | --- | --- | --- |
 | Redis Enterprise | `redislabs/redis:6.2.10-107` | `redislabs/redis:6.2.10-107.rhel8-openshift` |
-| Operator | `redislabs/operator:6.2.10-34` | `redislabs/operator:6.2.10-34` |
-| Services Rigger | `redislabs/k8s-controller:6.2.10-34` | `redislabs/k8s-controller:6.2.10-34` |
+| Operator | `redislabs/operator:100.0.1-11804` | `redislabs/operator:100.0.1-11804` |
+| Services Rigger | `redislabs/k8s-controller:100.0.1-11804` | `redislabs/k8s-controller:100.0.1-11804` |
 > * RedHat certified images are available on [Redhat Catalog](https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d) </br>
 
 
@@ -488,14 +488,14 @@ For example:
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       6.2.10-34
+    versionTag:       100.0.1-11804
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       6.2.10-34
+    versionTag:       100.0.1-11804
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -507,7 +507,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:6.2.10-34
+          image: harbor.corp.local/redisenterprise/operator:100.0.1-11804
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).
@@ -647,33 +647,24 @@ Each release of the Redis Enterprise Operator deployment is thoroughly tested ag
 Supported versions (platforms/versions that are not listed are not supported): 
 | Distribution                    | Support Status |
 |---------------------------------|----------------|
-| OpenShift 4.6  (K8s 1.19)       | deprecated     |
 | OpenShift 4.7  (K8s 1.20)       | supported      |
 | OpenShift 4.8  (K8s 1.21)       | supported      |
 | OpenShift 4.9  (K8s 1.22)       | supported      |
 | OpenShift 4.10  (K8s 1.23)      | supported      |
-| KOPS vanilla 1.18               | deprecated     |
-| KOPS vanilla 1.19               | deprecated     |
 | KOPS vanilla 1.20               | supported      |
 | KOPS vanilla 1.21               | supported      |
 | KOPS vanilla 1.22               | supported      |
 | KOPS vanilla 1.23               | supported      |
-| GKE 1.19                        | deprecated     |
 | GKE 1.20                        | supported      |
 | GKE 1.21                        | supported      |
 | GKE 1.22                        | supported      |
-| Rancher 2.6 (K8s 1.18)          | deprecated     |
 | Rancher 2.6 (K8s 1.19)          | supported      |
 | Rancher 2.6 (K8s 1.20)          | supported      |
 | Rancher 2.6 (K8s 1.21)          | supported      |
 | VMWare TKGIE** 1.10 (K8s 1.19)  | supported      |
 | VMWare TKGIE 1.11 (K8s 1.20)    | supported      |
-| AKS 1.20                        | deprecated     |
-| AKS 1.21                        | deprecated     |
 | AKS 1.22                        | supported      |
 | AKS 1.23                        | supported      |
-| EKS 1.18                        | deprecated     |
-| EKS 1.19                        | deprecated     |
 | EKS 1.20                        | supported      |
 | EKS 1.21                        | supported      |
 | EKS 1.22                        | supported      |

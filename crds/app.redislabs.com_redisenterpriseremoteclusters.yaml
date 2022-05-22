@@ -1,0 +1,62 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.6.1
+  creationTimestamp: null
+  name: redisenterpriseremoteclusters.app.redislabs.com
+spec:
+  group: app.redislabs.com
+  names:
+    kind: RedisEnterpriseRemoteCluster
+    listKind: RedisEnterpriseRemoteClusterList
+    plural: redisenterpriseremoteclusters
+    singular: redisenterpriseremotecluster
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              apiIngressUrl:
+                type: string
+              dbUrlSuffix:
+                type: string
+              name:
+                type: string
+              secretName:
+                type: string
+            required:
+            - apiIngressUrl
+            - name
+            type: object
+          status:
+            properties:
+              local:
+                type: boolean
+              specStatus:
+                type: string
+              status:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

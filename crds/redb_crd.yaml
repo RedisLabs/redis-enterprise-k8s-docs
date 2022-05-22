@@ -39,6 +39,12 @@ spec:
       - jsonPath: .metadata.creationTimestamp
         name: Age
         type: date
+      - jsonPath: .status.activeActiveName
+        name: Active active name
+        type: string
+      - jsonPath: .status.globalConfigurations
+        name: Global configurations
+        type: boolean
     subresources:
       status: {}
     schema:
@@ -685,8 +691,6 @@ spec:
                   lastBackupTime:
                     description: Time of last successful backup
                     type: string
-                required:
-                - backupHistory
                 type: object
               specStatus:
                 description: Whether the desired specification is valid

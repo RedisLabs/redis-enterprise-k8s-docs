@@ -12,6 +12,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [CrdbCoordinator](#crdbcoordinator)
   * [CrdbWorker](#crdbworker)
   * [ImageSpec](#imagespec)
+  * [IngressOrRouteSpec](#ingressorroutespec)
   * [LicenseStatus](#licensestatus)
   * [MdnsServer](#mdnsserver)
   * [Module](#module)
@@ -119,7 +120,19 @@ Image specification
 | ----- | ----------- | ------ | -------- | -------- |
 | repository | Repository | string |  | true |
 | versionTag |  | string |  | true |
+| digestHash | The digest hash of the image to pull. Version tag must be also specified with the corresponding version, will use the digest hash to pull the image if exists. Note: This is currently supported only for OLM. | string |  | false |
 | imagePullPolicy |  | v1.PullPolicy |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### IngressOrRouteSpec
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| method | Used to distinguish between different platforms implementation. | [ActiveActiveMethod](#activeactivemethod) |  | true |
+| apiFqdnUrl | RS API URL | string |  | true |
+| dbFqdnSuffix | DB ENDPOINT SUFFIX - will be used to set the db host ingress <db name><db fqdn suffix>. Creates a host name so it should be unique if more than one db is created on the cluster with the same name | string |  | true |
+| ingressAnnotations | Additional annotations to set on ingress resources created by the operator | map[string]string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### LicenseStatus
@@ -260,7 +273,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | extraLabels | Labels that the user defines for their convenience. Note that Persistent Volume Claims would only be labeled with the extra labels specified during the cluster's creation (modifying this field when the cluster is running won't affect the Persistent Volume | map[string]string | empty | false |
 | podAntiAffinity | Override for the default anti-affinity rules of the Redis Enterprise pods | *v1.PodAntiAffinity |  | false |
 | antiAffinityAdditionalTopologyKeys | Additional antiAffinity terms in order to support installation on different zones/vcenters | []string |  | false |
-| activeActive | Specification for ActiveActive setup | *[ActiveActive](#activeactive) |  | false |
+| activeActive | Specification for ActiveActive setup. At most one of ingressOrRouteSpec or activeActive fields can be set at the same time. | *[ActiveActive](#activeactive) |  | false |
 | upgradeSpec | Specification for upgrades of Redis Enterprise | *[UpgradeSpec](#upgradespec) |  | false |
 | podSecurityPolicyName | Name of pod security policy to use on pods See https://kubernetes.io/docs/concepts/policy/pod-security-policy/ | string | empty | false |
 | enforceIPv4 | Sets ENFORCE_IPV4 environment variable | *bool | False | false |
@@ -282,10 +295,11 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | certificates | RS Cluster Certificates. Used to modify the certificates used by the cluster. See the \"RSClusterCertificates\" struct described above to see the supported certificates. | *[RSClusterCertificates](#rsclustercertificates) |  | false |
 | podStartingPolicy | Mitigation setting for STS pods stuck in \"ContainerCreating\" | *[StartingPolicy](#startingpolicy) |  | false |
 | redisEnterpriseTerminationGracePeriodSeconds | The TerminationGracePeriodSeconds value for the (STS created) REC pods. Note that pods should not be taken down intentionally by force. Because clean pod shutdown is essential to prevent data loss, the default value is intentionally large (1 year). When data loss is acceptable (such as pure caching configurations), a value of a few minutes may be acceptable. | *int64 | 31536000 | false |
-| redisOnFlashSpec | Stores configurations specific to redis on flash. If provided, the cluster will be capable of creating redis on flash databases. Note - This is an ALPHA Feature. For this feature to take effect, set a boolean environment variable with the name "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. | *[RedisOnFlashSpec](#redisonflashspec) |  | false |
+| redisOnFlashSpec | Stores configurations specific to redis on flash. If provided, the cluster will be capable of creating redis on flash databases. | *[RedisOnFlashSpec](#redisonflashspec) |  | false |
 | ocspConfiguration | An API object that represents the cluster's OCSP configuration. To enable OCSP, the cluster's proxy certificate should contain the OCSP responder URL. Note - This is an ALPHA Feature. For this feature to take effect, set a boolean environment variable with the name \"ENABLE_ALPHA_FEATURES\" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. | *[OcspConfiguration](#ocspconfiguration) |  | false |
 | encryptPkeys | Private key encryption - in order to enable, first need to mount ${ephemeralconfdir}/secrets/pem/passphrase and add the passphrase and then set fields value to 'true' Possible values: true/false Note: This is an ALPHA Feature. For this feature to take effect, set a boolean environment variable with the name \"ENABLE_ALPHA_FEATURES\" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. | *bool |  | false |
 | containerTimezone | Container timezone configuration. While the default timezone on all containers is UTC, this setting can be used to set the timezone on services rigger/bootstrapper/RS containers. Currently the only supported value is to propagate the host timezone to all containers. | *[ContainerTimezoneSpec](#containertimezonespec) |  | false |
+| ingressOrRouteSpec | Access configurations for the Redis Enterprise Cluster and Databases. Note - this feature is currently in preview. For this feature to take effect, set a boolean environment variable with the name \"ENABLE_ALPHA_FEATURES\" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. At most one of ingressOrRouteSpec or activeActive fields can be set at the same time. | *[IngressOrRouteSpec](#ingressorroutespec) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseClusterStatus

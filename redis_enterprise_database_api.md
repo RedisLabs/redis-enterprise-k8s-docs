@@ -47,13 +47,13 @@ This document describes the parameters for the Redis Enterprise Database custom 
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| backupFailureReason | Reason of last failed backup process | string |  | false |
-| backupHistory | Backup history retention policy (number of days, 0 is forever) | int |  | true |
-| backupInterval | Interval in seconds in which automatic backup will be initiated | int |  | false |
-| backupIntervalOffset | Offset (in seconds) from round backup interval when automatic backup will be initiated (should be less than backup_interval) | int |  | false |
-| backupProgressPercentage | Database scheduled periodic backup progress (percentage) | int |  | false |
-| backupStatus | Status of scheduled periodic backup process | string |  | false |
-| lastBackupTime | Time of last successful backup | string |  | false |
+| backupFailureReason | Reason of last failed backup process | *string |  | false |
+| backupHistory | Backup history retention policy (number of days, 0 is forever) | *int |  | false |
+| backupInterval | Interval in seconds in which automatic backup will be initiated | *int |  | false |
+| backupIntervalOffset | Offset (in seconds) from round backup interval when automatic backup will be initiated (should be less than backup_interval) | *int |  | false |
+| backupProgressPercentage | Database scheduled periodic backup progress (percentage) | *int |  | false |
+| backupStatus | Status of scheduled periodic backup process | *string |  | false |
+| lastBackupTime | Time of last successful backup | *string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### BackupSpec
