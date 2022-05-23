@@ -133,7 +133,9 @@ spec:
             description: RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
             properties:
               activeActive:
-                description: Specification for ActiveActive setup
+                description: Specification for ActiveActive setup. At most one of
+                  ingressOrRouteSpec or activeActive fields can be set at the same
+                  time.
                 properties:
                   apiIngressUrl:
                     description: RS API URL
@@ -178,6 +180,10 @@ spec:
                     description: Repository
                     type: string
                   versionTag:
+                    type: string
+                  digestHash:
+                    description: 'The digest hash of the image to pull. Version tag must be also specified with the corresponding version, will use the digest hash to pull the image if exists.
+                      Note: This is currently supported only for OLM.'
                     type: string
                 type: object
               bootstrapperResources:
@@ -301,6 +307,41 @@ spec:
                       type: string
                   type: object
                 type: array
+              ingressOrRouteSpec:
+                description: Access configurations for the Redis Enterprise Cluster
+                  and Databases. Note - this feature is currently in preview. For
+                  this feature to take effect, set a boolean environment variable
+                  with the name "ENABLE_ALPHA_FEATURES" to True. This variable can
+                  be set via the redis-enterprise-operator pod spec, or through the
+                  operator-environment-config Config Map. At most one of ingressOrRouteSpec
+                  or activeActive fields can be set at the same time.
+                properties:
+                  apiFqdnUrl:
+                    description: RS API URL
+                    type: string
+                  dbFqdnSuffix:
+                    description: DB ENDPOINT SUFFIX - will be used to set the db host
+                      ingress <db name><db fqdn suffix>. Creates a host name so it
+                      should be unique if more than one db is created on the cluster
+                      with the same name
+                    type: string
+                  ingressAnnotations:
+                    additionalProperties:
+                      type: string
+                    description: Additional annotations to set on ingress resources
+                      created by the operator
+                    type: object
+                  method:
+                    description: Used to distinguish between different platforms implementation.
+                    enum:
+                    - openShiftRoute
+                    - ingress
+                    type: string
+                required:
+                - apiFqdnUrl
+                - dbFqdnSuffix
+                - method
+                type: object
               license:
                 description: Redis Enterprise License
                 type: string
@@ -2965,6 +3006,10 @@ spec:
                     description: Repository
                     type: string
                   versionTag:
+                    type: string
+                  digestHash:
+                    description: 'The digest hash of the image to pull. Version tag must be also specified with the corresponding version, will use the digest hash to pull the image if exists.
+                      Note: This is currently supported only for OLM.'
                     type: string
                 type: object
               redisEnterpriseNodeResources:
@@ -6224,11 +6269,7 @@ spec:
                 type: string
               redisOnFlashSpec:
                 description: Stores configurations specific to redis on flash. If provided, the cluster will be capable of
-                  creating redis on flash databases. Note - This is an ALPHA Feature. For this feature
-                  to take effect, set a boolean environment variable with the name
-                  "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the
-                  redis-enterprise-operator pod spec, or through the operator-environment-config
-                  Config Map.
+                  creating redis on flash databases
                 properties:
                   enabled:
                     type: boolean
@@ -6984,7 +7025,9 @@ spec:
             description: RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
             properties:
               activeActive:
-                description: Specification for ActiveActive setup
+                description: Specification for ActiveActive setup. At most one of
+                  ingressOrRouteSpec or activeActive fields can be set at the same
+                  time.
                 properties:
                   apiIngressUrl:
                     description: RS API URL
@@ -7151,6 +7194,41 @@ spec:
                       type: string
                   type: object
                 type: array
+              ingressOrRouteSpec:
+                description: Access configurations for the Redis Enterprise Cluster
+                  and Databases. Note - this feature is currently in preview. For
+                  this feature to take effect, set a boolean environment variable
+                  with the name "ENABLE_ALPHA_FEATURES" to True. This variable can
+                  be set via the redis-enterprise-operator pod spec, or through the
+                  operator-environment-config Config Map. At most one of ingressOrRouteSpec
+                  or activeActive fields can be set at the same time.
+                properties:
+                  apiFqdnUrl:
+                    description: RS API URL
+                    type: string
+                  dbFqdnSuffix:
+                    description: DB ENDPOINT SUFFIX - will be used to set the db host
+                      ingress <db name><db fqdn suffix>. Creates a host name so it
+                      should be unique if more than one db is created on the cluster
+                      with the same name
+                    type: string
+                  ingressAnnotations:
+                    additionalProperties:
+                      type: string
+                    description: Additional annotations to set on ingress resources
+                      created by the operator
+                    type: object
+                  method:
+                    description: Used to distinguish between different platforms implementation.
+                    enum:
+                    - openShiftRoute
+                    - ingress
+                    type: string
+                required:
+                - apiFqdnUrl
+                - dbFqdnSuffix
+                - method
+                type: object
               license:
                 description: Redis Enterprise License
                 type: string
@@ -9817,6 +9895,10 @@ spec:
                     type: string
                   versionTag:
                     type: string
+                  digestHash:
+                    description: 'The digest hash of the image to pull. Version tag must be also specified with the corresponding version, will use the digest hash to pull the image if exists.
+                      Note: This is currently supported only for OLM.'
+                    type: string
                 type: object
               redisEnterpriseNodeResources:
                 description: Compute resource requirements for Redis Enterprise containers
@@ -9937,6 +10019,10 @@ spec:
                     description: Repository
                     type: string
                   versionTag:
+                    type: string
+                  digestHash:
+                    description: 'The digest hash of the image to pull. Version tag must be also specified with the corresponding version, will use the digest hash to pull the image if exists.
+                      Note: This is currently supported only for OLM.'
                     type: string
                 type: object
               redisEnterpriseServicesRiggerResources:
@@ -13075,11 +13161,7 @@ spec:
                 type: string
               redisOnFlashSpec:
                 description: Stores configurations specific to redis on flash. If provided, the cluster will be capable of
-                  creating redis on flash databases. Note - This is an ALPHA Feature. For this feature
-                  to take effect, set a boolean environment variable with the name
-                  "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the
-                  redis-enterprise-operator pod spec, or through the operator-environment-config
-                  Config Map.
+                  creating redis on flash databases
                 properties:
                   enabled:
                     type: boolean
