@@ -505,15 +505,14 @@ def collect_logs_from_pod(namespace, pod, logs_dir):
         # getting the logs of the containers before the restart can help us with debugging potential bugs
         get_logs_before_restart_cmd = "kubectl logs -c {} -n  {} {} -p" \
             .format(container, namespace, pod)
-        with open(os.path.join(logs_dir, "{}.log".format(f'{pod}-{container}-instance-before-restart')),
-                  "w+") as file_handle:
-            err_code, output = run_shell_command(get_logs_before_restart_cmd)
-            if err_code == 0:
+        err_code, output = run_shell_command(get_logs_before_restart_cmd)
+        container_log_before_restart_file = os.path.join(logs_dir,
+                                                         "{}.log".format(f'{pod}-{container}-instance-before-restart'))
+        if err_code == 0:  # Previous container instance found; did restart.
+            with open(container_log_before_restart_file, "w+") as file_handle:
                 file_handle.write(output)
-            else:  # no previous container instance found; did not restart
-                os.unlink(file_handle.name)
 
-        logger.info("Namespace '%s':  + %s-%s", namespace, pod, container)
+            logger.info("Namespace '%s':  + %s-%s", namespace, pod, container)
 
 
 def get_pod_names(namespace, selector=""):
