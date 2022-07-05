@@ -32,9 +32,9 @@ High level architecture and overview of the solution can be found [HERE](https:/
 The following are the images and tags for this release:
 | Component | k8s | Openshift |
 | --- | --- | --- |
-| Redis Enterprise | `redislabs/redis:6.2.10-107` | `redislabs/redis:6.2.10-107.rhel8-openshift` |
-| Operator | `redislabs/operator:6.2.10-34` | `redislabs/operator:6.2.10-34` |
-| Services Rigger | `redislabs/k8s-controller:6.2.10-34` | `redislabs/k8s-controller:6.2.10-34` |
+| Redis Enterprise | `redislabs/redis:6.2.10-129` | `redislabs/redis:6.2.10-129.rhel8-openshift` |
+| Operator | `redislabs/operator:6.2.10-45` | `redislabs/operator:6.2.10-45` |
+| Services Rigger | `redislabs/k8s-controller:6.2.10-45` | `redislabs/k8s-controller:6.2.10-45` |
 > * RedHat certified images are available on [Redhat Catalog](https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d) </br>
 
 
@@ -220,8 +220,6 @@ The "OpenShift" installation deploys the operator from the current release with 
 This is the fastest way to get up and running with a new cluster on OpenShift 3.x.
 For OpenShift 4.x, you may choose to use OLM deployment from within your OpenShift cluster or follow the steps below.
 Other custom configurations are referenced in this repository.
-If you are running on OpenShift 3.x, use the `bundle.yaml` file located under `openshift_3_x` folder (see comment in step 4).
-That folder also contains the custom resource definitions compatible with OpenShift 3.x.
 > Note: you will need to replace `<my-project>` with your project name.
 
 1. Create a new project:
@@ -252,7 +250,6 @@ That folder also contains the custom resource definitions compatible with OpenSh
     ```bash
     oc apply -f openshift.bundle.yaml
     ``` 
-    > Note: If you are running on OpenShift 3.x, use the `bundle.yaml` file located under `openshift_3_x` folder.
 
 5. Redis Enterprise Cluster custom resource - `RedisEnterpriseCluster`
     > Note: Define a `storageClassName` setting in `openshift/rec_rhel.yaml` as required (it's set to `gp2` by default).
@@ -379,7 +376,7 @@ The operator deploys a `RedisEnterpriseCluster` with default configurations valu
     redisEnterpriseImageSpec:
       imagePullPolicy:  IfNotPresent
       repository:       redislabs/redis
-      versionTag:       6.2.10-107
+      versionTag:       6.2.10-129
   ```
 
 * Persistence
@@ -481,21 +478,21 @@ For example:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/redis
-    versionTag:       6.2.10-107
+    versionTag:       6.2.10-129
 ```
 
 ```yaml
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       6.2.10-34
+    versionTag:       6.2.10-45
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       6.2.10-34
+    versionTag:       6.2.10-45
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -507,7 +504,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:6.2.10-34
+          image: harbor.corp.local/redisenterprise/operator:6.2.10-45
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).
@@ -630,7 +627,7 @@ Note: in the  examples above the Redis Enterprise Cluster name is: 'rec' and the
 The Operator automates and simplifies the upgrade process.  
 The Redis Enterprise Cluster Software, and the Redis Enterprise Operator for Kubernetes versions are tightly coupled and should be upgraded together.  
 It is recommended to use the bundle.yaml to upgrade, as it loads all the relevant CRD documents for this version. If the updated CRDs are not loaded, the operator might fail.
-There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.2.10-107
+There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.2.10-129
 
 ```yaml
   autoUpgradeRedisEnterprise: true
@@ -639,7 +636,7 @@ There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within t
 Alternatively:
 ```yaml
   RedisEnterpriseImageSpec:
-    versionTag: redislabs/redis:6.2.10-107
+    versionTag: redislabs/redis:6.2.10-129
 ```
 
 ## Supported K8S Distributions
@@ -647,33 +644,29 @@ Each release of the Redis Enterprise Operator deployment is thoroughly tested ag
 Supported versions (platforms/versions that are not listed are not supported): 
 | Distribution                    | Support Status |
 |---------------------------------|----------------|
-| OpenShift 4.6  (K8s 1.19)       | deprecated     |
-| OpenShift 4.7  (K8s 1.20)       | supported      |
-| OpenShift 4.8  (K8s 1.21)       | supported      |
+| OpenShift 4.7  (K8s 1.20)       | deprecated     |
+| OpenShift 4.8  (K8s 1.21)       | deprecated     |
 | OpenShift 4.9  (K8s 1.22)       | supported      |
 | OpenShift 4.10  (K8s 1.23)      | supported      |
-| KOPS vanilla 1.18               | deprecated     |
-| KOPS vanilla 1.19               | deprecated     |
-| KOPS vanilla 1.20               | supported      |
+| KOPS vanilla 1.20               | deprecated     |
 | KOPS vanilla 1.21               | supported      |
 | KOPS vanilla 1.22               | supported      |
 | KOPS vanilla 1.23               | supported      |
-| GKE 1.19                        | deprecated     |
+| KOPS vanilla 1.24               | supported      |
 | GKE 1.20                        | supported      |
 | GKE 1.21                        | supported      |
 | GKE 1.22                        | supported      |
-| Rancher 2.6 (K8s 1.18)          | deprecated     |
-| Rancher 2.6 (K8s 1.19)          | supported      |
-| Rancher 2.6 (K8s 1.20)          | supported      |
+| GKE 1.23                        | supported      |
+| Rancher 2.6 (K8s 1.19)          | deprecated     |
+| Rancher 2.6 (K8s 1.20)          | deprecated     |
 | Rancher 2.6 (K8s 1.21)          | supported      |
-| VMWare TKGIE** 1.10 (K8s 1.19)  | supported      |
-| VMWare TKGIE 1.11 (K8s 1.20)    | supported      |
-| AKS 1.20                        | deprecated     |
-| AKS 1.21                        | deprecated     |
+| Rancher 2.6 (K8s 1.22)          | supported      |
+| VMWare TKGIE** 1.10 (K8s 1.19)  | deprecated     |
+| VMWare TKGIE** 1.11 (K8s 1.20)  | deprecated     |
+| VMWare TKGIE** 1.12 (K8s 1.21)  | supported      |
+| VMWare TKGIE** 1.13 (K8s 1.22)  | supported      |
 | AKS 1.22                        | supported      |
 | AKS 1.23                        | supported      |
-| EKS 1.18                        | deprecated     |
-| EKS 1.19                        | deprecated     |
 | EKS 1.20                        | supported      |
 | EKS 1.21                        | supported      |
 | EKS 1.22                        | supported      |
