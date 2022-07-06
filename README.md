@@ -649,11 +649,12 @@ Supported versions (platforms/versions that are not listed are not supported):
 | OpenShift 4.9  (K8s 1.22)       | supported      |
 | OpenShift 4.10  (K8s 1.23)      | supported      |
 | KOPS vanilla 1.20               | deprecated     |
-| KOPS vanilla 1.21               | supported      |
+| KOPS vanilla 1.21               | deprecated     |
 | KOPS vanilla 1.22               | supported      |
 | KOPS vanilla 1.23               | supported      |
 | KOPS vanilla 1.24               | supported      |
-| GKE 1.20                        | supported      |
+| GKE 1.19                        | deprecated     |
+| GKE 1.20                        | deprecated     |
 | GKE 1.21                        | supported      |
 | GKE 1.22                        | supported      |
 | GKE 1.23                        | supported      |
@@ -665,9 +666,11 @@ Supported versions (platforms/versions that are not listed are not supported):
 | VMWare TKGIE** 1.11 (K8s 1.20)  | deprecated     |
 | VMWare TKGIE** 1.12 (K8s 1.21)  | supported      |
 | VMWare TKGIE** 1.13 (K8s 1.22)  | supported      |
+| AKS 1.21                        | deprecated     |
 | AKS 1.22                        | supported      |
 | AKS 1.23                        | supported      |
-| EKS 1.20                        | supported      |
+| EKS 1.19                        | deprecated     |
+| EKS 1.20                        | deprecated     |
 | EKS 1.21                        | supported      |
 | EKS 1.22                        | supported      |
 
