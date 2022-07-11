@@ -582,7 +582,7 @@ def get_pod_names(namespace, k8s_cli, selector=""):
     pods = get_pods(namespace, k8s_cli, selector)
     if not pods:
         logger.info("Namespace '%s': Cannot find pods", namespace)
-        return None
+        return []
     return [pod['metadata']['name'] for pod in pods]
 
 
