@@ -28,6 +28,7 @@ TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
 
 KUBCTL_DESCRIBE_RETRIES = 3
 KUBCTL_GET_YAML_RETRIES = 3
+DEBUG_INFO_PACKAGE_RETRIES = 3
 
 TIMEOUT = 180
 
@@ -293,19 +294,20 @@ def collect_pod_rs_logs(namespace, output_dir, k8s_cli):
             logger.info("Collected rs config from pod marked as not ready, pod name: %s", rs_pod_name)
 
 
-def debuginfo_attempt_on_pod(namespace, output_dir, pod_name, attempt, k8s_cli):
+def create_debug_info_package_on_pod(namespace, pod_name, attempt, k8s_cli):
     """
-    Execute the rladmin command to get debug info on a specific pod
-    Returns: true on success, false on failure
+    Execute the rladmin command to get debug info on a specific pod.
+    Returns: a tuple of the form (file_path, file_name) in case of success
+    and None otherwise.
     """
     prog = "/opt/redislabs/bin/rladmin"
     cmd = "{} -n {} exec {} -c {} {} cluster debug_info path /tmp" \
         .format(k8s_cli, namespace, pod_name, RLEC_CONTAINER_NAME, prog)
     return_code, out = run_shell_command(cmd)
-    if "Downloading complete" not in out:
+    if return_code != 0 or "Downloading complete" not in out:
         logger.warning("Failed running rladmin command in pod: %s (attempt %d)",
                        out.rstrip(), attempt)
-        return False
+        return None
 
     # get the debug file name
     match = re.search(r'File (/tmp/(.*\.gz))', out)
@@ -314,13 +316,21 @@ def debuginfo_attempt_on_pod(namespace, output_dir, pod_name, attempt, k8s_cli):
         debug_file_name = match.group(2)
         logger.info("Namespace '%s': debug info created on pod %s in path %s",
                     namespace, pod_name, debug_file_path)
-    else:
-        logger.warning(
-            "Failed to extract debug info name from output (attempt %d for pod %s) - (%s)",
-            attempt, pod_name, out)
-        return False
+        return (debug_file_path, debug_file_name)
 
-    # copy package from RS pod
+    logger.warning(
+        "Failed to extract debug info name from output (attempt %d for pod %s) - (%s)",
+        attempt, pod_name, out)
+    return None
+
+
+def download_debug_info_package_from_pod(       # pylint: disable=R0913
+    namespace, output_dir, pod_name, attempt, k8s_cli, debug_file_path, debug_file_name
+):
+    """
+    This function attempt to download debug info package from a given pod.
+    It should only be called once the package is created.
+    """
     cmd = "cd \"{}\" && {} -n {} cp {}:{} ./{}".format(output_dir,
                                                        k8s_cli,
                                                        namespace,
@@ -336,6 +346,52 @@ def debuginfo_attempt_on_pod(namespace, output_dir, pod_name, attempt, k8s_cli):
 
     # all is well
     return True
+
+
+def create_and_download_debug_info_package_from_pod(
+    namespace, pod_name, output_dir, k8s_cli
+):
+    """
+    This function attempts to create a debug info package on a pod and if debug
+    info package creation was successful, attempts downloading it.
+    """
+    debug_info_path_and_name = None
+    for attempt in range(DEBUG_INFO_PACKAGE_RETRIES):
+        debug_info_path_and_name = create_debug_info_package_on_pod(namespace, pod_name, attempt + 1, k8s_cli)
+        if debug_info_path_and_name is not None:
+            # We managed to create the debug info package.
+            break
+        time.sleep(1)
+
+    # If we fail creating a debug info package, there is nothing to download, so we move on to the next pod.
+    if debug_info_path_and_name is None:
+        logger.info("Namespace: %s: Failed creating debug info package on pod: %s", namespace, pod_name)
+        return False
+
+    (debug_info_path, debug_info_file_name) = debug_info_path_and_name
+    for attempt in range(DEBUG_INFO_PACKAGE_RETRIES):
+        if download_debug_info_package_from_pod(
+            namespace, output_dir, pod_name, attempt + 1, k8s_cli, debug_info_path, debug_info_file_name
+        ):
+            logger.info(
+                "Namespace '%s': Collected Redis Enterprise cluster debug package from pod: %s",
+                namespace,
+                pod_name
+            )
+            return True
+        time.sleep(1)
+
+    # In case of a failure to fully download the archive from the pod. Make sure that partially downloaded
+    # archive is deleted.
+    file_to_delete = "{}/{}".format(output_dir, debug_info_file_name)
+    logger.info(
+        "Namespace: %s: Deleting possible partially downloaded debug package: %s",
+        namespace,
+        file_to_delete
+    )
+    cmd = "rm {}".format(file_to_delete)
+    run_shell_command(cmd)
+    return False
 
 
 def get_redis_enterprise_debug_info(namespace, output_dir, k8s_cli):
@@ -359,16 +415,8 @@ def get_redis_enterprise_debug_info(namespace, output_dir, k8s_cli):
 
     logger.info("Trying to extract debug info from RS pods: {%s}", pod_names)
     for pod_name in pod_names:
-        for attempt in range(3):
-            if attempt > 0:
-                time.sleep(1)
-            if debuginfo_attempt_on_pod(namespace,
-                                        output_dir,
-                                        pod_name,
-                                        attempt + 1,
-                                        k8s_cli):
-                logger.info("Namespace '%s': Collected Redis Enterprise cluster debug package", namespace)
-                return
+        if create_and_download_debug_info_package_from_pod(namespace, pod_name, output_dir, k8s_cli):
+            break
 
 
 def collect_resources_list(namespace, output_dir, k8s_cli):
@@ -582,7 +630,7 @@ def get_pod_names(namespace, k8s_cli, selector=""):
     pods = get_pods(namespace, k8s_cli, selector)
     if not pods:
         logger.info("Namespace '%s': Cannot find pods", namespace)
-        return None
+        return []
     return [pod['metadata']['name'] for pod in pods]
 
 
