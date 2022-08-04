@@ -39,6 +39,7 @@ API_RESOURCES = [
     "RedisEnterpriseCluster",
     "RedisEnterpriseDatabase",
     "RedisEnterpriseRemoteCluster",
+    "RedisEnterpriseActiveActivePeering",
     "StatefulSet",
     "Deployment",
     "Service",
