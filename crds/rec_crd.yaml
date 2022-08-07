@@ -172,18 +172,23 @@ spec:
               bootstrapperImageSpec:
                 description: Specification for Bootstrapper container image
                 properties:
+                  digestHash:
+                    description: 'The digest hash of the container image to pull.
+                      When specified, the container image is pulled according to the
+                      digest hash instead of the image tag. The versionTag field must
+                      also be specified with the image tag matching this digest hash.
+                      Note: This field is only supported for OLM deployments.'
+                    type: string
                   imagePullPolicy:
-                    description: PullPolicy describes a policy for if/when to pull a
-                      container image
+                    description: The image pull policy to be applied to the container
+                      image. One of Always, Never, IfNotPresent.
                     type: string
                   repository:
-                    description: Repository
+                    description: The repository (name) of the container image to be
+                      deployed.
                     type: string
                   versionTag:
-                    type: string
-                  digestHash:
-                    description: 'The digest hash of the image to pull. Version tag must be also specified with the corresponding version, will use the digest hash to pull the image if exists.
-                      Note: This is currently supported only for OLM.'
+                    description: The tag of the container image to be deployed.
                     type: string
                 type: object
               bootstrapperResources:
@@ -2999,18 +3004,23 @@ spec:
               redisEnterpriseImageSpec:
                 description: Specification for Redis Enterprise container image
                 properties:
+                  digestHash:
+                    description: 'The digest hash of the container image to pull.
+                      When specified, the container image is pulled according to the
+                      digest hash instead of the image tag. The versionTag field must
+                      also be specified with the image tag matching this digest hash.
+                      Note: This field is only supported for OLM deployments.'
+                    type: string
                   imagePullPolicy:
-                    description: PullPolicy describes a policy for if/when to pull a
-                      container image
+                    description: The image pull policy to be applied to the container
+                      image. One of Always, Never, IfNotPresent.
                     type: string
                   repository:
-                    description: Repository
+                    description: The repository (name) of the container image to be
+                      deployed.
                     type: string
                   versionTag:
-                    type: string
-                  digestHash:
-                    description: 'The digest hash of the image to pull. Version tag must be also specified with the corresponding version, will use the digest hash to pull the image if exists.
-                      Note: This is currently supported only for OLM.'
+                    description: The tag of the container image to be deployed.
                     type: string
                 type: object
               redisEnterpriseNodeResources:
@@ -3124,14 +3134,23 @@ spec:
               redisEnterpriseServicesRiggerImageSpec:
                 description: Specification for Services Rigger container image
                 properties:
+                  digestHash:
+                    description: 'The digest hash of the container image to pull.
+                      When specified, the container image is pulled according to the
+                      digest hash instead of the image tag. The versionTag field must
+                      also be specified with the image tag matching this digest hash.
+                      Note: This field is only supported for OLM deployments.'
+                    type: string
                   imagePullPolicy:
-                    description: PullPolicy describes a policy for if/when to pull a
-                      container image
+                    description: The image pull policy to be applied to the container
+                      image. One of Always, Never, IfNotPresent.
                     type: string
                   repository:
-                    description: Repository
+                    description: The repository (name) of the container image to be
+                      deployed.
                     type: string
                   versionTag:
+                    description: The tag of the container image to be deployed.
                     type: string
                 type: object
               redisEnterpriseServicesRiggerResources:
@@ -7070,14 +7089,23 @@ spec:
               bootstrapperImageSpec:
                 description: Specification for Bootstrapper container image
                 properties:
+                  digestHash:
+                    description: 'The digest hash of the container image to pull.
+                      When specified, the container image is pulled according to the
+                      digest hash instead of the image tag. The versionTag field must
+                      also be specified with the image tag matching this digest hash.
+                      Note: This field is only supported for OLM deployments.'
+                    type: string
                   imagePullPolicy:
-                    description: PullPolicy describes a policy for if/when to pull a
-                      container image
+                    description: The image pull policy to be applied to the container
+                      image. One of Always, Never, IfNotPresent.
                     type: string
                   repository:
-                    description: Repository
+                    description: The repository (name) of the container image to be
+                      deployed.
                     type: string
                   versionTag:
+                    description: The tag of the container image to be deployed.
                     type: string
                 type: object
               bootstrapperResources:
@@ -9893,18 +9921,23 @@ spec:
               redisEnterpriseImageSpec:
                 description: Specification for Redis Enterprise container image
                 properties:
+                  digestHash:
+                    description: 'The digest hash of the container image to pull.
+                      When specified, the container image is pulled according to the
+                      digest hash instead of the image tag. The versionTag field must
+                      also be specified with the image tag matching this digest hash.
+                      Note: This field is only supported for OLM deployments.'
+                    type: string
                   imagePullPolicy:
-                    description: PullPolicy describes a policy for if/when to pull a
-                      container image
+                    description: The image pull policy to be applied to the container
+                      image. One of Always, Never, IfNotPresent.
                     type: string
                   repository:
-                    description: Repository
+                    description: The repository (name) of the container image to be
+                      deployed.
                     type: string
                   versionTag:
-                    type: string
-                  digestHash:
-                    description: 'The digest hash of the image to pull. Version tag must be also specified with the corresponding version, will use the digest hash to pull the image if exists.
-                      Note: This is currently supported only for OLM.'
+                    description: The tag of the container image to be deployed.
                     type: string
                 type: object
               redisEnterpriseNodeResources:
@@ -10018,18 +10051,23 @@ spec:
               redisEnterpriseServicesRiggerImageSpec:
                 description: Specification for Services Rigger container image
                 properties:
+                  digestHash:
+                    description: 'The digest hash of the container image to pull.
+                      When specified, the container image is pulled according to the
+                      digest hash instead of the image tag. The versionTag field must
+                      also be specified with the image tag matching this digest hash.
+                      Note: This field is only supported for OLM deployments.'
+                    type: string
                   imagePullPolicy:
-                    description: PullPolicy describes a policy for if/when to pull a
-                      container image
+                    description: The image pull policy to be applied to the container
+                      image. One of Always, Never, IfNotPresent.
                     type: string
                   repository:
-                    description: Repository
+                    description: The repository (name) of the container image to be
+                      deployed.
                     type: string
                   versionTag:
-                    type: string
-                  digestHash:
-                    description: 'The digest hash of the image to pull. Version tag must be also specified with the corresponding version, will use the digest hash to pull the image if exists.
-                      Note: This is currently supported only for OLM.'
+                    description: The tag of the container image to be deployed.
                     type: string
                 type: object
               redisEnterpriseServicesRiggerResources:

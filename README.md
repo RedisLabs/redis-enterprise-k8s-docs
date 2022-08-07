@@ -32,9 +32,9 @@ High level architecture and overview of the solution can be found [HERE](https:/
 The following are the images and tags for this release:
 | Component | k8s | Openshift |
 | --- | --- | --- |
-| Redis Enterprise | `redislabs/redis:6.2.10-129` | `redislabs/redis:6.2.10-129.rhel8-openshift` |
-| Operator | `redislabs/operator:6.2.10-45` | `redislabs/operator:6.2.10-45` |
-| Services Rigger | `redislabs/k8s-controller:6.2.10-45` | `redislabs/k8s-controller:6.2.10-45` |
+| Redis Enterprise | `redislabs/redis:6.2.16-41` | `redislabs/redis:6.2.16-41.rhel8-openshift`, or `redislabs/redis:6.2.16-41.rhel7-openshift` (if upgrading from a RHEL7 cluster) |
+| Operator | `redislabs/operator:6.2.16-6` | `redislabs/operator:6.2.16-6` |
+| Services Rigger | `redislabs/k8s-controller:6.2.16-6` | `redislabs/k8s-controller:6.2.16-6` |
 > * RedHat certified images are available on [Redhat Catalog](https://access.redhat.com/containers/#/product/71f6d1bb3408bd0d) </br>
 
 
@@ -376,7 +376,7 @@ The operator deploys a `RedisEnterpriseCluster` with default configurations valu
     redisEnterpriseImageSpec:
       imagePullPolicy:  IfNotPresent
       repository:       redislabs/redis
-      versionTag:       6.2.10-129
+      versionTag:       6.2.16-41
   ```
 
 * Persistence
@@ -478,21 +478,21 @@ For example:
   redisEnterpriseImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/redis
-    versionTag:       6.2.10-129
+    versionTag:       6.2.16-41
 ```
 
 ```yaml
   redisEnterpriseServicesRiggerImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/k8s-controller
-    versionTag:       6.2.10-45
+    versionTag:       6.2.16-6
 ```
 
 ```yaml
   bootstrapperImageSpec:
     imagePullPolicy:  IfNotPresent
     repository:       harbor.corp.local/redisenterprise/operator
-    versionTag:       6.2.10-45
+    versionTag:       6.2.16-6
 ```
 
 In Operator Deployment spec (operator.yaml):
@@ -504,7 +504,7 @@ spec:
     spec:
       containers:
         - name: redis-enterprise-operator
-          image: harbor.corp.local/redisenterprise/operator:6.2.10-45
+          image: harbor.corp.local/redisenterprise/operator:6.2.16-6
 ```
 
 Image specification follow the [K8s Container schema](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core).
@@ -627,7 +627,7 @@ Note: in the  examples above the Redis Enterprise Cluster name is: 'rec' and the
 The Operator automates and simplifies the upgrade process.  
 The Redis Enterprise Cluster Software, and the Redis Enterprise Operator for Kubernetes versions are tightly coupled and should be upgraded together.  
 It is recommended to use the bundle.yaml to upgrade, as it loads all the relevant CRD documents for this version. If the updated CRDs are not loaded, the operator might fail.
-There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.2.10-129
+There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within the Redis Enterprise Cluster Spec to instruct the operator to automatically upgrade to the compatible version, or specify the correct Redis Enterprise image manually using the versionTag attribute. The Redis Enterprise Version compatible with this release is 6.2.16-41
 
 ```yaml
   autoUpgradeRedisEnterprise: true
@@ -636,7 +636,7 @@ There are two ways to upgrade - either set 'autoUpgradeRedisEnterprise' within t
 Alternatively:
 ```yaml
   RedisEnterpriseImageSpec:
-    versionTag: redislabs/redis:6.2.10-129
+    versionTag: redislabs/redis:6.2.16-41
 ```
 
 ## Supported K8S Distributions
@@ -648,31 +648,29 @@ Supported versions (platforms/versions that are not listed are not supported):
 | OpenShift 4.8  (K8s 1.21)       | deprecated     |
 | OpenShift 4.9  (K8s 1.22)       | supported      |
 | OpenShift 4.10  (K8s 1.23)      | supported      |
-| KOPS vanilla 1.20               | deprecated     |
-| KOPS vanilla 1.21               | deprecated     |
 | KOPS vanilla 1.22               | supported      |
 | KOPS vanilla 1.23               | supported      |
 | KOPS vanilla 1.24               | supported      |
-| GKE 1.19                        | deprecated     |
-| GKE 1.20                        | deprecated     |
-| GKE 1.21                        | supported      |
+| GKE 1.21                        | deprecated     |
 | GKE 1.22                        | supported      |
 | GKE 1.23                        | supported      |
-| Rancher 2.6 (K8s 1.19)          | deprecated     |
-| Rancher 2.6 (K8s 1.20)          | deprecated     |
 | Rancher 2.6 (K8s 1.21)          | supported      |
 | Rancher 2.6 (K8s 1.22)          | supported      |
-| VMWare TKGIE** 1.10 (K8s 1.19)  | deprecated     |
 | VMWare TKGIE** 1.11 (K8s 1.20)  | deprecated     |
-| VMWare TKGIE** 1.12 (K8s 1.21)  | supported      |
+| VMWare TKGIE** 1.12 (K8s 1.21)  | deprecated     |
 | VMWare TKGIE** 1.13 (K8s 1.22)  | supported      |
-| AKS 1.21                        | deprecated     |
 | AKS 1.22                        | supported      |
 | AKS 1.23                        | supported      |
-| EKS 1.19                        | deprecated     |
-| EKS 1.20                        | deprecated     |
-| EKS 1.21                        | supported      |
+| EKS 1.21                        | deprecated     |
 | EKS 1.22                        | supported      |
 
 \* No longer supported by the vendor
 \*\* Tanzu Kubernetes Grid Integrated Edition
+
+### Supported RedisEnterprise versions per operator
+Each release of the Redis Enterprise Operator deployment is tested against a set of Redis Enterprise releases.
+You can specify Redis Enterprise image manually using the versionTag attribute.
+Redis Enterprise Operator deployment versions and Redis Enterprise Cluster Software versions that are supported:
+| Operator             | Redis Enterprise | Openshift                      |
+|----------------------|------------------|--------------------------------|
+| `redislabs/operator:6.2.16-6` | `redislabs/redis:6.2.16-41`   | `redislabs/redis:6.2.16-41.rhel8-openshift` |

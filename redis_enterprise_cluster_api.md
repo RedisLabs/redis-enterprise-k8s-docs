@@ -117,10 +117,10 @@ Image specification
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| repository | Repository | string |  | true |
-| versionTag |  | string |  | true |
-| digestHash | The digest hash of the image to pull. Version tag must be also specified with the corresponding version, will use the digest hash to pull the image if exists. Note: This is currently supported only for OLM. | string |  | false |
-| imagePullPolicy |  | v1.PullPolicy |  | true |
+| repository | The repository (name) of the container image to be deployed. | string |  | true |
+| versionTag | The tag of the container image to be deployed. | string |  | true |
+| digestHash | The digest hash of the container image to pull. When specified, the container image is pulled according to the digest hash instead of the image tag. The versionTag field must also be specified with the image tag matching this digest hash. Note: This field is only supported for OLM deployments. | string |  | false |
+| imagePullPolicy | The image pull policy to be applied to the container image. One of Always, Never, IfNotPresent. | v1.PullPolicy |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### IngressOrRouteSpec
@@ -257,7 +257,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | servicesRiggerSpec | Specification for service rigger | *[ServicesRiggerConfigurationSpec](#servicesriggerconfigurationspec) |  | false |
 | redisEnterpriseAdditionalPodSpecAttributes | ADVANCED USAGE USE AT YOUR OWN RISK - specify pod attributes that are required for the statefulset - Redis Enterprise pods. Pod attributes managed by the operator might override these settings. Also make sure the attributes are supported by the K8s version running on the cluster - the operator does not validate that. | *[v1.PodSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#podspec-v1-core) |  | false |
 | license | Redis Enterprise License | string | Empty string which is a [Trial Mode licesne](https://docs.redislabs.com/latest/rs/administering/cluster-operations/settings/license-keys/#trial-mode) | false |
-| licenseSecretName | K8s secret or Vault Secret Name/Path to use for Cluster License. When left blank, the license is read from the \"license\" field. Note that you can't specify non-empty values in both \"license\" and \"licenseSecretName\", only one of these fields can be used to pass the license string. The license needs to be stored under the key \"license\". | string | Empty string | false |
+| licenseSecretName | K8s secret or Vault Secret Name/Path to use for Cluster License. When left blank, the license is read from the "license" field. Note that you can't specify non-empty values in both "license" and "licenseSecretName", only one of these fields can be used to pass the license string. The license needs to be stored under the key "license". | string | Empty string | false |
 | username | Username for the admin user of Redis Enterprise | string | demo@redislabs.com | false |
 | nodeSelector | Selector for nodes that could fit Redis Enterprise pod | *map[string]string |  | false |
 | redisEnterpriseImageSpec | Specification for Redis Enterprise container image | *[ImageSpec](#imagespec) | the default Redis Enterprise image for this version | false |
@@ -286,13 +286,13 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | slaveHA | Slave high availability mechanism configuration. | *[SlaveHA](#slaveha) |  | false |
 | clusterCredentialSecretName | Secret Name/Path to use for Cluster Credentials. To be used only if ClusterCredentialSecretType is vault. If left blank, will use cluster name. | string |  | false |
 | clusterCredentialSecretType | Type of Secret to use for ClusterCredential: vault, kubernetes,... If left blank, will default to kubernetes secrets | string |  | true |
-| clusterCredentialSecretRole | Used only if ClusterCredentialSecretType is vault, to define vault role to be used.  If blank, defaults to \"redis-enterprise-rec\" | string |  | true |
-| vaultCASecret | K8s secret name containing Vault's CA cert - defaults to \"vault-ca-cert\" | string |  | false |
+| clusterCredentialSecretRole | Used only if ClusterCredentialSecretType is vault, to define vault role to be used.  If blank, defaults to "redis-enterprise-rec" | string |  | true |
+| vaultCASecret | K8s secret name containing Vault's CA cert - defaults to "vault-ca-cert" | string |  | false |
 | redisEnterpriseServicesConfiguration | RS Cluster optional services settings. Note that when disabling the CM Server service, the cluster's UI Service will be removed from the k8s cluster | *[RedisEnterpriseServicesConfiguration](#redisenterpriseservicesconfiguration) |  | false |
 | dataInternodeEncryption | Internode encryption (INE) cluster wide policy. An optional boolean setting. Specifies if INE should be on/off for new created REDBs. May be overridden for specific REDB via similar setting, please view the similar setting for REDB for more info. | *bool |  | false |
 | redisUpgradePolicy | Redis upgrade policy to be set on the Redis Enterprise Cluster. Possible values: major/latest This value is used by the cluster to choose the Redis version of the database when an upgrade is performed. The Redis Enterprise Cluster includes multiple versions of OSS Redis that can be used for databases. | string |  | false |
-| certificates | RS Cluster Certificates. Used to modify the certificates used by the cluster. See the \"RSClusterCertificates\" struct described above to see the supported certificates. | *[RSClusterCertificates](#rsclustercertificates) |  | false |
-| podStartingPolicy | Mitigation setting for STS pods stuck in \"ContainerCreating\" | *[StartingPolicy](#startingpolicy) |  | false |
+| certificates | RS Cluster Certificates. Used to modify the certificates used by the cluster. See the "RSClusterCertificates" struct described above to see the supported certificates. | *[RSClusterCertificates](#rsclustercertificates) |  | false |
+| podStartingPolicy | Mitigation setting for STS pods stuck in "ContainerCreating" | *[StartingPolicy](#startingpolicy) |  | false |
 | redisEnterpriseTerminationGracePeriodSeconds | The TerminationGracePeriodSeconds value for the (STS created) REC pods. Note that pods should not be taken down intentionally by force. Because clean pod shutdown is essential to prevent data loss, the default value is intentionally large (1 year). When data loss is acceptable (such as pure caching configurations), a value of a few minutes may be acceptable. | *int64 | 31536000 | false |
 | redisOnFlashSpec | Stores configurations specific to redis on flash. If provided, the cluster will be capable of creating redis on flash databases. Note - This is an ALPHA Feature. For this feature to take effect, set a boolean environment variable with the name "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. | *[RedisOnFlashSpec](#redisonflashspec) |  | false |
 | ocspConfiguration | An API object that represents the cluster's OCSP configuration. To enable OCSP, the cluster's proxy certificate should contain the OCSP responder URL. Note - This is an ALPHA Feature. For this feature to take effect, set a boolean environment variable with the name "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. | *[OcspConfiguration](#ocspconfiguration) |  | false |
@@ -334,7 +334,7 @@ RedisOnFlashSpec contains all the parameters needed to configure in order to ena
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | enabled | Indicates whether RoF is turned on or not. | bool |  | true |
-| flashStorageEngine | The type of DB engine used on flash. Currently the only supported value is \"rocksdb\", but this will change in the future. | [RedisOnFlashsStorageEngine](#redisonflashsstorageengine) |  | true |
+| flashStorageEngine | The type of DB engine used on flash. Currently the only supported value is "rocksdb", but this will change in the future. | [RedisOnFlashsStorageEngine](#redisonflashsstorageengine) |  | true |
 | storageClassName | Used to identify the storage class name of the corresponding volume claim template. | string |  | true |
 | flashDiskSize | Required flash disk size. | resource.Quantity |  | false |
 [Back to Table of Contents](#table-of-contents)
