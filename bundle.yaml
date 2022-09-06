@@ -797,6 +797,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis-enterprise-operator
+  labels:
+    name: redis-enterprise-operator
 spec:
   replicas: 1
   selector:
