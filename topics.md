@@ -102,6 +102,10 @@ On GKE, these thresholds are [managed](https://cloud.google.com/kubernetes-engin
 
 ## Pod Security Policy (PSP)
 
+### `WARNING`:
+> PodSecurityPolicy is [deprecated](https://kubernetes.io/blog/2021/04/06/podsecuritypolicy-deprecation-past-present-and-future/) for Kubernetes v1.21+ and invalid for v1.25+.  
+Users are advised to [migrate](https://kubernetes.io/docs/tasks/configure-pod-container/migrate-from-psp/) to [Pod Security Admission](https://kubernetes.io/docs/concepts/security/pod-security-admission/) / [Pod Security Standards](https://kubernetes.io/docs/concepts/security/pod-security-standards/) mechanism.
+
 You can optionally use pod security policy.
 
 ```bash
@@ -158,38 +162,8 @@ When creating ResourceQuota, be careful when applying quotas on ConfigMaps. When
 ```
 
 ## Custom Resource Deletion
-### REDB Deletion
-The Redis Enterprise Database (REDB) object has a finalizer, to make sure the database is deleted before the REDB custom resource is removed from k8s.  
-The finalizer name is `finalizer.redisenterprisedatabases.app.redislabs.com`.  
-When a user requests the deletion of REDB (for example by running `kubectl delete redb <name>`), the following happens:
-1. K8s API adds `DeletionTimestamp` to the REDB resource.
-2. The Operator notices the `DeletionTimestamp`, and sends delete request to the RS API.
-3. When RS API approves the delete request, the operator removes the REDB finalizer.
-4. K8s cleans up the REDB resource, now that it has no finalizers.
 
-If for some reason the user ends up with an REDB resource that can't be deleted, because the finalizer can't be removed, they can remove the finalizer manually by editing the REDB resource.
-For example, if the REDB name is `redis-enterprise-database`, here is a command to remove its finalizer manually:
-```shell script
-kubectl patch redb redis-enterprise-database --type=json -p '[{"op":"remove","path":"/metadata/finalizers","value":"finalizer.redisenterprisedatabases.app.redislabs.com"}]'
-```
-note: In this case the database may still exist in the Redis Enterprise cluster, and should be deleted via RS GUI, or API.
-
-### REC Deletion
-The Redis Enterprise Cluster (REC) object has a finalizer, to make sure all REDBs on that cluster are deleted before the REC custom resource is removed from k8s.  
-The finalizer name is `redbfinalizer.redisenterpriseclusters.app.redislabs.com`.  
-When a user requests the deletion of an REC (for example by running `kubectl delete rec <name>`), the following happens:
-1. K8s API adds `DeletionTimestamp` to the REC resource.
-2. The Operator notices the `DeletionTimestamp`, and checks if this REC has REDBs attached to it.
-3. If there are such REDBs, the operator will not delete the REC, and will log the error: `Cannot delete REC, as REDBs that were stored in the cluster still exist.`
-4. When there are no more REDBs attached to that REC, the operator will remove the finalizer from the REC resource.
-5. K8s cleans up the REC resource, including deployments and stateful sets, now that it has no finalizers.
-
-If for some reason the user ends up with an REC resource that can't be deleted, because the finalizer can't be removed, they can remove the finalizer manually by editing the REC resource.
-For example, if the REC name is `redis-enterprise`, here is a command to remove its finalizer manually:
-```shell script
-kubectl patch rec redis-enterprise --type=json -p '[{"op":"remove","path":"/metadata/finalizers","value":"redbfinalizer.redisenterpriseclusters.app.redislabs.com"}]'
-```
-note: In this case the REDB resources that were attached to the REC may still exist. see [REDB Deletion](#redb-deletion) for details on how to delete these REDBs.
+This content [has moved](https://docs.redis.com/latest/kubernetes/re-clusters/delete_custom_resources/) to the Redis Enterprise doc site, [docs.redis.com](https://docs.redis.com/latest/kubernetes/).
 
 ### REDB `redisVersion` field
 The ‘redisVersion’ field is used for specifying Redis OSS version on REDB.

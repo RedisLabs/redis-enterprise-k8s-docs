@@ -172,18 +172,23 @@ spec:
               bootstrapperImageSpec:
                 description: Specification for Bootstrapper container image
                 properties:
+                  digestHash:
+                    description: 'The digest hash of the container image to pull.
+                      When specified, the container image is pulled according to the
+                      digest hash instead of the image tag. The versionTag field must
+                      also be specified with the image tag matching this digest hash.
+                      Note: This field is only supported for OLM deployments.'
+                    type: string
                   imagePullPolicy:
-                    description: PullPolicy describes a policy for if/when to pull a
-                      container image
+                    description: The image pull policy to be applied to the container
+                      image. One of Always, Never, IfNotPresent.
                     type: string
                   repository:
-                    description: Repository
+                    description: The repository (name) of the container image to be
+                      deployed.
                     type: string
                   versionTag:
-                    type: string
-                  digestHash:
-                    description: 'The digest hash of the image to pull. Version tag must be also specified with the corresponding version, will use the digest hash to pull the image if exists.
-                      Note: This is currently supported only for OLM.'
+                    description: The tag of the container image to be deployed.
                     type: string
                 type: object
               bootstrapperResources:
@@ -342,6 +347,17 @@ spec:
                 - apiFqdnUrl
                 - dbFqdnSuffix
                 - method
+                type: object
+              services:
+                description: Redis-Enterprise-Operator services specifications.
+                properties:
+                  servicesAnnotations:
+                    additionalProperties:
+                      type: string
+                    description: Global additional annotations to set on service resources
+                      created by the operator.
+                      Note - The specified annotations will not override annotations that already exists and didn't originated from the operator.
+                    type: object
                 type: object
               license:
                 description: Redis Enterprise License
@@ -556,7 +572,12 @@ spec:
                     type: array
                 type: object
               podSecurityPolicyName:
-                description: Name of pod security policy to use on pods See https://kubernetes.io/docs/concepts/policy/pod-security-policy/
+                description: "DEPRECATED PodSecurityPolicy support is removed in Kubernetes
+                  v1.25 and the use of this field is invalid for use when running
+                  on Kubernetes v1.25+. Future versions of the RedisEnterpriseCluster
+                  API will remove support for this field altogether. For migration
+                  instructions, see https://kubernetes.io/docs/tasks/configure-pod-container/migrate-from-psp/
+                  \n Name of pod security policy to use on pods"                
                 type: string
               podStartingPolicy:
                 description: Mitigation setting for STS pods stuck in "ContainerCreating"
@@ -2999,18 +3020,23 @@ spec:
               redisEnterpriseImageSpec:
                 description: Specification for Redis Enterprise container image
                 properties:
+                  digestHash:
+                    description: 'The digest hash of the container image to pull.
+                      When specified, the container image is pulled according to the
+                      digest hash instead of the image tag. The versionTag field must
+                      also be specified with the image tag matching this digest hash.
+                      Note: This field is only supported for OLM deployments.'
+                    type: string
                   imagePullPolicy:
-                    description: PullPolicy describes a policy for if/when to pull a
-                      container image
+                    description: The image pull policy to be applied to the container
+                      image. One of Always, Never, IfNotPresent.
                     type: string
                   repository:
-                    description: Repository
+                    description: The repository (name) of the container image to be
+                      deployed.
                     type: string
                   versionTag:
-                    type: string
-                  digestHash:
-                    description: 'The digest hash of the image to pull. Version tag must be also specified with the corresponding version, will use the digest hash to pull the image if exists.
-                      Note: This is currently supported only for OLM.'
+                    description: The tag of the container image to be deployed.
                     type: string
                 type: object
               redisEnterpriseNodeResources:
@@ -3124,14 +3150,23 @@ spec:
               redisEnterpriseServicesRiggerImageSpec:
                 description: Specification for Services Rigger container image
                 properties:
+                  digestHash:
+                    description: 'The digest hash of the container image to pull.
+                      When specified, the container image is pulled according to the
+                      digest hash instead of the image tag. The versionTag field must
+                      also be specified with the image tag matching this digest hash.
+                      Note: This field is only supported for OLM deployments.'
+                    type: string
                   imagePullPolicy:
-                    description: PullPolicy describes a policy for if/when to pull a
-                      container image
+                    description: The image pull policy to be applied to the container
+                      image. One of Always, Never, IfNotPresent.
                     type: string
                   repository:
-                    description: Repository
+                    description: The repository (name) of the container image to be
+                      deployed.
                     type: string
                   versionTag:
+                    description: The tag of the container image to be deployed.
                     type: string
                 type: object
               redisEnterpriseServicesRiggerResources:
@@ -6258,7 +6293,10 @@ spec:
               uiAnnotations:
                 additionalProperties:
                   type: string
-                description: Annotations for Redis Enterprise UI service
+                description: Annotations for Redis Enterprise UI service.
+                  This annotations will override the overlapping global annotations set under spec.services.servicesAnnotations
+                  Note - The specified annotations will not override annotations that already exists and didn't originated from the operator
+                  except for the following reserved annotation name redis.io/last-keys.
                 type: object
               uiServiceType:
                 description: Type of service used to expose Redis Enterprise UI (https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types)
@@ -7070,14 +7108,23 @@ spec:
               bootstrapperImageSpec:
                 description: Specification for Bootstrapper container image
                 properties:
+                  digestHash:
+                    description: 'The digest hash of the container image to pull.
+                      When specified, the container image is pulled according to the
+                      digest hash instead of the image tag. The versionTag field must
+                      also be specified with the image tag matching this digest hash.
+                      Note: This field is only supported for OLM deployments.'
+                    type: string
                   imagePullPolicy:
-                    description: PullPolicy describes a policy for if/when to pull a
-                      container image
+                    description: The image pull policy to be applied to the container
+                      image. One of Always, Never, IfNotPresent.
                     type: string
                   repository:
-                    description: Repository
+                    description: The repository (name) of the container image to be
+                      deployed.
                     type: string
                   versionTag:
+                    description: The tag of the container image to be deployed.
                     type: string
                 type: object
               bootstrapperResources:
@@ -7235,6 +7282,17 @@ spec:
                 - apiFqdnUrl
                 - dbFqdnSuffix
                 - method
+                type: object
+              services:
+                description: Redis-Enterprise-Operator services specifications.
+                properties:
+                  servicesAnnotations:
+                    additionalProperties:
+                      type: string
+                    description: Global additional annotations to set on service resources
+                      created by the operator.
+                      Note - The specified annotations will not override annotations that already exists and didn't originated from the operator.
+                    type: object
                 type: object
               license:
                 description: Redis Enterprise License
@@ -7449,7 +7507,12 @@ spec:
                     type: array
                 type: object
               podSecurityPolicyName:
-                description: Name of pod security policy to use on pods See https://kubernetes.io/docs/concepts/policy/pod-security-policy/
+                description: "DEPRECATED PodSecurityPolicy support is removed in Kubernetes
+                  v1.25 and the use of this field is invalid for use when running
+                  on Kubernetes v1.25+. Future versions of the RedisEnterpriseCluster
+                  API will remove support for this field altogether. For migration
+                  instructions, see https://kubernetes.io/docs/tasks/configure-pod-container/migrate-from-psp/
+                  \n Name of pod security policy to use on pods"
                 type: string
               podStartingPolicy:
                 description: Mitigation setting for STS pods stuck in "ContainerCreating"
@@ -9893,18 +9956,23 @@ spec:
               redisEnterpriseImageSpec:
                 description: Specification for Redis Enterprise container image
                 properties:
+                  digestHash:
+                    description: 'The digest hash of the container image to pull.
+                      When specified, the container image is pulled according to the
+                      digest hash instead of the image tag. The versionTag field must
+                      also be specified with the image tag matching this digest hash.
+                      Note: This field is only supported for OLM deployments.'
+                    type: string
                   imagePullPolicy:
-                    description: PullPolicy describes a policy for if/when to pull a
-                      container image
+                    description: The image pull policy to be applied to the container
+                      image. One of Always, Never, IfNotPresent.
                     type: string
                   repository:
-                    description: Repository
+                    description: The repository (name) of the container image to be
+                      deployed.
                     type: string
                   versionTag:
-                    type: string
-                  digestHash:
-                    description: 'The digest hash of the image to pull. Version tag must be also specified with the corresponding version, will use the digest hash to pull the image if exists.
-                      Note: This is currently supported only for OLM.'
+                    description: The tag of the container image to be deployed.
                     type: string
                 type: object
               redisEnterpriseNodeResources:
@@ -10018,18 +10086,23 @@ spec:
               redisEnterpriseServicesRiggerImageSpec:
                 description: Specification for Services Rigger container image
                 properties:
+                  digestHash:
+                    description: 'The digest hash of the container image to pull.
+                      When specified, the container image is pulled according to the
+                      digest hash instead of the image tag. The versionTag field must
+                      also be specified with the image tag matching this digest hash.
+                      Note: This field is only supported for OLM deployments.'
+                    type: string
                   imagePullPolicy:
-                    description: PullPolicy describes a policy for if/when to pull a
-                      container image
+                    description: The image pull policy to be applied to the container
+                      image. One of Always, Never, IfNotPresent.
                     type: string
                   repository:
-                    description: Repository
+                    description: The repository (name) of the container image to be
+                      deployed.
                     type: string
                   versionTag:
-                    type: string
-                  digestHash:
-                    description: 'The digest hash of the image to pull. Version tag must be also specified with the corresponding version, will use the digest hash to pull the image if exists.
-                      Note: This is currently supported only for OLM.'
+                    description: The tag of the container image to be deployed.
                     type: string
                 type: object
               redisEnterpriseServicesRiggerResources:
@@ -13156,7 +13229,10 @@ spec:
               uiAnnotations:
                 additionalProperties:
                   type: string
-                description: Annotations for Redis Enterprise UI service
+                description: Annotations for Redis Enterprise UI service.
+                  This annotations will override the overlapping global annotations set under spec.services.servicesAnnotations
+                  Note - The specified annotations will not override annotations that already exists and didn't originated from the operator
+                  except for the following reserved annotation name redis.io/last-keys.
                 type: object
               uiServiceType:
                 description: Type of service used to expose Redis Enterprise UI (https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types)
