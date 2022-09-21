@@ -37,7 +37,7 @@ This document describes the parameters for the Redis Enterprise Database custom 
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| absSecretName | The name of the secret that holds ABS credentials. The secret must contain the keys \"AccountName\" and \"AccountKey\", and these must hold the corresponding credentials | string |  | true |
+| absSecretName | The name of the secret that holds ABS credentials. The secret must contain the keys "AccountName" and "AccountKey", and these must hold the corresponding credentials | string |  | true |
 | container | Azure Blob Storage container name. | string |  | true |
 | subdir | Optional. Azure Blob Storage subdir under container. | string | empty | false |
 [Back to Table of Contents](#table-of-contents)
@@ -106,8 +106,8 @@ Redis Enterprise Module: https://redislabs.com/redis-enterprise/modules/
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| name | The module's name e.g \"ft\" for redissearch | string |  | true |
-| version | Module's semantic version e.g \"1.6.12\" | string |  | true |
+| name | The module's name e.g "ft" for redissearch | string |  | true |
+| version | Module's semantic version e.g "1.6.12" | string |  | true |
 | config | Module command line arguments e.g. VKEY_MAX_ENTITY_COUNT 30 | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
@@ -116,7 +116,7 @@ Redis Enterprise Module: https://redislabs.com/redis-enterprise/modules/
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| url | a URI of the \"ftps://[USER[:PASSWORD]@]HOST[:PORT]/PATH[/]\" format | string |  | true |
+| url | a URI of the "ftps://[USER[:PASSWORD]@]HOST[:PORT]/PATH[/]" format | string |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### GoogleStorage
@@ -124,7 +124,7 @@ GoogleStorage
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| gcsSecretName | The name of the secret that holds the Google Cloud Storage credentials. The secret must contain the keys \"CLIENT_ID\", \"PRIVATE_KEY\", \"PRIVATE_KEY_ID\", \"CLIENT_EMAIL\" and these must hold the corresponding credentials. The keys should correspond to the values in the key JSON. | string |  | true |
+| gcsSecretName | The name of the secret that holds the Google Cloud Storage credentials. The secret must contain the keys "CLIENT_ID", "PRIVATE_KEY", "PRIVATE_KEY_ID", "CLIENT_EMAIL" and these must hold the corresponding credentials. The keys should correspond to the values in the key JSON. | string |  | true |
 | bucketName | Google Storage bucket name. | string |  | true |
 | subdir | Optional. Google Storage subdir under bucket. | string | empty | false |
 [Back to Table of Contents](#table-of-contents)
@@ -159,7 +159,7 @@ RedisEnterpriseDatabase is the Schema for the redisenterprisedatabases API
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| metadata |  | [metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#objectmeta-v1-meta) |  | false |
+| metadata |  | [metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta) |  | false |
 | spec |  | [RedisEnterpriseDatabaseSpec](#redisenterprisedatabasespec) |  | false |
 | status |  | [RedisEnterpriseDatabaseStatus](#redisenterprisedatabasestatus) |  | false |
 [Back to Table of Contents](#table-of-contents)
@@ -169,7 +169,7 @@ RedisEnterpriseDatabaseList contains a list of RedisEnterpriseDatabase
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| metadata |  | [metav1.ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#listmeta-v1-meta) |  | false |
+| metadata |  | [metav1.ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#listmeta-v1-meta) |  | false |
 | items |  | [][RedisEnterpriseDatabase](#redisenterprisedatabase) |  | true |
 [Back to Table of Contents](#table-of-contents)
 
@@ -198,10 +198,10 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | proxyPolicy | The policy used for proxy binding to the endpoint. Supported proxy policies are: single/all-master-shards/all-nodes When left blank, the default value will be chosen according to the value of ossCluster - single if disabled, all-master-shards when enabled | string |  | false |
 | dataInternodeEncryption | Internode encryption (INE) setting. An optional boolean setting, overriding a similar cluster-wide policy. If set to False, INE is guaranteed to be turned off for this DB (regardless of cluster-wide policy). If set to True, INE will be turned on, unless the capability is not supported by the DB ( in such a case we will get an error and database creation will fail). If left unspecified, will be disabled if internode encryption is not supported by the DB (regardless of cluster default). Deleting this property after explicitly setting its value shall have no effect. | *bool |  | false |
 | databasePort | Database port number. TCP port on which the database is available. Will be generated automatically if omitted. can not be changed after creation | *int |  | false |
-| shardsPlacement | Control the density of shards - should they reside on as few or as many nodes as possible. Available options are \"dense\" or \"sparse\". If left unset, defaults to \"dense\". | string |  | false |
+| shardsPlacement | Control the density of shards - should they reside on as few or as many nodes as possible. Available options are "dense" or "sparse". If left unset, defaults to "dense". | string |  | false |
 | type | The type of the database. | *[DatabaseType](#databasetype) | redis | false |
-| isRof | Whether it is an RoF database or not. Applicable only for databases of type \"REDIS\". Assumed to be false if left blank. | *bool |  | false |
-| rofRamSize | The size of the RAM portion of an RoF database. Similarly to \"memorySize\" use formats like 100MB, 0.1GB It must be at least 10% of combined memory size (RAM+Flash), as specified by \"memorySize\". | string |  | false |
+| isRof | Whether it is an RoF database or not. Applicable only for databases of type "REDIS". Assumed to be false if left blank. | *bool |  | false |
+| rofRamSize | The size of the RAM portion of an RoF database. Similarly to "memorySize" use formats like 100MB, 0.1GB It must be at least 10% of combined memory size (RAM+Flash), as specified by "memorySize". | string |  | false |
 | memcachedSaslSecretName | Credentials used for binary authentication in memcached databases. The credentials should be saved as an opaque secret and the name of that secret should be configured using this field. For username, use 'username' as the key and the actual username as the value. For password, use 'password' as the key and the actual password as the value. Note that connections are not encrypted. | string |  | false |
 | redisVersion | Redis OSS version. For existing databases - Upgrade Redis OSS version. For new databases - the version which the database will be created with. If set to 'major' - will always upgrade to the most recent major Redis version. If set to 'latest' - will always upgrade to the most recent Redis version. Depends on 'redisUpgradePolicy' - if you want to set the value to 'latest' for some databases, you must set redisUpgradePolicy on the cluster before. Possible values are 'major' or 'latest' When using upgrade - make sure to backup the database before. This value is used only for database type 'redis' | string |  | false |
 [Back to Table of Contents](#table-of-contents)
@@ -232,12 +232,12 @@ RedisEnterpriseDatabaseStatus defines the observed state of RedisEnterpriseDatab
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| replicaSourceType | Determines what resource ReplicaSourceName refers to SECRET - Get URI from secret named in ReplicaSourceName.  The secret will have a key named 'uri' that defines the complete, redis:// URI.  The type of secret is determined by the secret mechanism used by the underlying REC object REDB - Determine URI from Kubernetes REDB resource named in ReplicaSourceName | [ReplicaSourceType](#replicasourcetype) |  | true |
-| replicaSourceName | Resource (SECRET/REDB) name of type ReplicaSourceType | string |  | true |
-| compression | GZIP Compression level (0-9) to use for replication | int |  | false |
-| clientKeySecret | Secret that defines what client key to use.  The secret needs 2 keys in its map, \"cert\" that is the PEM encoded certificate and \"key\" that is the PEM encoded private key | *string |  | false |
-| serverCertSecret | Secret that defines the Server's certificate.  The secret needs 1 key in its map, \"cert\" that is the PEM encoded certificate | *string |  | false |
-| tlsSniName | TLS SNI Name to use | *string |  | false |
+| replicaSourceType | The type of resource from which the source database URI is derived. If set to 'SECRET', the source database URI is derived from the secret named in the ReplicaSourceName field. The secret must have a key named 'uri' that defines the URI of the source database in the form of 'redis://...'. The type of secret (kubernetes, vault, ...) is determined by the secret mechanism used by the underlying REC object. If set to 'REDB', the source database URI is derived from the RedisEnterpriseDatabase resource named in the ReplicaSourceName field. | [ReplicaSourceType](#replicasourcetype) |  | true |
+| replicaSourceName | The name of the resource from which the source database URI is derived. The type of resource must match the type specified in the ReplicaSourceType field. | string |  | true |
+| compression | GZIP compression level (0-6) to use for replication. | int |  | false |
+| clientKeySecret | Secret that defines the client certificate and key used by the syncer in the target database cluster. The secret must have 2 keys in its map: "cert" which is the PEM encoded certificate, and "key" which is the PEM encoded private key. | *string |  | false |
+| serverCertSecret | Secret that defines the server certificate used by the proxy in the source database cluster. The secret must have 1 key in its map: "cert" which is the PEM encoded certificate. | *string |  | false |
+| tlsSniName | TLS SNI name to use for the replication link. | *string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ReplicaSourceStatus
@@ -269,7 +269,7 @@ Redis Enterprise Role and ACL Binding
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| awsSecretName | The name of the secret that holds the AWS credentials. The secret must contain the keys \"AWS_ACCESS_KEY_ID\" and \"AWS_SECRET_ACCESS_KEY\", and these must hold the corresponding credentials. | string |  | true |
+| awsSecretName | The name of the secret that holds the AWS credentials. The secret must contain the keys "AWS_ACCESS_KEY_ID" and "AWS_SECRET_ACCESS_KEY", and these must hold the corresponding credentials. | string |  | true |
 | bucketName | Amazon S3 bucket name. | string |  | true |
 | subdir | Optional. Amazon S3 subdir under bucket. | string | empty | false |
 [Back to Table of Contents](#table-of-contents)
@@ -279,7 +279,7 @@ Redis Enterprise Role and ACL Binding
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| sftpSecretName | The name of the secret that holds SFTP credentials. The secret must contain the \"Key\" key, which is the SSH private key for connecting to the sftp server. | string |  | true |
+| sftpSecretName | The name of the secret that holds SFTP credentials. The secret must contain the "Key" key, which is the SSH private key for connecting to the sftp server. | string |  | true |
 | sftp_url | SFTP url | string |  | true |
 [Back to Table of Contents](#table-of-contents)
 
@@ -288,7 +288,7 @@ Redis Enterprise Role and ACL Binding
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| swiftSecretName | The name of the secret that holds Swift credentials. The secret must contain the keys \"Key\" and \"User\", and these must hold the corresponding credentials: service access key and service user name (pattern for the latter does not allow special characters &,<,>,\") | string |  | true |
+| swiftSecretName | The name of the secret that holds Swift credentials. The secret must contain the keys "Key" and "User", and these must hold the corresponding credentials: service access key and service user name (pattern for the latter does not allow special characters &,<,>,") | string |  | true |
 | auth_url | Swift service authentication URL. | string |  | true |
 | container | Swift object store container for storing the backup files. | string |  | true |
 | prefix | Optional. Prefix (path) of backup files in the swift container. | string | empty | false |
@@ -335,8 +335,8 @@ State of the Redis Enterprise Database
 
 | Value | Description |
 | ----- | ----------- |
-| "SECRET" | Information on DB to Replicate from stored in a secret |
-| "REDB" | Replicate from a DB created via the RedisEnterpriseDatabase Controller. Note - specify only names of REDBs created on the same namespace. To configure replicaof with a database configured on another namespace, use \"SECRET\". |
+| "SECRET" | When ReplicaSourceType is set to 'SECRET', the source database URI is derived from the secret named in the ReplicaSourceName field. The secret must have a key named 'uri' that defines the URI of the source database in the form of 'redis://...'. The type of secret (kubernetes, vault, ...) is determined by the secret mechanism used by the underlying REC object. |
+| "REDB" | When ReplicaSourceType is set to 'REDB', the source database URI is derived from the RedisEnterpriseDatabase resource named in the ReplicaSourceName field. |
 [Back to Table of Contents](#table-of-contents)
 
 ### RolePermissionType

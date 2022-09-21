@@ -39,6 +39,7 @@ API_RESOURCES = [
     "RedisEnterpriseCluster",
     "RedisEnterpriseDatabase",
     "RedisEnterpriseRemoteCluster",
+    "RedisEnterpriseActiveActivePeering",
     "StatefulSet",
     "Deployment",
     "Service",
@@ -450,6 +451,11 @@ def collect_events(namespace, output_dir, k8s_cli):
     cmd = "{} get events -n {} -o wide".format(k8s_cli, namespace)
     collect_helper(output_dir, cmd=cmd,
                    file_name="events", resource_name="events", namespace=namespace)
+
+    # We get the events in YAML format as well since in YAML format they are a bit more informative.
+    output = run_get_resource_yaml(namespace, "Event", k8s_cli)
+    with open(os.path.join(output_dir, "Event.yaml"), "w+") as file_handle:
+        file_handle.write(output)
 
 
 def collect_api_resources(namespace, output_dir, k8s_cli):

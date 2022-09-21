@@ -449,30 +449,39 @@ spec:
                 items:
                   properties:
                     clientKeySecret:
-                      description: Secret that defines what client key to use.  The
-                        secret needs 2 keys in it's map, "cert" that is the PEM encoded
-                        certificate and "key" that is the PEM encoded private key
+                      description: 'Secret that defines the client certificate and
+                        key used by the syncer in the target database cluster. The
+                        secret must have 2 keys in its map: "cert" which is the PEM
+                        encoded certificate, and "key" which is the PEM encoded private
+                        key.'
                       type: string
                     compression:
-                      description: GZIP Compression level (0-9) to use for replication
+                      description: GZIP compression level (0-6) to use for replication.
                       type: integer
                     replicaSourceName:
-                      description: Kubernetes resource name of type ReplicaSourceType
+                      description: The name of the resource from which the source
+                        database URI is derived. The type of resource must match the
+                        type specified in the ReplicaSourceType field.
                       type: string
                     replicaSourceType:
-                      description: Determines what Kuberetes resource ReplicaSourceName
-                        refers to SECRET - Get URI from secret named in ReplicaSourceName.  The
-                        secret will have a uri key that defines the complete, redis://
-                        URI REDB - Determine URI from Kubernetes REDB resource named
-                        in ReplicaSourceName
+                      description: The type of resource from which the source database
+                        URI is derived. If set to 'SECRET', the source database URI
+                        is derived from the secret named in the ReplicaSourceName
+                        field. The secret must have a key named 'uri' that defines
+                        the URI of the source database in the form of 'redis://...'.
+                        The type of secret (kubernetes, vault, ...) is determined
+                        by the secret mechanism used by the underlying REC object.
+                        If set to 'REDB', the source database URI is derived from
+                        the RedisEnterpriseDatabase resource named in the ReplicaSourceName
+                        field.
                       type: string
                     serverCertSecret:
-                      description: Secret that defines the Server's certificate.  The
-                        secret needs 1 key in it's map, "cert" that is the PEM encoded
-                        certificate
+                      description: 'Secret that defines the server certificate used
+                        by the proxy in the source database cluster. The secret must
+                        have 1 key in its map: "cert" which is the PEM encoded certificate.'
                       type: string
                     tlsSniName:
-                      description: TLS SNI Name to use
+                      description: TLS SNI name to use for the replication link.
                       type: string
                   required:
                   - replicaSourceName
