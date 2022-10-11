@@ -58,10 +58,11 @@ roleRef:
 
 ```
 
-### 3. Updating the operator configmap
+### 3. Updating the managed namespaces
+Use one of these methods (they are mutually exclusive):
 
-The operator has to be deployed with a comma separated list of namespaces it will watch for REDB objects.
-
+#### Method 1: Updating the operator's configmap with explicit namespace list
+The operator should to be deployed with a comma separated list of namespaces it will watch for REDB objects.
 Specifically, a new environment variable is added to the operator's configmap (edit the operator-environment-config configmap within the operator namespace):
 * Patch the configmap by running the following command:
 ```
@@ -71,6 +72,35 @@ kubectl patch configmap/operator-environment-config \
   -p '{"data":{"REDB_NAMESPACES":"comma,delimited,list,of,namespaces,to,watch"}}'
 ``` 
 > Note - the admission controller uses the same config map
+
+#### Method 2: Updating the operator's configmap with the label that the managed namespaces would have 
+
+When the operator detects this label in a namespace it would start to watch it for REDBs.
+
+a. Apply a cluster role for the operator since it now needs to filter the namespaces to watch over :
+
+Edit the `cluster_role_binding.yaml` with the namespace of the operator (change the string `NAMESPACE_OF_SERVICE_ACCOUNT`) <br>
+then apply the cluster role and cluster role binding:
+```
+kubectl apply -f cluster_role.yaml
+kubectl apply -f cluster_role_binding.yaml 
+``` 
+    
+b. Configure the operator with a label to indicate how the redb namespaces are labeled:
+ <br> Patch the configmap by running the following command:
+```
+kubectl patch configmap/operator-environment-config \
+  -n <YOUR_NAMESPACE> \
+  --type merge \
+  -p '{"data": {"REDB_NAMESPACES_LABEL": "<NAMESPACE_LABEL>"}}'
+``` 
+
+c. Label the desired namespaces with the same label:
+```
+kubectl label namespace <YOUR_NAMESPACE> <NAMESPACE_LABEL>=<ANY_VALUE>
+```
+
+> Note - when a change in a managed redb namespace is detected  (e.g. the indicating label is added/removed) the operator deployment would restart.
 
 ## Additional areas for consideration
 * When deploying multiple Redis Enterprise Operators within the same K8s cluster, do not configure more than one of the operators to watch the same namespace.
