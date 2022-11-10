@@ -3,6 +3,8 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: gesher
+  labels:
+    app: redis-enterprise
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -34,6 +36,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: gesher
+  labels:
+    app: redis-enterprise
 rules:
 - apiGroups:
   - ""
@@ -96,6 +100,8 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: gesher
+  labels:
+    app: redis-enterprise
 subjects:
 - kind: ServiceAccount
   name: gesher
@@ -108,6 +114,8 @@ kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: gesher
+  labels:
+    app: redis-enterprise
 subjects:
 - kind: ServiceAccount
   name: gesher
@@ -121,6 +129,8 @@ apiVersion: v1
 kind: Service
 metadata:
   name: gesher
+  labels:
+    app: redis-enterprise
 spec:
   ports:
   - port: 443
@@ -133,6 +143,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: namespacedvalidatingrules.app.redislabs.com
+  labels:
+    app: redis-enterprise
 spec:
   group: app.redislabs.com
   names:
@@ -286,6 +298,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   name: namespacedvalidatingtypes.app.redislabs.com
+  labels:
+    app: redis-enterprise
 spec:
   group: app.redislabs.com
   names:
@@ -367,6 +381,7 @@ spec:
     metadata:
       labels:
         name: gesher
+        app: redis-enterprise
     spec:
       securityContext:
         runAsUser: 1001

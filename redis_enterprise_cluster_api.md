@@ -3,6 +3,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
 > Note this document is auto-generated from code comments. To contribute a change please change the code comments.
 ## Table of Contents
 * [Objects](#objects)
+  * [APIServiceSpec](#apiservicespec)
   * [ActiveActive](#activeactive)
   * [BundledDatabaseRedisVersions](#bundleddatabaseredisversions)
   * [BundledDatabaseVersions](#bundleddatabaseversions)
@@ -40,8 +41,17 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [IngressMethod](#ingressmethod)
   * [OperatingMode](#operatingmode)
   * [RedisOnFlashsStorageEngine](#redisonflashsstorageengine)
+  * [ServiceType](#servicetype)
   * [SpecStatusName](#specstatusname)
 ## Objects
+
+### APIServiceSpec
+Customization options for the REC API service.
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| type | Type of service to create for the REC API service. Defaults to ClusterIP service, if not specified otherwise. | *[ServiceType](#servicetype) | ClusterIP | false |
+[Back to Table of Contents](#table-of-contents)
 
 ### ActiveActive
 
@@ -295,12 +305,12 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | certificates | RS Cluster Certificates. Used to modify the certificates used by the cluster. See the "RSClusterCertificates" struct described above to see the supported certificates. | *[RSClusterCertificates](#rsclustercertificates) |  | false |
 | podStartingPolicy | Mitigation setting for STS pods stuck in "ContainerCreating" | *[StartingPolicy](#startingpolicy) |  | false |
 | redisEnterpriseTerminationGracePeriodSeconds | The TerminationGracePeriodSeconds value for the (STS created) REC pods. Note that pods should not be taken down intentionally by force. Because clean pod shutdown is essential to prevent data loss, the default value is intentionally large (1 year). When data loss is acceptable (such as pure caching configurations), a value of a few minutes may be acceptable. | *int64 | 31536000 | false |
-| redisOnFlashSpec | Stores configurations specific to redis on flash. If provided, the cluster will be capable of creating redis on flash databases. Note - This is an ALPHA Feature. For this feature to take effect, set a boolean environment variable with the name "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. | *[RedisOnFlashSpec](#redisonflashspec) |  | false |
-| ocspConfiguration | An API object that represents the cluster's OCSP configuration. To enable OCSP, the cluster's proxy certificate should contain the OCSP responder URL. Note - This is an ALPHA Feature. For this feature to take effect, set a boolean environment variable with the name "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. | *[OcspConfiguration](#ocspconfiguration) |  | false |
-| encryptPkeys | Private key encryption - in order to enable, first need to mount ${ephemeralconfdir}/secrets/pem/passphrase and add the passphrase and then set fields value to 'true' Possible values: true/false Note: This is an ALPHA Feature. For this feature to take effect, set a boolean environment variable with the name "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. | *bool |  | false |
+| redisOnFlashSpec | Stores configurations specific to redis on flash. If provided, the cluster will be capable of creating redis on flash databases. | *[RedisOnFlashSpec](#redisonflashspec) |  | false |
+| ocspConfiguration | An API object that represents the cluster's OCSP configuration. To enable OCSP, the cluster's proxy certificate should contain the OCSP responder URL. | *[OcspConfiguration](#ocspconfiguration) |  | false |
+| encryptPkeys | Private key encryption Possible values: true/false | *bool |  | false |
 | containerTimezone | Container timezone configuration. While the default timezone on all containers is UTC, this setting can be used to set the timezone on services rigger/bootstrapper/RS containers. Currently the only supported value is to propagate the host timezone to all containers. | *[ContainerTimezoneSpec](#containertimezonespec) |  | false |
 | ingressOrRouteSpec | Access configurations for the Redis Enterprise Cluster and Databases. Note - this feature is currently in preview. For this feature to take effect, set a boolean environment variable with the name "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. At most one of ingressOrRouteSpec or activeActive fields can be set at the same time. | *[IngressOrRouteSpec](#ingressorroutespec) |  | false |
-| services | Redis-Enterprise-Operator services specifications. | *[Services](#services) |  | false |
+| services | Customization options for operator-managed service resources created for Redis Enterprise clusters and databases | *[Services](#services) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseClusterStatus
@@ -350,11 +360,12 @@ RedisOnFlashSpec contains all the parameters needed to configure in order to ena
 [Back to Table of Contents](#table-of-contents)
 
 ### Services
-
+Customization options for operator-managed service resources created for Redis Enterprise clusters and databases
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| servicesAnnotations | Global additional annotations to set on service resources created by the operator. | map[string]string |  | false |
+| servicesAnnotations | Global additional annotations to set on service resources created by the operator. The specified annotations will not override annotations that already exist and didn't originate from the operator. | map[string]string |  | false |
+| apiService | Customization options for the REC API service. | *[APIServiceSpec](#apiservicespec) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ServicesRiggerConfigurationSpec
@@ -444,6 +455,16 @@ Used to distinguish between different platforms implementation
 | Value | Description |
 | ----- | ----------- |
 | "rocksdb" |  |
+[Back to Table of Contents](#table-of-contents)
+
+### ServiceType
+ServiceType determines how the service is exposed in the cluster.
+
+| Value | Description |
+| ----- | ----------- |
+| "ClusterIP" | ClusterIP service provides access via a cluster-internal IP address. |
+| "NodePort" | NodePort service provides access via a dedicated port exposed on every cluster node. |
+| "LoadBalancer" | LoadBalancer service provides access via an external load balancer provided by the cloud provider platform. |
 [Back to Table of Contents](#table-of-contents)
 
 ### SpecStatusName

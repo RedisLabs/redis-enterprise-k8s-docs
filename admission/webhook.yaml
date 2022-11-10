@@ -2,6 +2,8 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: redb-admission
+  labels:
+    app: redis-enterprise
 webhooks:
 - name: redb.admission.redislabs
   failurePolicy: Fail

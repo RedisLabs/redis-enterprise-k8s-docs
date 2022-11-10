@@ -2,6 +2,8 @@ kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: redis-enterprise-operator
+  labels:
+    app: redis-enterprise
 rules:
   - apiGroups: ["rbac.authorization.k8s.io", ""]
     resources: ["roles", "serviceaccounts", "rolebindings"]
