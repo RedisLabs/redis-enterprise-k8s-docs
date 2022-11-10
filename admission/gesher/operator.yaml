@@ -11,6 +11,7 @@ spec:
     metadata:
       labels:
         name: gesher
+        app: redis-enterprise
     spec:
       securityContext:
         runAsUser: 1001

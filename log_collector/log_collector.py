@@ -20,9 +20,13 @@ from collections import OrderedDict
 from multiprocessing import Process
 
 RLEC_CONTAINER_NAME = "redis-enterprise-node"
+OPERATOR_LABEL = "app=redis-enterprise"
+MODE_RESTRICTED = "restricted"
+MODE_ALL = "all"
 
 RS_LOG_FOLDER_PATH = "/var/opt/redislabs/log"
 logger = logging.getLogger(__name__)
+VERSION_LOG_COLLECTOR = "6.2.18-3"
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
 
@@ -91,7 +95,7 @@ def _filter_non_existing_namespaces(namespaces, k8s_cli):
         Filter non-existing namespaces from user's input
     """
     return_code, out = run_shell_command(
-        "{} get ns -o=custom-columns='DATA:metadata.name' --no-headers=true".format(k8s_cli))
+        "{} get ns -o=custom-columns=\"DATA:metadata.name\" --no-headers=true".format(k8s_cli))
     if return_code:
         return []
     res = []
@@ -116,7 +120,7 @@ def _get_namespaces_to_run_on(namespace, k8s_cli):
 
     if namespace == 'all':
         return_code, out = run_shell_command(
-            "{} get ns -o=custom-columns='DATA:metadata.name' --no-headers=true".format(k8s_cli))
+            "{} get ns -o=custom-columns=\"DATA:metadata.name\" --no-headers=true".format(k8s_cli))
         if return_code:
             logger.warning("Failed to parse namespace list - will use namespace from config: %s", out)
             return _get_namespace_from_config()
@@ -131,20 +135,24 @@ def _get_namespaces_to_run_on(namespace, k8s_cli):
     return existing_namespaces
 
 
-def collect_from_ns(namespace, output_dir, logs_from_all_pods=False, k8s_cli_input=""):
+def collect_from_ns(namespace, output_dir, logs_from_all_pods=False, k8s_cli_input="", mode=MODE_RESTRICTED):
     "Collect the context of a specific namespace. Typically runs in parallel processes."
     k8s_cli = detect_k8s_cli(k8s_cli_input)
     logger.info("Started collecting from namespace '%s'", namespace)
     ns_output_dir = os.path.join(output_dir, namespace)
     make_dir(ns_output_dir)
 
+    selector = ""
+    if mode == MODE_RESTRICTED:
+        selector = '--selector="{}"'.format(OPERATOR_LABEL)
+
     collect_connectivity_check(namespace, ns_output_dir, k8s_cli)
-    get_redis_enterprise_debug_info(namespace, ns_output_dir, k8s_cli)
-    collect_pod_rs_logs(namespace, ns_output_dir, k8s_cli)
-    collect_resources_list(namespace, ns_output_dir, k8s_cli)
-    collect_events(namespace, ns_output_dir, k8s_cli)
-    collect_api_resources(namespace, ns_output_dir, k8s_cli)
-    collect_api_resources_description(namespace, ns_output_dir, k8s_cli)
+    get_redis_enterprise_debug_info(namespace, ns_output_dir, k8s_cli, mode)
+    collect_pod_rs_logs(namespace, ns_output_dir, k8s_cli, mode)
+    collect_resources_list(namespace, ns_output_dir, k8s_cli, mode)
+    collect_events(namespace, ns_output_dir, k8s_cli, mode)
+    collect_api_resources(namespace, ns_output_dir, k8s_cli, selector)
+    collect_api_resources_description(namespace, ns_output_dir, k8s_cli, selector)
     collect_pods_logs(namespace, ns_output_dir, k8s_cli, logs_from_all_pods)
 
 
@@ -180,7 +188,29 @@ def detect_k8s_cli(k8s_cli_input=""):
     return DEFAULT_K8S_CLI
 
 
-def run(namespace_input, output_dir, logs_from_all_pods=False, k8s_cli_input=""):
+def compare_versions(k8s_cli, namespaces):
+    """
+        Compare operator version with the current log_collector version.
+    """
+    operator_version = ""
+    for namespace in namespaces:
+        cmd = "{} get deployment redis-enterprise-operator -o jsonpath=" \
+              "\"{{.spec.template.spec.containers[0].image}}\" -n {}".format(k8s_cli, namespace)
+        return_code, out = run_shell_command(cmd)
+        if return_code or not out:
+            continue
+        operator_version = str.split(out, ":")
+        if len(operator_version) == 2:
+            logger.info("running with operator version: %s and log collector version: %s",
+                        operator_version[1], VERSION_LOG_COLLECTOR)
+            return operator_version[1] == VERSION_LOG_COLLECTOR
+    logger.info("could not find operator version - running log collector")
+    return True
+
+
+def run(namespace_input, output_dir, logs_from_all_pods=False, k8s_cli_input="",  # pylint: disable=R0913
+        mode=MODE_RESTRICTED,
+        skip_version_check=False):
     """
         Collect logs
     """
@@ -196,9 +226,14 @@ def run(namespace_input, output_dir, logs_from_all_pods=False, k8s_cli_input="")
     make_dir(output_dir)
     collect_cluster_info(output_dir, k8s_cli)
 
+    if not skip_version_check:
+        if not compare_versions(k8s_cli, namespaces):
+            logger.info("Log collector version is not compatible with current operator version."
+                        "Stopping Redis Enterprise log collector")
+            return
     processes = []
     for namespace in namespaces:
-        proc = Process(target=collect_from_ns, args=[namespace, output_dir, logs_from_all_pods, k8s_cli_input])
+        proc = Process(target=collect_from_ns, args=[namespace, output_dir, logs_from_all_pods, k8s_cli_input, mode])
         proc.start()
         processes.append(proc)
 
@@ -226,12 +261,23 @@ def create_collection_report(output_dir, output_file_name, k8s_cli, namespaces, 
         }, output_fh)
 
 
-def get_non_ready_rs_pod_names(namespace, k8s_cli):
+def get_selector(mode):
+    """
+        selector of rs pods
+    """
+    selector = 'redis.io/role=node'
+    if mode == MODE_RESTRICTED:
+        selector = '{},{}'.format(selector, OPERATOR_LABEL)
+    return selector
+
+
+def get_non_ready_rs_pod_names(namespace, k8s_cli, mode=MODE_RESTRICTED):
     """
         get names of rs pods that are not ready
     """
     pod_names = []
-    rs_pods = get_pods(namespace, k8s_cli, selector='redis.io/role=node')
+    selector = get_selector(mode)
+    rs_pods = get_pods(namespace, k8s_cli, selector=selector)
     if not rs_pods:
         logger.info("Namespace '%s': cannot find redis enterprise pods", namespace)
         return []
@@ -248,12 +294,13 @@ def get_non_ready_rs_pod_names(namespace, k8s_cli):
     return pod_names
 
 
-def collect_pod_rs_logs(namespace, output_dir, k8s_cli):
+def collect_pod_rs_logs(namespace, output_dir, k8s_cli, mode):
     """
         get logs from rs pods that are not ready
     """
     rs_pod_logs_dir = os.path.join(output_dir, "rs_pod_logs")
-    rs_pod_names = get_pod_names(namespace=namespace, k8s_cli=k8s_cli, selector='redis.io/role=node')
+    selector = get_selector(mode)
+    rs_pod_names = get_pod_names(namespace=namespace, k8s_cli=k8s_cli, selector=selector)
     if not rs_pod_names:
         logger.warning("Namespace '%s' Could not get rs pods list - "
                        "skipping rs pods logs collection", namespace)
@@ -395,12 +442,13 @@ def create_and_download_debug_info_package_from_pod(
     return False
 
 
-def get_redis_enterprise_debug_info(namespace, output_dir, k8s_cli):
+def get_redis_enterprise_debug_info(namespace, output_dir, k8s_cli, mode):
     """
         Connects to an RS cluster node,
         creates and copies debug info package from a pod, preferably one that passes readiness probe
     """
-    rs_pods = get_pods(namespace, k8s_cli, selector='redis.io/role=node')
+    selector = get_selector(mode)
+    rs_pods = get_pods(namespace, k8s_cli, selector=selector)
     if not rs_pods:
         logger.info("Namespace '%s': Cannot find redis enterprise pod", namespace)
         return
@@ -420,12 +468,15 @@ def get_redis_enterprise_debug_info(namespace, output_dir, k8s_cli):
             break
 
 
-def collect_resources_list(namespace, output_dir, k8s_cli):
+def collect_resources_list(namespace, output_dir, k8s_cli, mode):
     """
         Prints the output of kubectl get all to a file
     """
+    selector = ""
+    if mode == MODE_RESTRICTED:
+        selector = '--selector="{}"'.format(OPERATOR_LABEL)
     collect_helper(output_dir,
-                   cmd="{} get all -o wide -n {}".format(k8s_cli, namespace),
+                   cmd="{} get all -o wide -n {} {}".format(k8s_cli, namespace, selector),
                    file_name="resources_list",
                    resource_name="resources list",
                    namespace=namespace)
@@ -439,10 +490,15 @@ def collect_cluster_info(output_dir, k8s_cli):
                    file_name="cluster_info", resource_name="cluster-info")
 
 
-def collect_events(namespace, output_dir, k8s_cli):
+def collect_events(namespace, output_dir, k8s_cli, mode=MODE_RESTRICTED):
     """
-        Prints the output of kubectl cluster-info to a file
+        Prints the output of kubectl get events -o wide and
+        kubectl get event -o yaml
     """
+    if mode != MODE_ALL:
+        logger.warning("Cannot collect events when labels is specified - "
+                       "skipping events collection")
+        return
     # events need -n parameter in kubectl
     if not namespace:
         logger.warning("Cannot collect events without namespace - "
@@ -458,7 +514,7 @@ def collect_events(namespace, output_dir, k8s_cli):
         file_handle.write(output)
 
 
-def collect_api_resources(namespace, output_dir, k8s_cli):
+def collect_api_resources(namespace, output_dir, k8s_cli, selector=""):
     """
         Creates file for each of the API resources
         with the output of kubectl get <resource> -o yaml
@@ -466,17 +522,20 @@ def collect_api_resources(namespace, output_dir, k8s_cli):
     logger.info("Namespace '%s': Collecting API resources", namespace)
     resources_out = OrderedDict()
     for resource in API_RESOURCES:
-        output = run_get_resource_yaml(namespace, resource, k8s_cli)
+        output = run_get_resource_yaml(namespace, resource, k8s_cli, selector)
         if output:
             resources_out[resource] = output
             logger.info("Namespace '%s':   + Collected %s", namespace, resource)
+    if selector:
+        # collect PV resource
+        collect_persistent_volume(namespace, k8s_cli, resources_out, "get", KUBCTL_GET_YAML_RETRIES)
     for entry, out in resources_out.items():
         with open(os.path.join(output_dir,
                                "{}.yaml".format(entry)), "w+") as file_handle:
             file_handle.write(out)
 
 
-def collect_api_resources_description(namespace, output_dir, k8s_cli):
+def collect_api_resources_description(namespace, output_dir, k8s_cli, selector=""):
     """
         Creates file for each of the API resources
         with the output of kubectl describe <resource>
@@ -484,15 +543,88 @@ def collect_api_resources_description(namespace, output_dir, k8s_cli):
     logger.info("Namespace '%s': Collecting API resources description", namespace)
     resources_out = OrderedDict()
     for resource in API_RESOURCES:
-        output = describe_resource(namespace, resource, k8s_cli)
+        output = describe_resource(namespace, resource, k8s_cli, selector)
         if output:
             resources_out[resource] = output
             logger.info("Namespace: '%s' + Collected %s", namespace, resource)
-
+    if selector:
+        # collect PV resource
+        collect_persistent_volume_description(namespace, k8s_cli, resources_out, KUBCTL_DESCRIBE_RETRIES)
     for entry, out in resources_out.items():
         with open(os.path.join(output_dir,
                                "{}.txt".format(entry)), "w+") as file_handle:
             file_handle.write(out)
+
+
+def collect_persistent_volume(namespace, k8s_cli, resources_out, collect_func, retries):
+    """
+        Collect PersistentVolume resource
+        get volumes names of the PersistentVolumeClaim with operator label
+    """
+    resource = "PersistentVolume"
+    output = collect_pv_by_pvc_names(namespace, k8s_cli, collect_func, retries)
+    if output:
+        resources_out["PersistentVolume"] = output
+        logger.info("Namespace '%s':   + Collected %s", namespace, resource)
+
+
+def collect_persistent_volume_description(namespace, k8s_cli, resources_out, retries):
+    """
+        Collect PersistentVolume resource
+        get volumes names of the PersistentVolumeClaim with operator label
+    """
+    resource = "PersistentVolume"
+    output = collect_pv_by_pvc_name_description(namespace, k8s_cli, retries)
+    if output:
+        resources_out["PersistentVolume"] = output
+        logger.info("Namespace '%s':   + Collected %s", namespace, resource)
+
+
+def get_pv_names(k8s_cli, namespace, error_template):
+    """
+        get volumes names from the PersistentVolumeClaim
+    """
+    cmd = "{} get -n {} PersistentVolumeClaim --selector={} -o=custom-columns=VOLUME:.spec.volumeName --no-headers" \
+        .format(k8s_cli, namespace, OPERATOR_LABEL)
+    output = run_shell_command_with_retries(cmd, KUBCTL_GET_YAML_RETRIES, error_template)
+    return output.split()
+
+
+def collect_pv_by_pvc_names(namespace, k8s_cli, collect_func, retries):
+    """
+        Collect PersistentVolume resource (get/describe - collect_func) when use restricted mode
+    """
+    pv_output = ""
+    error_template = "Namespace '{}': Failed to get {} resource: {{}}.".format(namespace, "PersistentVolumeClaim")
+    volumes_names = get_pv_names(k8s_cli, namespace, error_template)
+    for volume in volumes_names:
+        cmd = "{} {} -n {} {} --field-selector=metadata.name={} -o yaml".format(k8s_cli, collect_func,
+                                                                                namespace,
+                                                                                "PersistentVolume",
+                                                                                volume)
+        # cmd = f"kubectl get pv --field-selector=metadata.name={pv}"
+        output = run_shell_command_with_retries(cmd, retries, error_template)
+        pv_output = pv_output + output
+    return pv_output
+
+
+def collect_pv_by_pvc_name_description(namespace, k8s_cli, retries):
+    """
+        Collect PersistentVolume resource description
+    """
+    pv_output = ""
+    error_template = "Namespace '{}': Failed to get {} resource: {{}}.".format(namespace, "PersistentVolumeClaim")
+    volumes_names = get_pv_names(k8s_cli, namespace, error_template)
+    for volume in volumes_names:
+        # get the PV name and then run with describe
+        cmd = "{} get -n {} {} --field-selector=metadata.name={} -o=name".format(k8s_cli, namespace, "PersistentVolume",
+                                                                                 volume)
+        # cmd = f"kubectl get pv --field-selector=metadata.name={pv}"
+        pv_name = run_shell_command_with_retries(cmd, retries, error_template)
+        cmd = "{} describe -n {} {}".format(k8s_cli, namespace, pv_name)
+        output = run_shell_command_with_retries(cmd, retries, error_template)
+        pv_output = pv_output + output
+    return pv_output
 
 
 def collect_pods_logs(namespace, output_dir, k8s_cli, logs_from_all_pods=False):
@@ -576,24 +708,24 @@ def get_list_of_containers_from_pod(namespace, pod_name, k8s_cli):
     """
         Returns list of containers from a given pod
     """
-    cmd = "{} get pod {} -o jsonpath='{{.spec.containers[*].name}}' -n {}".format(k8s_cli, pod_name, namespace)
+    cmd = "{} get pod {} -o jsonpath=\"{{.spec.containers[*].name}}\" -n {}".format(k8s_cli, pod_name, namespace)
     return_code, out = run_shell_command(cmd)
     if return_code:
         logger.warning("Failed to get containers from pod: %s", out)
         return None
-    return out.replace("'", "").split()
+    return out.split()
 
 
 def get_list_of_init_containers_from_pod(namespace, pod_name, k8s_cli):
     """
         Returns a list of init containers from a given pod.
     """
-    cmd = "{} get pod {} -o jsonpath='{{.spec.initContainers[*].name}}' -n {}".format(k8s_cli, pod_name, namespace)
+    cmd = "{} get pod {} -o jsonpath=\"{{.spec.initContainers[*].name}}\" -n {}".format(k8s_cli, pod_name, namespace)
     return_code, out = run_shell_command(cmd)
     if return_code:
         logger.warning("Failed to get init containers from pod: %s", out)
         return None
-    return out.replace("'", "").split()
+    return out.split()
 
 
 def collect_logs_from_pod(namespace, pod, logs_dir, k8s_cli):
@@ -686,11 +818,11 @@ def native_string(input_var):
     return input_var.decode('utf-8', 'replace')
 
 
-def run_get_resource_yaml(namespace, resource_type, k8s_cli):
+def run_get_resource_yaml(namespace, resource_type, k8s_cli, selector=""):
     """
         Runs kubectl get command with yaml format
     """
-    cmd = "{} get -n {} {} -o yaml".format(k8s_cli, namespace, resource_type)
+    cmd = "{} get -n {} {} {} -o yaml".format(k8s_cli, namespace, resource_type, selector)
     error_template = "Namespace '{}': Failed to get {} resource: {{}}.".format(namespace, resource_type)
     return run_shell_command_with_retries(cmd, KUBCTL_GET_YAML_RETRIES, error_template)
 
@@ -795,11 +927,11 @@ def run_shell_command_timeout(args, cwd=None, shell=True, env=None):
     return piped_process.returncode, native_string(output)
 
 
-def describe_resource(namespace, resource_type, k8s_cli):
+def describe_resource(namespace, resource_type, k8s_cli, selector=""):
     """
         Runs kubectl describe command
     """
-    cmd = "{} describe -n {} {}".format(k8s_cli, namespace, resource_type)
+    cmd = "{} describe -n {} {} {}".format(k8s_cli, namespace, resource_type, selector)
     error_template = "Namespace '{}': Failed to describe {} resource: {{}}.".format(namespace, resource_type)
     return run_shell_command_with_retries(cmd, KUBCTL_DESCRIBE_RETRIES, error_template)
 
@@ -828,6 +960,13 @@ if __name__ == "__main__":
                         help="Which K8s cli client to use (kubectl/oc/auto-detect). "
                              "Defaults to auto-detect (chooses between \"kubectl\" and \"oc\"). "
                              "Full paths can also be used.")
+    parser.add_argument('-m', '--mode', action="store", type=str, default=MODE_RESTRICTED,
+                        help="in which mode to run the log collector. The options are:"
+                             "1. all - collect all resources"
+                             "2. restricted (default) - collect only resources that are related to the operaotr,"
+                             " and has the label \"app=redis-enterprise\". ")
+    parser.add_argument('--skip-version-check', action="store_true",
+                        help="skip the version check")
 
     # pylint: disable=locally-disabled, invalid-name
     results = parser.parse_args()
@@ -839,4 +978,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
     logger.info("Started Redis Enterprise k8s log collector")
-    run(results.namespace, results.output_dir, results.logs_from_all_pods, results.k8s_cli)
+    if results.skip_version_check:
+        logger.info("skipping version check")
+    else:
+        logger.info("Checking version compatible")
+    run(results.namespace, results.output_dir, results.logs_from_all_pods, results.k8s_cli, results.mode,
+        results.skip_version_check)

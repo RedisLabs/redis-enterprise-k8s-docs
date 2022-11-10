@@ -2,12 +2,14 @@ apiVersion: app.redislabs.com/v1
 kind: RedisEnterpriseCluster
 metadata:
   name: rec
+  labels:
+    app: redis-enterprise
 spec:
   # Add fields here
   nodes: 3
   redisEnterpriseImageSpec:
     repository: registry.connect.redhat.com/redislabs/redis-enterprise
-    versionTag: 6.2.12-82.rhel8-openshift
+    versionTag: 6.2.18-58.rhel8-openshift
   redisEnterpriseServicesRiggerImageSpec:
     repository: registry.connect.redhat.com/redislabs/services-manager
   bootstrapperImageSpec:

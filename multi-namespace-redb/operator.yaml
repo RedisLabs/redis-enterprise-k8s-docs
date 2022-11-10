@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis-enterprise-operator
+  labels:
+    app: redis-enterprise
 spec:
   replicas: 1
   selector:
@@ -11,11 +13,12 @@ spec:
     metadata:
       labels:
         name: redis-enterprise-operator
+        app: redis-enterprise
     spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:6.2.12-1
+          image: redislabs/operator:6.2.18-3
           command:
           - redis-enterprise-operator
           imagePullPolicy: Always
@@ -57,7 +60,7 @@ spec:
               port: 8080
               scheme: HTTP
         - name: admission
-          image: redislabs/operator:6.2.12-1
+          image: redislabs/operator:6.2.18-3
           command:
             - /usr/local/bin/admission
           imagePullPolicy: Always

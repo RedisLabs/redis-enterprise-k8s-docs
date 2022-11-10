@@ -16,6 +16,8 @@ kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: redb-role
+  labels:
+    app: redis-enterprise
 rules:
   - apiGroups:
       - app.redislabs.com
@@ -41,6 +43,8 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: redb-role
+  labels:
+    app: redis-enterprise
 subjects:
 - kind: ServiceAccount
   name: redis-enterprise-operator

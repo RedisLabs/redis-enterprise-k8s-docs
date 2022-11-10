@@ -17,10 +17,6 @@ Redis Enterprise operator, the following prerequisites must be met:
   SSD is mouted at the same path. This is critical for the next steps.
 * The locally attached NVMe SSDs must be provisioned as persistent volumes, and assigned
   a unique storage class name.
-* RoF is currently in preview. For this feature to take effect, 
-  set a boolean environment variable with the name \"ENABLE_ALPHA_FEATURES\" to True. 
-  This variable can be set via the redis-enterprise-operator pod spec, 
-  or through the operator-environment-config Config Map.
 
 ### Formatting and mounting locally attached SSDs
 Some cloud providers will automatically format and mount locally attached SSDs for you.
@@ -170,6 +166,8 @@ apiVersion: app.redislabs.com/v1
 kind: RedisEnterpriseCluster
 metadata:
   name: "rec"
+  labels:
+    app: redis-enterprise
 spec:
   # Add fields here
   nodes: 3
@@ -191,6 +189,8 @@ apiVersion: app.redislabs.com/v1alpha1
 kind: RedisEnterpriseDatabase
 metadata:
   name: rof-redb
+  labels:
+    app: redis-enterprise
 spec:
   redisEnterpriseCluster:
     name: rec

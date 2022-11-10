@@ -134,6 +134,8 @@ Hashicorp Vault and the Redis Enterprise Operator can be deployed in multiple sc
     kind: RedisEnterpriseCluster
     metadata:
       name: rec
+      labels:
+        app: redis-enterprise
     spec:
       # Add fields here
       nodes: 3

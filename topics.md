@@ -64,6 +64,8 @@ apiVersion: app.redislabs.com/v1
 kind: RedisEnterpriseCluster
 metadata:
   name: example-redisenterprisecluster
+  labels:
+    app: redis-enterprise
 spec:
   nodes: 3
   nodeSelector:
@@ -199,35 +201,6 @@ Or you can run patch command -(here it sets its value to 20s, replace with the v
 kubectl patch deployment redis-enterprise-operator  --type json   -p='[{"op": "replace", "path": "/spec/template/spec/containers/1/livenessProbe/initialDelaySeconds", "value":20}]'
 ```
 
-## Handling password rotation using `/v1/users/password`
-Currently, requests to `/v1/users/password` must be routed to the master node (this constraint may be dropped
-in the future).
-The default headless service created by the operator, however, has a pod selector corresponding with all cluster
-nodes, master and non-masters alike. As a result, this service is not suitable for requests that must address
-the master node directly, since they are not guaranteed to be routed to the pod running the master node.
-In order to use `/v1/users/password` API endpoint, we recommend manually creating a headless
-service similar to the default service created by the operator, with the addition of a master pod selector,
-as in the following example:
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  creationTimestamp: "2022-04-19T15:00:44Z"
-  labels:
-    app: redis-enterprise
-    redis.io/cluster: <your cluster name>
-  name: rec-master
-spec:
-  ...
-  selector:
-    app: redis-enterprise
-    redis.io/cluster: rec
-    redis.io/role: node
-    redis.io/role-master: "1"
-```
-
-Sending `/v1/users/password` requests to the master node using this service should work fine.
-
 ## Host machine time zone propagation
 You can propagate the host machine time zone by mounting `/etc/localtime` from the host
 to all Redis Enterprise containers, using a hostPath volume.
@@ -275,6 +248,8 @@ apiVersion: app.redislabs.com/v1
 kind: RedisEnterpriseCluster
 metadata:
   name: rec
+  labels:
+    app: redis-enterprise
 spec:
   nodes: 3
   containerTimezone:
