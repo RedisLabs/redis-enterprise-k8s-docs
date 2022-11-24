@@ -29,7 +29,7 @@ FIRST_VERSION_SUPPORTING_RESTRICTED = "6.2.18-3"
 
 RS_LOG_FOLDER_PATH = "/var/opt/redislabs/log"
 logger = logging.getLogger(__name__)
-VERSION_LOG_COLLECTOR = "100.0.8-1506"
+VERSION_LOG_COLLECTOR = "6.2.18-3a"
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
 
