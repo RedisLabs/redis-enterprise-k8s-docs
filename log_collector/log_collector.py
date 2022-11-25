@@ -18,15 +18,18 @@ import tarfile
 import time
 from collections import OrderedDict
 from multiprocessing import Process
+# pylint: disable=E0401
+from packaging import version as packaging_version  # type: ignore
 
 RLEC_CONTAINER_NAME = "redis-enterprise-node"
 OPERATOR_LABEL = "app=redis-enterprise"
 MODE_RESTRICTED = "restricted"
 MODE_ALL = "all"
+FIRST_VERSION_SUPPORTING_RESTRICTED = "6.2.18-3"
 
 RS_LOG_FOLDER_PATH = "/var/opt/redislabs/log"
 logger = logging.getLogger(__name__)
-VERSION_LOG_COLLECTOR = "6.2.18-3"
+VERSION_LOG_COLLECTOR = "6.2.18-3a"
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
 
@@ -39,7 +42,7 @@ TIMEOUT = 180
 DEFAULT_K8S_CLI = "kubectl"
 OC_K8S_CLI = "oc"
 
-API_RESOURCES = [
+RESTRICTED_MODE_API_RESOURCES = [
     "RedisEnterpriseCluster",
     "RedisEnterpriseDatabase",
     "RedisEnterpriseRemoteCluster",
@@ -54,26 +57,29 @@ API_RESOURCES = [
     "RoleBinding",
     "PersistentVolume",
     "PersistentVolumeClaim",
-    "Node",
     "PodDisruptionBudget",
-    "ResourceQuota",
     "Endpoints",
     "Pod",
-    "NetworkPolicy",
     "CustomResourceDefinition",
-    "CertificateSigningRequest",
     "ValidatingWebhookConfiguration",
     "NamespacedValidatingType",
     "NamespacedValidatingRule",
+    "PodSecurityPolicy"
+]
+
+ALL_ONLY_API_RESOURCES = [
+    "Node",
+    "ResourceQuota",
+    "NetworkPolicy",
+    "CertificateSigningRequest",
     "ClusterRole",
     "ClusterRoleBinding",
     "ClusterServiceVersion",
     "Subscription",
     "InstallPlan",
     "CatalogSource",
-    "PodSecurityPolicy",
     "ReplicaSet",
-    "StorageClass",
+    "StorageClass"
 ]
 
 
@@ -135,7 +141,9 @@ def _get_namespaces_to_run_on(namespace, k8s_cli):
     return existing_namespaces
 
 
-def collect_from_ns(namespace, output_dir, logs_from_all_pods=False, k8s_cli_input="", mode=MODE_RESTRICTED):
+# pylint: disable=R0913
+def collect_from_ns(namespace, output_dir, api_resources, logs_from_all_pods=False, k8s_cli_input="",
+                    mode=MODE_RESTRICTED):
     "Collect the context of a specific namespace. Typically runs in parallel processes."
     k8s_cli = detect_k8s_cli(k8s_cli_input)
     logger.info("Started collecting from namespace '%s'", namespace)
@@ -151,8 +159,8 @@ def collect_from_ns(namespace, output_dir, logs_from_all_pods=False, k8s_cli_inp
     collect_pod_rs_logs(namespace, ns_output_dir, k8s_cli, mode)
     collect_resources_list(namespace, ns_output_dir, k8s_cli, mode)
     collect_events(namespace, ns_output_dir, k8s_cli, mode)
-    collect_api_resources(namespace, ns_output_dir, k8s_cli, selector)
-    collect_api_resources_description(namespace, ns_output_dir, k8s_cli, selector)
+    collect_api_resources(namespace, ns_output_dir, k8s_cli, api_resources, selector)
+    collect_api_resources_description(namespace, ns_output_dir, k8s_cli, api_resources, selector)
     collect_pods_logs(namespace, ns_output_dir, k8s_cli, logs_from_all_pods)
 
 
@@ -188,11 +196,10 @@ def detect_k8s_cli(k8s_cli_input=""):
     return DEFAULT_K8S_CLI
 
 
-def compare_versions(k8s_cli, namespaces):
+def get_operator_version(k8s_cli, namespaces):
     """
         Compare operator version with the current log_collector version.
     """
-    operator_version = ""
     for namespace in namespaces:
         cmd = "{} get deployment redis-enterprise-operator -o jsonpath=" \
               "\"{{.spec.template.spec.containers[0].image}}\" -n {}".format(k8s_cli, namespace)
@@ -203,51 +210,87 @@ def compare_versions(k8s_cli, namespaces):
         if len(operator_version) == 2:
             logger.info("running with operator version: %s and log collector version: %s",
                         operator_version[1], VERSION_LOG_COLLECTOR)
-            return operator_version[1] == VERSION_LOG_COLLECTOR
-    logger.info("could not find operator version - running log collector")
-    return True
+            return operator_version[1]
+    logger.info("could not find operator version")
+    return ""
 
 
-def run(namespace_input, output_dir, logs_from_all_pods=False, k8s_cli_input="",  # pylint: disable=R0913
-        mode=MODE_RESTRICTED,
-        skip_version_check=False):
+def validate_mode(mode, operator_version):
+    """
+       for old versions there is no way to use restricted because resources are missing labels
+    """
+    if mode == MODE_RESTRICTED and packaging_version.parse(operator_version) < packaging_version.parse(
+            FIRST_VERSION_SUPPORTING_RESTRICTED):
+        raise ValueError("{} is not supported for this version, please use {}".format(MODE_RESTRICTED, MODE_ALL))
+
+
+def determine_default_mode(operator_version):
+    """
+        check the version of the operator (if it is running)
+        the default mode is ALL before 6.2.18 and RESTRICTED afterwards
+    """
+    if operator_version == "" or packaging_version.parse(operator_version) >= packaging_version.parse(
+            FIRST_VERSION_SUPPORTING_RESTRICTED):
+        return MODE_RESTRICTED
+
+    return MODE_ALL
+
+
+def run(results):
     """
         Collect logs
     """
+    logger.info("Started Redis Enterprise k8s log collector")
+
     start_time = time.time()
-    k8s_cli = detect_k8s_cli(k8s_cli_input)
+    k8s_cli = detect_k8s_cli(results.k8s_cli)
+    namespace_input = results.namespace
+
     namespaces = _get_namespaces_to_run_on(namespace_input, k8s_cli)
+    logs_from_all_pods = results.logs_from_all_pods
+
+    # pylint: disable=global-statement, invalid-name
+    global TIMEOUT
+    # pylint: disable=locally-disabled, invalid-name
+    TIMEOUT = results.timeout
+
+    mode = results.mode
+    operator_version = get_operator_version(k8s_cli, namespaces)
+    if mode:
+        validate_mode(mode, operator_version)
+    else:
+        mode = determine_default_mode(operator_version)
+
+    api_resources = RESTRICTED_MODE_API_RESOURCES
+    if mode == MODE_ALL:
+        api_resources = api_resources + ALL_ONLY_API_RESOURCES
 
     output_file_name = "redis_enterprise_k8s_debug_info_{}".format(TIME_FORMAT)
+    output_dir = results.output_dir
     if not output_dir:
-        # if not specified, use cwd
         output_dir = os.getcwd()
     output_dir = os.path.join(output_dir, output_file_name)
     make_dir(output_dir)
     collect_cluster_info(output_dir, k8s_cli)
 
-    if not skip_version_check:
-        if not compare_versions(k8s_cli, namespaces):
-            logger.info("Log collector version is not compatible with current operator version."
-                        "Stopping Redis Enterprise log collector")
-            return
     processes = []
     for namespace in namespaces:
-        proc = Process(target=collect_from_ns, args=[namespace, output_dir, logs_from_all_pods, k8s_cli_input, mode])
+        proc = Process(target=collect_from_ns,
+                       args=[namespace, output_dir, api_resources, logs_from_all_pods, k8s_cli, mode])
         proc.start()
         processes.append(proc)
 
     for proc in processes:
         proc.join()
 
-    create_collection_report(output_dir, output_file_name, k8s_cli, namespaces, start_time)
+    create_collection_report(output_dir, output_file_name, k8s_cli, namespaces, start_time, mode)
 
     archive_files(output_dir, output_file_name)
     logger.info("Finished Redis Enterprise log collector")
     logger.info("--- Run time: %d minutes ---", round(((time.time() - start_time) / 60), 3))
 
 
-def create_collection_report(output_dir, output_file_name, k8s_cli, namespaces, start_time):
+def create_collection_report(output_dir, output_file_name, k8s_cli, namespaces, start_time, mode):
     """
         create a file with some data about the collection
     """
@@ -257,7 +300,9 @@ def create_collection_report(output_dir, output_file_name, k8s_cli, namespaces, 
             "output_file_name": output_file_name,
             "k8s_cli": k8s_cli,
             "namespaces": namespaces,
-            "start_time": start_time
+            "start_time": start_time,
+            "mode": mode,
+            "log_collector_version": VERSION_LOG_COLLECTOR
         }, output_fh)
 
 
@@ -372,8 +417,8 @@ def create_debug_info_package_on_pod(namespace, pod_name, attempt, k8s_cli):
     return None
 
 
-def download_debug_info_package_from_pod(       # pylint: disable=R0913
-    namespace, output_dir, pod_name, attempt, k8s_cli, debug_file_path, debug_file_name
+def download_debug_info_package_from_pod(  # pylint: disable=R0913
+        namespace, output_dir, pod_name, attempt, k8s_cli, debug_file_path, debug_file_name
 ):
     """
     This function attempt to download debug info package from a given pod.
@@ -397,7 +442,7 @@ def download_debug_info_package_from_pod(       # pylint: disable=R0913
 
 
 def create_and_download_debug_info_package_from_pod(
-    namespace, pod_name, output_dir, k8s_cli
+        namespace, pod_name, output_dir, k8s_cli
 ):
     """
     This function attempts to create a debug info package on a pod and if debug
@@ -419,7 +464,7 @@ def create_and_download_debug_info_package_from_pod(
     (debug_info_path, debug_info_file_name) = debug_info_path_and_name
     for attempt in range(DEBUG_INFO_PACKAGE_RETRIES):
         if download_debug_info_package_from_pod(
-            namespace, output_dir, pod_name, attempt + 1, k8s_cli, debug_info_path, debug_info_file_name
+                namespace, output_dir, pod_name, attempt + 1, k8s_cli, debug_info_path, debug_info_file_name
         ):
             logger.info(
                 "Namespace '%s': Collected Redis Enterprise cluster debug package from pod: %s",
@@ -496,8 +541,7 @@ def collect_events(namespace, output_dir, k8s_cli, mode=MODE_RESTRICTED):
         kubectl get event -o yaml
     """
     if mode != MODE_ALL:
-        logger.warning("Cannot collect events when labels is specified - "
-                       "skipping events collection")
+        logger.warning('Cannot collect events in "restricted" mode - skipping events collection')
         return
     # events need -n parameter in kubectl
     if not namespace:
@@ -514,14 +558,14 @@ def collect_events(namespace, output_dir, k8s_cli, mode=MODE_RESTRICTED):
         file_handle.write(output)
 
 
-def collect_api_resources(namespace, output_dir, k8s_cli, selector=""):
+def collect_api_resources(namespace, output_dir, k8s_cli, api_resources, selector=""):
     """
         Creates file for each of the API resources
         with the output of kubectl get <resource> -o yaml
     """
     logger.info("Namespace '%s': Collecting API resources", namespace)
     resources_out = OrderedDict()
-    for resource in API_RESOURCES:
+    for resource in api_resources:
         output = run_get_resource_yaml(namespace, resource, k8s_cli, selector)
         if output:
             resources_out[resource] = output
@@ -535,14 +579,14 @@ def collect_api_resources(namespace, output_dir, k8s_cli, selector=""):
             file_handle.write(out)
 
 
-def collect_api_resources_description(namespace, output_dir, k8s_cli, selector=""):
+def collect_api_resources_description(namespace, output_dir, k8s_cli, api_resources, selector=""):
     """
         Creates file for each of the API resources
         with the output of kubectl describe <resource>
     """
     logger.info("Namespace '%s': Collecting API resources description", namespace)
     resources_out = OrderedDict()
-    for resource in API_RESOURCES:
+    for resource in api_resources:
         output = describe_resource(namespace, resource, k8s_cli, selector)
         if output:
             resources_out[resource] = output
@@ -936,6 +980,16 @@ def describe_resource(namespace, resource_type, k8s_cli, selector=""):
     return run_shell_command_with_retries(cmd, KUBCTL_DESCRIBE_RETRIES, error_template)
 
 
+def check_not_negative(value):
+    """
+        Validate a numeric option is not negative
+    """
+    ivalue = int(value)
+    if ivalue < 0:
+        raise argparse.ArgumentTypeError("%s can't be less than 0" % value)
+    return ivalue
+
+
 if __name__ == "__main__":
     logger.setLevel(logging.INFO)
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
@@ -951,7 +1005,7 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--logs_from_all_pods', action="store_true",
                         help="collect logs from all pods, not only the operator and pods run by the operator")
     parser.add_argument('-t', '--timeout', action="store",
-                        type=int, default=TIMEOUT,
+                        type=check_not_negative, default=TIMEOUT,
                         help="time to wait for external commands to "
                              "finish execution "
                              "(default: 180s, specify 0 to not timeout) "
@@ -960,27 +1014,12 @@ if __name__ == "__main__":
                         help="Which K8s cli client to use (kubectl/oc/auto-detect). "
                              "Defaults to auto-detect (chooses between \"kubectl\" and \"oc\"). "
                              "Full paths can also be used.")
-    parser.add_argument('-m', '--mode', action="store", type=str, default=MODE_RESTRICTED,
-                        help="in which mode to run the log collector. The options are:"
-                             "1. all - collect all resources"
-                             "2. restricted (default) - collect only resources that are related to the operaotr,"
-                             " and has the label \"app=redis-enterprise\". ")
-    parser.add_argument('--skip-version-check', action="store_true",
-                        help="skip the version check")
+    parser.add_argument('-m', '--mode', action="store", type=str,
+                        choices=[MODE_RESTRICTED, MODE_ALL],
+                        help="Which mode to run the log collector. The options are:"
+                             "1. restricted (default for clusters of version 6.2.18 and newer) - "
+                             "collect only resources that are related to the operator,"
+                             " and has the label \"app=redis-enterprise\". "
+                             "2. all - collect all resources")
 
-    # pylint: disable=locally-disabled, invalid-name
-    results = parser.parse_args()
-
-    # pylint: disable=locally-disabled, invalid-name
-    TIMEOUT = results.timeout
-    if TIMEOUT < 0:
-        logger.error("timeout can't be less than 0")
-        sys.exit(1)
-
-    logger.info("Started Redis Enterprise k8s log collector")
-    if results.skip_version_check:
-        logger.info("skipping version check")
-    else:
-        logger.info("Checking version compatible")
-    run(results.namespace, results.output_dir, results.logs_from_all_pods, results.k8s_cli, results.mode,
-        results.skip_version_check)
+    run(parser.parse_args())
