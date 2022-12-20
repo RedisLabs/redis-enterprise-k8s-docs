@@ -14769,7 +14769,7 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.2.18-3
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.2.18-41
           securityContext:
             runAsUser: 1001
           command:
@@ -14815,7 +14815,7 @@ spec:
               port: 8080
               scheme: HTTP
         - name: admission
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.2.18-3
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.2.18-41
           command:
             - /usr/local/bin/admission
           imagePullPolicy: Always
