@@ -18,8 +18,6 @@ import tarfile
 import time
 from collections import OrderedDict
 from multiprocessing import Process
-# pylint: disable=E0401
-from packaging import version as packaging_version  # type: ignore
 
 RLEC_CONTAINER_NAME = "redis-enterprise-node"
 OPERATOR_LABEL = "app=redis-enterprise"
@@ -29,7 +27,7 @@ FIRST_VERSION_SUPPORTING_RESTRICTED = "6.2.18-3"
 
 RS_LOG_FOLDER_PATH = "/var/opt/redislabs/log"
 logger = logging.getLogger(__name__)
-VERSION_LOG_COLLECTOR = "6.2.18-3a"
+VERSION_LOG_COLLECTOR = "6.2.18-41"
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
 
@@ -80,6 +78,14 @@ ALL_ONLY_API_RESOURCES = [
     "CatalogSource",
     "ReplicaSet",
     "StorageClass"
+]
+
+SHA_DIGESTS_BEFORE_RESTRICTED_MODE_SUPPORT = [
+    "0f144922ea1e2d4ea72affb36238258c9f21c39d6ba9ad73da79278dde1eed37",
+    "97ffbde86f27810b1a5e6fee7ec53683f49b650cc33c327696be66d04e10bf31",
+    "53b008cecf3807d51f027f21029b63dc5ad8c002c5278554ce79c008f1b97bbb",
+    "b771ef87bf211c17c37df028c202aac97170fb6d7d5d49b3ccb3410deb8212f6",
+    "2a033d4a4ccabb4963116add69fc8e91770ee627f6b974879d8dd7ddddebce47"
 ]
 
 
@@ -196,41 +202,92 @@ def detect_k8s_cli(k8s_cli_input=""):
     return DEFAULT_K8S_CLI
 
 
-def get_operator_version(k8s_cli, namespaces):
+def parse_operator_deployment(k8s_cli, namespaces):
     """
         Compare operator version with the current log_collector version.
     """
     for namespace in namespaces:
-        cmd = "{} get deployment redis-enterprise-operator -o jsonpath=" \
-              "\"{{.spec.template.spec.containers[0].image}}\" -n {}".format(k8s_cli, namespace)
-        return_code, out = run_shell_command(cmd)
-        if return_code or not out:
-            continue
-        operator_version = str.split(out, ":")
-        if len(operator_version) == 2:
-            logger.info("running with operator version: %s and log collector version: %s",
-                        operator_version[1], VERSION_LOG_COLLECTOR)
-            return operator_version[1]
+        try:
+            cmd = "{} get deployment redis-enterprise-operator -o jsonpath=" \
+                  "\"{{.spec.template.spec.containers[0].image}}\" -n {}".format(k8s_cli, namespace)
+            return_code, out = run_shell_command(cmd)
+            if return_code or not out:
+                continue
+
+            uses_sha = "@sha256" in out
+
+            operator_version = str.split(out, ":")
+            if len(operator_version) == 2:
+                logger.info("running with operator version: %s and log collector version: %s",
+                            operator_version[1], VERSION_LOG_COLLECTOR)
+                return operator_version[1], uses_sha
+        # pylint: disable=W0703
+        except Exception:
+            logger.info("Failed to parse operator deployment, ignoring ns %s", namespace)
     logger.info("could not find operator version")
-    return ""
+    return "", False
 
 
-def validate_mode(mode, operator_version):
+def validate_mode(mode, operator_tag, is_sha_digest):
     """
        for old versions there is no way to use restricted because resources are missing labels
     """
-    if mode == MODE_RESTRICTED and packaging_version.parse(operator_version) < packaging_version.parse(
-            FIRST_VERSION_SUPPORTING_RESTRICTED):
+    version_supports_restricted = check_if_tag_supports_restricted(operator_tag, is_sha_digest)
+    if mode == MODE_RESTRICTED and not version_supports_restricted:
         raise ValueError("{} is not supported for this version, please use {}".format(MODE_RESTRICTED, MODE_ALL))
 
 
-def determine_default_mode(operator_version):
+def is_old_sha(operator_tag):
     """
-        check the version of the operator (if it is running)
-        the default mode is ALL before 6.2.18 and RESTRICTED afterwards
+    Check if the sha of the operator is older than the first that supports restricted
+    Note - we only started using digests recently so there is no need to list all of them
     """
-    if operator_version == "" or packaging_version.parse(operator_version) >= packaging_version.parse(
-            FIRST_VERSION_SUPPORTING_RESTRICTED):
+    return operator_tag in SHA_DIGESTS_BEFORE_RESTRICTED_MODE_SUPPORT
+
+
+def check_if_tag_supports_restricted(operator_tag, is_sha_digest):
+    """
+    Handle both sha tags and versions and check if they support restricted
+    """
+    version_supports_restricted = True
+    if is_sha_digest:
+        if is_old_sha(operator_tag):
+            version_supports_restricted = False
+    else:
+        version_supports_restricted = check_if_version_supports_restricted(operator_tag)
+    return version_supports_restricted
+
+
+def check_if_version_supports_restricted(operator_version):
+    """
+    Compare the version to 6.2.18-3 which is the first version supporting restricted
+    Note - apparently there is no function in Python that is built in and supports that
+    """
+    try:
+        the_version = operator_version.split("-")[0]
+
+        parts = the_version.split(".")
+        if int(parts[0]) < 6:
+            return False
+        if int(parts[0]) >= 7:
+            return True
+        if int(parts[1]) > 2:
+            return True
+        if int(parts[1]) < 2:
+            return False
+        return int(parts[2]) >= 18
+    # pylint: disable=W0703
+    except Exception:
+        logger.info("issues parsing version %s", operator_version)
+        return True
+
+
+def determine_default_mode(operator_tag, is_sha_digest):
+    """
+    determine the default mode based on the version/sha digest
+    """
+    version_supports_restricted = check_if_tag_supports_restricted(operator_tag, is_sha_digest)
+    if operator_tag == "" or version_supports_restricted:
         return MODE_RESTRICTED
 
     return MODE_ALL
@@ -255,11 +312,11 @@ def run(results):
     TIMEOUT = results.timeout
 
     mode = results.mode
-    operator_version = get_operator_version(k8s_cli, namespaces)
+    operator_tag, is_sha_digest = parse_operator_deployment(k8s_cli, namespaces)
     if mode:
-        validate_mode(mode, operator_version)
+        validate_mode(mode, operator_tag, is_sha_digest)
     else:
-        mode = determine_default_mode(operator_version)
+        mode = determine_default_mode(operator_tag, is_sha_digest)
 
     api_resources = RESTRICTED_MODE_API_RESOURCES
     if mode == MODE_ALL:
