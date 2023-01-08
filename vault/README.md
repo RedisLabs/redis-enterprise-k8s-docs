@@ -4,7 +4,7 @@ Hashicorp Vault can be configured as the source of secrets used by the Redis Ent
 
 Clarification: when running in Vault mode, all secrets referenced in the Redis Enterprise custom resources are read from
 Vault instead of from Kubernetes Secrets. This includes credentials to access the cluster and databases, certificates,
-license, credentials to access backup storage targets, LDAP servers, etc.<br> For a full list of secrets that can be
+license, credentials to access backup storage targets, etc.<br> For a full list of secrets that can be
 specified, please refer to the [`RedisEnterpriseCluster`](../redis_enterprise_cluster_api.md)
 and [`RedisEnterpriseDatabase`](../redis_enterprise_database_api.md) API reference pages.
 
@@ -165,7 +165,6 @@ These are the certificates and their field name in the REC:
 * Metrics Exporter Certificate: metricsExporterCertificateSecretName
 * Proxy Certificate: proxyCertificateSecretName
 * Syncer Certificate: syncerCertificateSecretName
-* LDAP client Certificate: ldapClientCertificateSecretName
 
 You can read more about the different certificates [Here](../redis_enterprise_cluster_api.md#rsclustercertificates)
 
@@ -189,7 +188,6 @@ spec:
     metricsExporterCertificateSecretName: <VAULT SECRET NAME HERE>
     proxyCertificateSecretName: <VAULT SECRET NAME HERE>
     syncerCertificateSecretName: <VAULT SECRET NAME HERE>
-    ldapClientCertificateSecretName: <VAULT SECRET NAME HERE>
 
   # vault configuration as explained above: 
   clusterCredentialSecretType: vault
