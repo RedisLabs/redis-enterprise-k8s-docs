@@ -1,23 +1,24 @@
 # Integrating the Redis Enterprise Operator with Hashicorp Vault
 ## Overview
-Hashicorp Vault can be used to store secrets as an alternative to K8s secrets.<br>
-Hashicorp Vault can be configured as the source of secrets used by the Redis Enterprise K8s operator. For now, <br>
-the following items are supported:
-* Redis Enterprise Cluster Credentials
-* REDB admission TLS cert
-* REDB secrets:
-    * Replica of
-    * Backup credentials
-    * TLS keys
-    * default user secret
+Hashicorp Vault can be configured as the source of secrets used by the Redis Enterprise K8s operator as an alternative to Kubernetes secrets.<br>
 
-This document explains how to use Hashicorp Vault as a source for secrets.
+Clarification: when running in Vault mode, all secrets referenced in the Redis Enterprise custom resources are read from
+Vault instead of from Kubernetes Secrets. This includes credentials to access the cluster and databases, certificates,
+license, credentials to access backup storage targets, etc.<br> For a full list of secrets that can be
+specified, please refer to the [`RedisEnterpriseCluster`](../redis_enterprise_cluster_api.md)
+and [`RedisEnterpriseDatabase`](../redis_enterprise_database_api.md) API reference pages.
 
+To configure the operator to read secrets from Vault, set `.spec.clusterCredentialSecretType: "vault"` in the `RedisEnterpriseCluster` resource. This will be further explained next.
+
+How to use Hashicorp Vault as a source for secrets:
 1. [ Prerequisites ](#prerequisites)
 2. [ Deployment ](#deployment)
 3. [ Deploying the operator ](#deployment_operator)
 4. [ Creating the REC ](#deployment_rec)
-5. [ Creating an REDB ](#deployment_redb)
+5. [ REC secrets ](#example_rec)
+6. [ Deploy REDB admission Controller ](#redb-admission)
+7. [ Creating an REDB](#deployment_redb)
+8. [ REDB secrets ](#redb_secrets)
 
 > Note: when using Openshift it might be recommended to use oc instead of kubectl 
 <a name="prerequisites"></a>
@@ -148,9 +149,66 @@ Hashicorp Vault and the Redis Enterprise Operator can be deployed in multiple sc
           vault.hashicorp.com/namespace: <VAULT_NAMESPACE>
     ```
    > Note -  the "clusterCredentialSecretName" field as used to query the secret from Hashicorp Vault. See section below for explanation about secret name field values.
+
+<a name="example_rec"></a>
+### Redis Enterprise Cluster secrets
+> The full and detailed REC fields documentation can be found [here](../redis_enterprise_cluster_api.md)
+
+#### Cluster credentials and license fields:
+* Cluster Credential Secret: `clusterCredentialSecretName`
+* License Secret: `licenseSecretName`
+
+#### Certificates:
+These are the certificates and their field name in the REC:
+* API Certificate: apiCertificateSecretName
+* CM Certificate: cmCertificateSecretName
+* Metrics Exporter Certificate: metricsExporterCertificateSecretName
+* Proxy Certificate: proxyCertificateSecretName
+* Syncer Certificate: syncerCertificateSecretName
+
+You can read more about the different certificates [Here](../redis_enterprise_cluster_api.md#rsclustercertificates)
+
+<details><summary><b>Show REC example</b></summary>
+
+```
+apiVersion: app.redislabs.com/v1
+kind: RedisEnterpriseCluster
+metadata:
+  name: rec
+  labels:
+    app: redis-enterprise
+spec:
+  nodes: 3
+  
+  licenseSecretName: <VAULT SECRET NAME HERE>
+  clusterCredentialSecretName: <VAULT SECRET NAME HERE>
+  certificates:
+    apiCertificateSecretName: <VAULT SECRET NAME HERE>
+    cmCertificateSecretName: <VAULT SECRET NAME HERE>
+    metricsExporterCertificateSecretName: <VAULT SECRET NAME HERE>
+    proxyCertificateSecretName: <VAULT SECRET NAME HERE>
+    syncerCertificateSecretName: <VAULT SECRET NAME HERE>
+
+  # vault configuration as explained above: 
+  clusterCredentialSecretType: vault
+  clusterCredentialSecretRole: redis-enterprise-rec-<K8S_NAMESPACE>
+  vaultCASecret: vault-ca-cert
+  podAnnotations:
+      vault.hashicorp.com/auth-path: auth/<AUTH_PATH>
+      vault.hashicorp.com/namespace: <VAULT_NAMESPACE>
+```
+Edit and apply the rec.yaml or use patch like in this example, which sets API Certificate secret name: 
+```
+  kubectl patch rec rec --type merge --patch "{\"spec\": \
+    {\"certificates\": \
+      {\"apiCertificateSecretName\": \"<VAULT SECRET NAME HERE>\" }}}"
+```
+</details>
+
+<a name="redb-admission"></a>
 ### Deploy REDB admission controller (for OLM this is not needed)
 It is not recommended to use the admission bundle here if you want to avoid creation of K8s secrets.
-Instead, do a step by step installation.   
+Instead, do a step-by-step installation.   
 1. Create the Kubernetes Validating Webhook (for OLM this is not needed)
     **NOTE**: One must replace REPLACE_WITH_NAMESPACE in the following command with the namespace the REC was installed into.
 
@@ -175,12 +233,6 @@ Instead, do a step by step installation.
 
 <a name="deployment_redb"></a>
 ### Creating an REDB
-An REDB has several secrets associate with it:
-1. The password for the REDB
-2. [Replica Source](../redis_enterprise_database_api.md#replicasource) (optional)
-3. [Backup Credentials](../redis_enterprise_database_api.md#backupspec) (optional)
-4. [Client Auth](../redis_enterprise_database_api.md#redisenterprisedatabasespec) (optional)
- 
 Steps to create an REDB:
 1. Create a password in Vault in this path (change according to the specific configuration, see above)<br>
    `<VAULT_SECRET_ROOT>/<VAULT_SECRET_PREFIX>/redb-<REDB_NAME>`: <br>
@@ -193,3 +245,20 @@ Steps to create an REDB:
 3. The other REDB secrets (2 to 4) should be created in this path `redisenterprise-<K8S_NAMESPACE>/`. The secrets should comply with the 
    REDB [secrets schema](https://github.com/RedisLabs/redis-enterprise-operator/blob/master/deploy/redis_enterprise_database_api.md).
 > Note - when using the Redis Enterprise Vault plugin it recommended to set defaultUser: false and associate users through ACL bindings to the REDB
+
+<a name="redb_secrets"></a>
+### REDB secrets
+An REDB has several secrets associate with it as detailed here.<br> 
+1. The password for the REDB
+2. [Replica Source](../redis_enterprise_database_api.md#replicasource) (optional).<br>
+    Specifically: `clientKeySecret` and `serverCertSecret` fields which holds the Vault secret name
+3. [Backup Credentials](../redis_enterprise_database_api.md#backupspec) (optional)<br>
+    These are backup options, they contain (among other fields) a field for a secret used to access the backup.
+    * [S3 Storage](../redis_enterprise_database_api.md#s3storage): `awsSecretName`
+    * [sftp storage](../redis_enterprise_database_api.md#sftpstorage): `sftpSecretName`
+    * [Swift Storage](../redis_enterprise_database_api.md#SwiftStorage): `swiftSecretName`
+    * [Azure Blob Storage](../redis_enterprise_database_api.md#azureblobstorage): `absSecretName`
+    * [Google Storage](../redis_enterprise_database_api.md#googlestorage): `gcsSecretName`
+4. [Client Auth](../redis_enterprise_database_api.md#redisenterprisedatabasespec) (optional) - The Secrets containing TLS Client Certificate to use for Authentication
+> The full and detailed REDB fields documentation can be found [here](../redis_enterprise_database_api.md#redisenterprisedatabasespec)
+
