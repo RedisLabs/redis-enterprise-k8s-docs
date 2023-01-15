@@ -27,6 +27,8 @@ FIRST_VERSION_SUPPORTING_RESTRICTED = "6.2.18-3"
 
 RS_LOG_FOLDER_PATH = "/var/opt/redislabs/log"
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 VERSION_LOG_COLLECTOR = "6.2.18-41"
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
@@ -1048,8 +1050,6 @@ def check_not_negative(value):
 
 
 if __name__ == "__main__":
-    logger.setLevel(logging.INFO)
-    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
 
     # pylint: disable=locally-disabled, invalid-name
     parser = argparse.ArgumentParser(description='Redis Enterprise'
