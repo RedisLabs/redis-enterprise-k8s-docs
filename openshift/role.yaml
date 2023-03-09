@@ -14,8 +14,8 @@ rules:
                 "redisenterprisedatabases", "redisenterprisedatabases/status", "redisenterprisedatabases/finalizers",
                 "redisenterpriseremoteclusters", "redisenterpriseremoteclusters/status",
                 "redisenterpriseremoteclusters/finalizers",
-                "redisenterpriseactiveactivepeerings", "redisenterpriseactiveactivepeerings/status",
-                "redisenterpriseactiveactivepeerings/finalizers"]
+                "redisenterpriseactiveactivedatabases", "redisenterpriseactiveactivedatabases/status",
+                "redisenterpriseactiveactivedatabases/finalizers"]
     verbs: ["delete", "deletecollection", "get", "list", "patch", "create", "update", "watch"]
   - apiGroups: [""]
     resources: ["secrets"]
@@ -59,4 +59,8 @@ rules:
   - apiGroups: ["route.openshift.io"]
     resources: ["routes", "routes/custom-host"]
     verbs: ["create", "delete", "deletecollection", "get", "list", "patch", "update", "watch"]
+  - apiGroups: ["security.openshift.io"]
+    resourceNames: ["nonroot"]
+    resources: ["securitycontextconstraints"]
+    verbs: ["use"]
 

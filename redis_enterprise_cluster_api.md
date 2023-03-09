@@ -14,7 +14,13 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [CrdbWorker](#crdbworker)
   * [ImageSpec](#imagespec)
   * [IngressOrRouteSpec](#ingressorroutespec)
+  * [LDAPAuthenticationQuery](#ldapauthenticationquery)
+  * [LDAPAuthorizationQuery](#ldapauthorizationquery)
+  * [LDAPQuery](#ldapquery)
+  * [LDAPServer](#ldapserver)
+  * [LDAPSpec](#ldapspec)
   * [LicenseStatus](#licensestatus)
+  * [ManagedAPIs](#managedapis)
   * [MdnsServer](#mdnsserver)
   * [Module](#module)
   * [OcspConfiguration](#ocspconfiguration)
@@ -39,6 +45,8 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
 * [Enums](#enums)
   * [ClusterState](#clusterstate)
   * [IngressMethod](#ingressmethod)
+  * [LDAPProtocol](#ldapprotocol)
+  * [LDAPSearchScope](#ldapsearchscope)
   * [OperatingMode](#operatingmode)
   * [RedisOnFlashsStorageEngine](#redisonflashsstorageengine)
   * [ServiceType](#servicetype)
@@ -145,6 +153,59 @@ Image specification
 | ingressAnnotations | Additional annotations to set on ingress resources created by the operator | map[string]string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
+### LDAPAuthenticationQuery
+Configuration of LDAP authentication queries
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| template | Configuration for a template query. Mutually exclusive with the 'query' field. The substring '%u' will be replaced with the username, e.g., 'cn=%u,ou=dev,dc=example,dc=com'. | *string |  | false |
+| query | Configuration for a search query. Mutually exclusive with the 'template' field. The substring '%u' in the query filter will be replaced with the username. | *[LDAPQuery](#ldapquery) |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### LDAPAuthorizationQuery
+Configuration of LDAP authorization queries
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| attribute | Configuration for an attribute query. Mutually exclusive with the 'query' field. Holds the name of an attribute of the LDAP user entity that contains a list of the groups that the user belongs to. e.g., 'memberOf'. | *string |  | false |
+| query | Configuration for a search query. Mutually exclusive with the 'attribute' field. The substring '%D' in the query filter will be replaced with the user's Distinguished Name. | *[LDAPQuery](#ldapquery) |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### LDAPQuery
+Configuration for an LDAP search query.
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| base | The Distinguished Name of the entry at which to start the search, e.g., 'ou=dev,dc=example,dc=com'. | string |  | true |
+| filter | An RFC-4515 string representation of the filter to apply in the search. For an authentication query, the substring '%u' will be replaced with the username, e.g., '(cn=%u)'. For an authorization query, the substring '%D' will be replaced with the user's Distinguished Name, e.g., '(members=%D)'. | string |  | true |
+| scope | The search scope for an LDAP query. One of: BaseObject, SingleLevel, WholeSubtree | [LDAPSearchScope](#ldapsearchscope) |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### LDAPServer
+Address of an LDAP server.
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| host | Host name of the LDAP server | string |  | true |
+| port | Port number of the LDAP server. If unspecified, defaults to 389 for LDAP and STARTTLS protocols, and 636 for LDAPS protocol. | *uint32 |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### LDAPSpec
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| protocol | Specifies the LDAP protocol to use. One of: LDAP, LDAPS, STARTTLS. | [LDAPProtocol](#ldapprotocol) |  | true |
+| servers | One or more LDAP servers. If multiple servers are specified, they must all share an identical organization tree structure. | [][LDAPServer](#ldapserver) |  | true |
+| bindCredentialsSecretName | Name of a secret within the same namespace, holding the credentials used to communicate with the LDAP server for authentication queries. The secret must have a key named 'dn' with the Distinguished Name of the user to execute the query, and 'password' with its password. If left blank, credentials-based authentication is disabled. | *string |  | false |
+| caCertificateSecretName | Name of a secret within the same namespace, holding a PEM-encoded CA certificate for validating the TLS connection to the LDAP server. The secret must have a key named 'cert' with the certificate data. This field is applicable only when the protocol is LDAPS or STARTTLS. | *string |  | false |
+| enabledForControlPlane | Whether to enable LDAP for control plane access. Disabled by default. | bool |  | false |
+| enabledForDataPlane | Whether to enable LDAP for data plane access. Disabled by default. | bool |  | false |
+| cacheTTLSeconds | The maximum TTL of cached entries. | *int |  | false |
+| authenticationQuery | Configuration of authentication queries, mapping between the username, provided to the cluster for authentication, and the LDAP Distinguished Name. | [LDAPAuthenticationQuery](#ldapauthenticationquery) |  | true |
+| authorizationQuery | Configuration of authorization queries, mapping between a user's Distinguished Name and its group memberships. | [LDAPAuthorizationQuery](#ldapauthorizationquery) |  | true |
+[Back to Table of Contents](#table-of-contents)
+
 ### LicenseStatus
 
 
@@ -154,6 +215,14 @@ Image specification
 | activationDate | When the license was activated | string |  | true |
 | expirationDate | When the license will\has expired | string |  | true |
 | shardsLimit | Number of redis shards allowed under this license | int32 |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### ManagedAPIs
+Indicates cluster APIs that are being managed by the operator. This only applies to cluster APIs which are optionally-managed by the operator, such as cluster LDAP configuration. Most other APIs are automatically managed by the operator, and are not listed here.
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| ldap | Indicate whether cluster LDAP configuration is managed by the operator. When this is enabled, the operator will reconcile the cluster LDAP configuration according to the '.spec.ldap' field in the RedisEnterpriseCluster resource. | *bool |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### MdnsServer
@@ -229,11 +298,12 @@ Used to specify that the timezone is configured to match the host machine timezo
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| apiCertificateSecretName | Secret Name/Path to use for Cluster's API Certificate. If left blank, will use certificate provided by the cluster. | string |  | false |
-| cmCertificateSecretName | Secret Name/Path to use for Cluster's CM Certificate. If left blank, will use certificate provided by the cluster. | string |  | false |
-| metricsExporterCertificateSecretName | Secret Name/Path to use for Cluster's Metrics Exporter Certificate. If left blank, will use certificate provided by the cluster. | string |  | false |
-| proxyCertificateSecretName | Secret Name/Path to use for Cluster's Proxy Certificate. If left blank, will use certificate provided by the cluster. | string |  | false |
-| syncerCertificateSecretName | Secret Name/Path to use for Cluster's Syncer Certificate. If left blank, will use certificate provided by the cluster. | string |  | false |
+| apiCertificateSecretName | Secret name to use for cluster's API certificate. If left blank, a cluster-provided certificate will be used. | string |  | false |
+| cmCertificateSecretName | Secret name to use for cluster's CM (Cluster Manager) certificate. If left blank, a cluster-provided certificate will be used. | string |  | false |
+| metricsExporterCertificateSecretName | Secret name to use for cluster's Metrics Exporter certificate. If left blank, a cluster-provided certificate will be used. | string |  | false |
+| proxyCertificateSecretName | Secret name to use for cluster's Proxy certificate. If left blank, a cluster-provided certificate will be used. | string |  | false |
+| syncerCertificateSecretName | Secret name to use for cluster's Syncer certificate. If left blank, a cluster-provided certificate will be used. | string |  | false |
+| ldapClientCertificateSecretName | Secret name to use for cluster's LDAP client certificate. If left blank, LDAP client certificate authentication will be disabled. | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseCluster
@@ -311,6 +381,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | containerTimezone | Container timezone configuration. While the default timezone on all containers is UTC, this setting can be used to set the timezone on services rigger/bootstrapper/RS containers. Currently the only supported value is to propagate the host timezone to all containers. | *[ContainerTimezoneSpec](#containertimezonespec) |  | false |
 | ingressOrRouteSpec | Access configurations for the Redis Enterprise Cluster and Databases. Note - this feature is currently in preview. For this feature to take effect, set a boolean environment variable with the name "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. At most one of ingressOrRouteSpec or activeActive fields can be set at the same time. | *[IngressOrRouteSpec](#ingressorroutespec) |  | false |
 | services | Customization options for operator-managed service resources created for Redis Enterprise clusters and databases | *[Services](#services) |  | false |
+| ldap | Cluster-level LDAP configuration, such as server addresses, protocol, authentication and query settings. | *[LDAPSpec](#ldapspec) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseClusterStatus
@@ -324,6 +395,7 @@ RedisEnterpriseClusterStatus defines the observed state of RedisEnterpriseCluste
 | licenseStatus | State of the Cluster's License | *[LicenseStatus](#licensestatus) |  | false |
 | bundledDatabaseVersions | Versions of open source databases bundled by Redis Enterprise Software - please note that in order to use a specific version it should be supported by the ‘upgradePolicy’ - ‘major’ or ‘latest’ according to the desired version (major/minor) | []*[BundledDatabaseVersions](#bundleddatabaseversions) |  | false |
 | ocspStatus | An API object that represents the cluster's OCSP status | *[OcspStatus](#ocspstatus) |  | false |
+| managedAPIs | Indicates cluster APIs that are being managed by the operator. This only applies to cluster APIs which are optionally-managed by the operator, such as cluster LDAP configuration. Most other APIs are automatically managed by the operator, and are not listed here. | *[ManagedAPIs](#managedapis) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseServicesConfiguration
@@ -440,6 +512,26 @@ Used to distinguish between different platforms implementation
 | "openShiftRoute" | Routes are only usable in OpenShift |
 | "ingress" | See https://kubernetes.io/docs/concepts/services-networking/ingress/ |
 | "istio" | Ingress implemented via Istio |
+[Back to Table of Contents](#table-of-contents)
+
+### LDAPProtocol
+The transport protocol used for LDAP.
+
+| Value | Description |
+| ----- | ----------- |
+| "LDAP" | Plain unencrypted LDAP protocol |
+| "LDAPS" | LDAP over SSL |
+| "STARTTLS" | LDAP over TLS |
+[Back to Table of Contents](#table-of-contents)
+
+### LDAPSearchScope
+The search scope for an LDAP query.
+
+| Value | Description |
+| ----- | ----------- |
+| "BaseObject" | Specifies that search should only be performed against the entry specified as the search base DN. |
+| "SingleLevel" | Specifies that search should only be performed against entries that are immediate subordinates of the entry specified as the search base DN. |
+| "WholeSubtree" | Specifies that the search should be performed against the search base and all entries below. |
 [Back to Table of Contents](#table-of-contents)
 
 ### OperatingMode

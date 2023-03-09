@@ -18,7 +18,7 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.2.18-41
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.4.2-4
           securityContext:
             runAsUser: 1001
           command:
@@ -64,7 +64,7 @@ spec:
               port: 8080
               scheme: HTTP
         - name: admission
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.2.18-41
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.4.2-4
           command:
             - /usr/local/bin/admission
           imagePullPolicy: Always
@@ -76,6 +76,10 @@ spec:
             - containerPort: 8443
           env:
             - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: WATCH_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace

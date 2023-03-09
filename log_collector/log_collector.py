@@ -29,7 +29,7 @@ RS_LOG_FOLDER_PATH = "/var/opt/redislabs/log"
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
-VERSION_LOG_COLLECTOR = "6.2.18-41"
+VERSION_LOG_COLLECTOR = "6.4.2-4"
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
 
@@ -46,7 +46,7 @@ RESTRICTED_MODE_API_RESOURCES = [
     "RedisEnterpriseCluster",
     "RedisEnterpriseDatabase",
     "RedisEnterpriseRemoteCluster",
-    "RedisEnterpriseActiveActivePeering",
+    "RedisEnterpriseActiveActiveDatabase",
     "StatefulSet",
     "Deployment",
     "Service",
@@ -64,7 +64,8 @@ RESTRICTED_MODE_API_RESOURCES = [
     "ValidatingWebhookConfiguration",
     "NamespacedValidatingType",
     "NamespacedValidatingRule",
-    "PodSecurityPolicy"
+    "PodSecurityPolicy",
+    "Namespace"
 ]
 
 ALL_ONLY_API_RESOURCES = [
@@ -79,7 +80,9 @@ ALL_ONLY_API_RESOURCES = [
     "InstallPlan",
     "CatalogSource",
     "ReplicaSet",
-    "StorageClass"
+    "StorageClass",
+    "Gateway",
+    "VirtualService"
 ]
 
 SHA_DIGESTS_BEFORE_RESTRICTED_MODE_SUPPORT = [
@@ -89,6 +92,9 @@ SHA_DIGESTS_BEFORE_RESTRICTED_MODE_SUPPORT = [
     "b771ef87bf211c17c37df028c202aac97170fb6d7d5d49b3ccb3410deb8212f6",
     "2a033d4a4ccabb4963116add69fc8e91770ee627f6b974879d8dd7ddddebce47"
 ]
+
+MISSING_RESOURCE = "no resources found in"
+UNRECOGNIZED_RESOURCE = "error: the server doesn't have a resource type"
 
 
 def make_dir(directory):
@@ -170,6 +176,19 @@ def collect_from_ns(namespace, output_dir, api_resources, logs_from_all_pods=Fal
     collect_api_resources(namespace, ns_output_dir, k8s_cli, api_resources, selector)
     collect_api_resources_description(namespace, ns_output_dir, k8s_cli, api_resources, selector)
     collect_pods_logs(namespace, ns_output_dir, k8s_cli, logs_from_all_pods)
+
+
+# pylint: disable=R0913
+def collect_resources(namespace, output_dir, api_resources, k8s_cli_input="", selector=""):
+    """
+    Collect specific resources from specific namespace. Not meant to be used to collect RS pod logs.
+    """
+    k8s_cli = detect_k8s_cli(k8s_cli_input)
+    ns_output_dir = os.path.join(output_dir, namespace)
+    make_dir(ns_output_dir)
+    collect_api_resources(namespace, ns_output_dir, k8s_cli, api_resources, selector)
+    collect_api_resources_description(namespace, ns_output_dir, k8s_cli, api_resources, selector)
+    collect_pods_logs(namespace, ns_output_dir, k8s_cli, logs_from_all_pods=True)
 
 
 def detect_k8s_cli(k8s_cli_input=""):
@@ -339,6 +358,14 @@ def run(results):
         proc.start()
         processes.append(proc)
 
+    if results.collect_istio:
+        proc = Process(
+            target=collect_resources,
+            args=["istio-system", output_dir, ["Pod", "Service", "ConfigMap", "Deployment", "ReplicaSet"]]
+        )
+        proc.start()
+        processes.append(proc)
+
     for proc in processes:
         proc.join()
 
@@ -483,17 +510,18 @@ def download_debug_info_package_from_pod(  # pylint: disable=R0913
     This function attempt to download debug info package from a given pod.
     It should only be called once the package is created.
     """
-    cmd = "cd \"{}\" && {} -n {} cp {}:{} ./{}".format(output_dir,
-                                                       k8s_cli,
-                                                       namespace,
-                                                       pod_name,
-                                                       debug_file_path,
-                                                       debug_file_name)
+    cmd = "cd \"{}\" && {} -n {} cp {}:{} ./{} --retries={}".format(output_dir,
+                                                                    k8s_cli,
+                                                                    namespace,
+                                                                    pod_name,
+                                                                    debug_file_path,
+                                                                    debug_file_name,
+                                                                    attempt)
     return_code, out = run_shell_command(cmd)
     if return_code:
-        logger.warning("Failed to copy debug info from pod "
-                       "to output directory (attempt %d for pod %s), output:%s",
-                       attempt, pod_name, out)
+        logger.info("Unable to copy debug info from pod %s"
+                    "to output directory, output:%s \n Retrying from different pod",
+                    pod_name, out)
         return False
 
     # all is well
@@ -625,7 +653,10 @@ def collect_api_resources(namespace, output_dir, k8s_cli, api_resources, selecto
     logger.info("Namespace '%s': Collecting API resources", namespace)
     resources_out = OrderedDict()
     for resource in api_resources:
-        output = run_get_resource_yaml(namespace, resource, k8s_cli, selector)
+        if resource == "Namespace":
+            output = run_get_resource_yaml(namespace, resource, k8s_cli, resource_name=namespace)
+        else:
+            output = run_get_resource_yaml(namespace, resource, k8s_cli, selector)
         if output:
             resources_out[resource] = output
             logger.info("Namespace '%s':   + Collected %s", namespace, resource)
@@ -646,7 +677,10 @@ def collect_api_resources_description(namespace, output_dir, k8s_cli, api_resour
     logger.info("Namespace '%s': Collecting API resources description", namespace)
     resources_out = OrderedDict()
     for resource in api_resources:
-        output = describe_resource(namespace, resource, k8s_cli, selector)
+        if resource == "Namespace":
+            output = describe_resource(namespace, resource, k8s_cli, resource_name=namespace)
+        else:
+            output = describe_resource(namespace, resource, k8s_cli, selector)
         if output:
             resources_out[resource] = output
             logger.info("Namespace: '%s' + Collected %s", namespace, resource)
@@ -689,7 +723,9 @@ def get_pv_names(k8s_cli, namespace, error_template):
     """
     cmd = "{} get -n {} PersistentVolumeClaim --selector={} -o=custom-columns=VOLUME:.spec.volumeName --no-headers" \
         .format(k8s_cli, namespace, OPERATOR_LABEL)
-    output = run_shell_command_with_retries(cmd, KUBCTL_GET_YAML_RETRIES, error_template)
+    missing_resource_template = f"Namespace '{namespace}': Skip collecting information for PersistentVolumeClaim. " \
+                                f"Server has no resource of type PersistentVolumeClaim"
+    output = run_shell_command_with_retries(cmd, KUBCTL_GET_YAML_RETRIES, error_template, missing_resource_template)
     return output.split()
 
 
@@ -706,7 +742,10 @@ def collect_pv_by_pvc_names(namespace, k8s_cli, collect_func, retries):
                                                                                 "PersistentVolume",
                                                                                 volume)
         # cmd = f"kubectl get pv --field-selector=metadata.name={pv}"
-        output = run_shell_command_with_retries(cmd, retries, error_template)
+        missing_resource_template = f"Namespace '{namespace}': Skip collecting information for" \
+                                    f" PersistentVolume - {volume}. " \
+                                    f"Server has no resource of type PersistentVolume - {volume}"
+        output = run_shell_command_with_retries(cmd, retries, error_template, missing_resource_template)
         pv_output = pv_output + output
     return pv_output
 
@@ -723,9 +762,13 @@ def collect_pv_by_pvc_name_description(namespace, k8s_cli, retries):
         cmd = "{} get -n {} {} --field-selector=metadata.name={} -o=name".format(k8s_cli, namespace, "PersistentVolume",
                                                                                  volume)
         # cmd = f"kubectl get pv --field-selector=metadata.name={pv}"
-        pv_name = run_shell_command_with_retries(cmd, retries, error_template)
+        missing_resource_template = f"Namespace '{namespace}': Skip collecting information for PersistentVolume - " \
+                                    f"{volume}. Server has no resource of type PersistentVolume - {volume}"
+        pv_name = run_shell_command_with_retries(cmd, retries, error_template, missing_resource_template)
         cmd = "{} describe -n {} {}".format(k8s_cli, namespace, pv_name)
-        output = run_shell_command_with_retries(cmd, retries, error_template)
+        missing_resource_template = f"Namespace '{namespace}': Skip collecting description for PersistentVolume - " \
+                                    f"{volume}. Server has no resource of type PersistentVolume - {volume}"
+        output = run_shell_command_with_retries(cmd, retries, error_template, missing_resource_template)
         pv_output = pv_output + output
     return pv_output
 
@@ -921,16 +964,28 @@ def native_string(input_var):
     return input_var.decode('utf-8', 'replace')
 
 
-def run_get_resource_yaml(namespace, resource_type, k8s_cli, selector=""):
+def run_get_resource_yaml(namespace, resource_type, k8s_cli, selector="", resource_name=""):
     """
         Runs kubectl get command with yaml format
     """
-    cmd = "{} get -n {} {} {} -o yaml".format(k8s_cli, namespace, resource_type, selector)
+    cmd = "{} get -n {} {} {} {} -o yaml".format(k8s_cli, namespace, resource_type, resource_name, selector)
     error_template = "Namespace '{}': Failed to get {} resource: {{}}.".format(namespace, resource_type)
-    return run_shell_command_with_retries(cmd, KUBCTL_GET_YAML_RETRIES, error_template)
+    missing_resource_template = f"Namespace '{namespace}': Skip collecting information for {resource_type}. " \
+                                f"Server has no resource of type {resource_type}"
+    return run_shell_command_with_retries(cmd, KUBCTL_GET_YAML_RETRIES, error_template, missing_resource_template)
 
 
-def run_shell_command_with_retries(cmd, retries, error_template):
+def handle_unsuccessful_cmd(out, error_template, missing_resource_template):
+    """
+    function to choose whether to log in info or in warning according to output
+    """
+    if MISSING_RESOURCE in out.lower() or UNRECOGNIZED_RESOURCE in out.lower():
+        logger.info(missing_resource_template)
+    else:
+        logger.warning(error_template.format(out.rstrip()))
+
+
+def run_shell_command_with_retries(cmd, retries, error_template, missing_resource_template=""):
     """
         Run a shell command, retrying up to <retries> attempts.
         When the command fails with a non-zero exit code, the output is printed
@@ -943,7 +998,7 @@ def run_shell_command_with_retries(cmd, retries, error_template):
         if return_code == 0:
             return out
         if out is not None and out != prev_out:
-            logger.warning(error_template.format(out.rstrip()))
+            handle_unsuccessful_cmd(out, error_template, missing_resource_template)
         prev_out = out
     return None
 
@@ -1030,13 +1085,15 @@ def run_shell_command_timeout(args, cwd=None, shell=True, env=None):
     return piped_process.returncode, native_string(output)
 
 
-def describe_resource(namespace, resource_type, k8s_cli, selector=""):
+def describe_resource(namespace, resource_type, k8s_cli, selector="", resource_name=""):
     """
         Runs kubectl describe command
     """
-    cmd = "{} describe -n {} {} {}".format(k8s_cli, namespace, resource_type, selector)
+    cmd = "{} describe -n {} {} {} {}".format(k8s_cli, namespace, resource_type, resource_name, selector)
     error_template = "Namespace '{}': Failed to describe {} resource: {{}}.".format(namespace, resource_type)
-    return run_shell_command_with_retries(cmd, KUBCTL_DESCRIBE_RETRIES, error_template)
+    missing_resource_template = f"Namespace '{namespace}': Skip collecting description for {resource_type}. " \
+                                f"Server has no resource of type {resource_type}"
+    return run_shell_command_with_retries(cmd, KUBCTL_GET_YAML_RETRIES, error_template, missing_resource_template)
 
 
 def check_not_negative(value):
@@ -1078,5 +1135,8 @@ if __name__ == "__main__":
                              "collect only resources that are related to the operator,"
                              " and has the label \"app=redis-enterprise\". "
                              "2. all - collect all resources")
-
+    parser.add_argument('--collect_istio', action="store_true",
+                        help="collect data from istio-system namespace to debug potential "
+                        "problems related to istio ingress method")
+    parser.set_defaults(collect_istio=False)
     run(parser.parse_args())

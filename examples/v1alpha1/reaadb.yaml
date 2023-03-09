@@ -1,0 +1,13 @@
+apiVersion: app.redislabs.com/v1alpha1
+kind: RedisEnterpriseActiveActiveDatabase
+metadata:
+  name: reaadb-1
+spec:
+  # The Redis Enterprise Cluster Object this Resource is associated with 
+  redisEnterpriseCluster:
+    name: rec1
+  participatingClusters:
+    # Participating cluster with RERC named 'rerc1' in 'ns1' namespace.
+    - name: rerc1.ns1
+    # Participating cluster with RERC named 'rerc2' in 'ns2' namespace.
+    - name: rerc2.ns2
