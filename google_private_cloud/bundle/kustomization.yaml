@@ -1,4 +1,0 @@
-resources:
-- bundle.yaml
-patchesStrategicMerge:
-- kustomize_bundle.yaml
