@@ -559,22 +559,29 @@ spec:
                 - major
                 - latest
                 type: string
-              activeActiveName:
-                description: 'The Redis Enterprise Active Active Peering custom resource name this Resource is associated
-                  with, also, the corresponding active active database name.
-                  In case this resource is created manually
-                  at the active active database creation this field must be filled via the user,
-                  otherwise, the operator will assign this field automatically.
-                  Note: this feature is currently unsupported.'
-                type: string
-              globalConfigurations:
-                description: 'Flag that determines if this is the default global configurations
-                  for active active database.
-                  In case this resource is created manually
-                  at the active active database creation this field must be filled via the user
-                  otherwise the operator will create the global configurations REDB automatically with default values.
-                  Note: this feature is currently unsupported.'
-                type: boolean
+              activeActive:
+                description: Connection/ association to the Active-Active database.
+                properties:
+                  name:
+                    description: 'The the corresponding Active-Active database name,
+                      Redis Enterprise Active Active Database custom resource name, this
+                      Resource is associated with. In case this resource is created
+                      manually at the active active database creation this field must
+                      be filled via the user, otherwise, the operator will assign this
+                      field automatically. Note: this feature is currently unsupported.'
+                    type: string
+                  participatingClusterName:
+                    description: 'The corresponding participating cluster name, Redis
+                      Enterprise Remote Cluster custom resource name, in the Active-Active
+                      database, In case this resource is created manually at the active
+                      active database creation this field must be filled via the user,
+                      otherwise, the operator will assign this field automatically.
+                      Note: this feature is currently unsupported.'
+                    type: string
+                required:
+                  - name
+                  - participatingClusterName
+                type: object
               memcachedSaslSecretName:
                 description: 'Credentials used for binary authentication in memcached databases. 
                   The credentials should be saved as an opaque secret and the name of that secret should be configured using this field. 
@@ -704,15 +711,28 @@ spec:
               version:
                 description: Database compatibility version
                 type: string
-              activeActiveName:
-                description: 'The Redis Enterprise Active Active Peering custom resource this Resource is associated
-                  with, also, the corresponding active active database name.
-                  Note: this feature is currently unsupported.'
-                type: string
-              globalConfigurations:
-                description: 'Flag to determine if this is the default global configurations
-                  for active active database.
-                  Note: this feature is currently unsupported.'
-                type: boolean
+              activeActive:
+                description: Connection/ association to the Active-Active database.
+                properties:
+                  name:
+                    description: 'The the corresponding Active-Active database name,
+                      Redis Enterprise Active Active Database custom resource name, this
+                      Resource is associated with. In case this resource is created
+                      manually at the active active database creation this field must
+                      be filled via the user, otherwise, the operator will assign this
+                      field automatically. Note: this feature is currently unsupported.'
+                    type: string
+                  participatingClusterName:
+                    description: 'The corresponding participating cluster name, Redis
+                      Enterprise Remote Cluster custom resource name, in the Active-Active
+                      database, In case this resource is created manually at the active
+                      active database creation this field must be filled via the user,
+                      otherwise, the operator will assign this field automatically.
+                      Note: this feature is currently unsupported.'
+                    type: string
+                required:
+                  - name
+                  - participatingClusterName
+                type: object
             type: object
         type: object

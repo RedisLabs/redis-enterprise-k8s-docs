@@ -3,6 +3,7 @@ This document describes the parameters for the Redis Enterprise Database custom 
 > Note this document is auto-generated from code comments. To contribute a change please change the code comments.
 ## Table of Contents
 * [Objects](#objects)
+  * [ActiveActiveInfo](#activeactiveinfo)
   * [AzureBlobStorage](#azureblobstorage)
   * [BackupInfo](#backupinfo)
   * [BackupSpec](#backupspec)
@@ -31,6 +32,15 @@ This document describes the parameters for the Redis Enterprise Database custom 
   * [ReplicaSourceType](#replicasourcetype)
   * [RolePermissionType](#rolepermissiontype)
 ## Objects
+
+### ActiveActiveInfo
+Connection/ association  for Active-Active database related resources.
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| name | The the corresponding Active-Active database name, Redis Enterprise Active Active Database custom resource name, this Resource is associated with. In case this resource is created manually at the active active database creation this field must be filled via the user, otherwise, the operator will assign this field automatically. Note: this feature is currently unsupported. | string |  | true |
+| participatingClusterName | The corresponding participating cluster name, Redis Enterprise Remote Cluster custom resource name, in the Active-Active database, In case this resource is created manually at the active active database creation this field must be filled via the user, otherwise, the operator will assign this field automatically. Note: this feature is currently unsupported. | string |  | true |
+[Back to Table of Contents](#table-of-contents)
 
 ### AzureBlobStorage
 
@@ -204,6 +214,7 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | rofRamSize | The size of the RAM portion of an RoF database. Similarly to "memorySize" use formats like 100MB, 0.1GB It must be at least 10% of combined memory size (RAM+Flash), as specified by "memorySize". | string |  | false |
 | memcachedSaslSecretName | Credentials used for binary authentication in memcached databases. The credentials should be saved as an opaque secret and the name of that secret should be configured using this field. For username, use 'username' as the key and the actual username as the value. For password, use 'password' as the key and the actual password as the value. Note that connections are not encrypted. | string |  | false |
 | redisVersion | Redis OSS version. For existing databases - Upgrade Redis OSS version. For new databases - the version which the database will be created with. If set to 'major' - will always upgrade to the most recent major Redis version. If set to 'latest' - will always upgrade to the most recent Redis version. Depends on 'redisUpgradePolicy' - if you want to set the value to 'latest' for some databases, you must set redisUpgradePolicy on the cluster before. Possible values are 'major' or 'latest' When using upgrade - make sure to backup the database before. This value is used only for database type 'redis' | string |  | false |
+| activeActive | Connection/ association to the Active-Active database. | *[ActiveActiveInfo](#activeactiveinfo) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseDatabaseStatus
@@ -225,6 +236,7 @@ RedisEnterpriseDatabaseStatus defines the observed state of RedisEnterpriseDatab
 | redisEnterpriseCluster | The Redis Enterprise Cluster Object this Resource is associated with | string |  | false |
 | observedGeneration | The generation (built in update counter of K8s) of the REDB resource that was fully acted upon, meaning that all changes were handled and sent as an API call to the Redis Enterprise Cluster (REC). This field value should equal the current generation when the resource changes were handled. Note: the lastActionStatus field tracks actions handled asynchronously by the Redis Enterprise Cluster. | int64 |  | false |
 | backupInfo | Information on the database's periodic backup | *[BackupInfo](#backupinfo) |  | false |
+| activeActive | Connection/ association to the Active-Active database. | *[ActiveActiveInfo](#activeactiveinfo) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ReplicaSource

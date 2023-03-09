@@ -14,8 +14,8 @@ rules:
                 "redisenterprisedatabases", "redisenterprisedatabases/status", "redisenterprisedatabases/finalizers",
                 "redisenterpriseremoteclusters", "redisenterpriseremoteclusters/status",
                 "redisenterpriseremoteclusters/finalizers",
-                "redisenterpriseactiveactivepeerings", "redisenterpriseactiveactivepeerings/status",
-                "redisenterpriseactiveactivepeerings/finalizers"]
+                "redisenterpriseactiveactivedatabases", "redisenterpriseactiveactivedatabases/status",
+                "redisenterpriseactiveactivedatabases/finalizers"]
     verbs: ["delete", "deletecollection", "get", "list", "patch", "create", "update", "watch"]
   - apiGroups: [""]
     resources: ["secrets"]

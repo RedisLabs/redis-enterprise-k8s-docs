@@ -1,11 +1,11 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
-  name: redb-admission
+  name: redis-enterprise-admission
   labels:
     app: redis-enterprise
 webhooks:
-- name: redb.admission.redislabs
+- name: redisenterprise.admission.redislabs
   failurePolicy: Fail
   matchPolicy: Exact
   sideEffects: None
@@ -13,8 +13,8 @@ webhooks:
   rules:
   - apiGroups:   ["app.redislabs.com"]
     apiVersions: ["v1alpha1"]
-    operations:  ["*"]
-    resources:   ["redisenterprisedatabases"]
+    operations:  ["CREATE", "UPDATE"]
+    resources:   ["redisenterprisedatabases", "redisenterpriseactiveactivedatabases", "redisenterpriseremoteclusters"]
   clientConfig:
     service:
       namespace: NAMESPACE_OF_SERVICE_ACCOUNT

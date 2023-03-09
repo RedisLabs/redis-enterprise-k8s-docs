@@ -18,7 +18,7 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:6.2.18-41
+          image: redislabs/operator:6.4.2-4
           command:
           - redis-enterprise-operator
           imagePullPolicy: Always
@@ -60,7 +60,7 @@ spec:
               port: 8080
               scheme: HTTP
         - name: admission
-          image: redislabs/operator:6.2.18-41
+          image: redislabs/operator:6.4.2-4
           command:
             - /usr/local/bin/admission
           imagePullPolicy: Always
@@ -72,6 +72,10 @@ spec:
             - containerPort: 8443
           env:
             - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: WATCH_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
