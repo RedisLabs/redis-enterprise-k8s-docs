@@ -29,7 +29,7 @@ RS_LOG_FOLDER_PATH = "/var/opt/redislabs/log"
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
-VERSION_LOG_COLLECTOR = "6.4.2-4"
+VERSION_LOG_COLLECTOR = "6.4.2-4a"
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
 
@@ -66,6 +66,13 @@ RESTRICTED_MODE_API_RESOURCES = [
     "NamespacedValidatingRule",
     "PodSecurityPolicy",
     "Namespace"
+]
+
+OPERATOR_CUSTOM_RESOURCES = [
+    "RedisEnterpriseCluster",
+    "RedisEnterpriseDatabase",
+    "RedisEnterpriseRemoteCluster",
+    "RedisEnterpriseActiveActiveDatabase",
 ]
 
 ALL_ONLY_API_RESOURCES = [
@@ -655,6 +662,8 @@ def collect_api_resources(namespace, output_dir, k8s_cli, api_resources, selecto
     for resource in api_resources:
         if resource == "Namespace":
             output = run_get_resource_yaml(namespace, resource, k8s_cli, resource_name=namespace)
+        elif resource in OPERATOR_CUSTOM_RESOURCES:
+            output = run_get_resource_yaml(namespace, resource, k8s_cli)
         else:
             output = run_get_resource_yaml(namespace, resource, k8s_cli, selector)
         if output:
@@ -679,6 +688,8 @@ def collect_api_resources_description(namespace, output_dir, k8s_cli, api_resour
     for resource in api_resources:
         if resource == "Namespace":
             output = describe_resource(namespace, resource, k8s_cli, resource_name=namespace)
+        elif resource in OPERATOR_CUSTOM_RESOURCES:
+            output = run_get_resource_yaml(namespace, resource, k8s_cli)
         else:
             output = describe_resource(namespace, resource, k8s_cli, selector)
         if output:
