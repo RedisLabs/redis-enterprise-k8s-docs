@@ -39,8 +39,7 @@ Please follow the following steps:
     kubectl create secret generic <cluster secret name> --from-file=./username --from-file=./password --dry-run -o yaml | kubectl apply -f -
     ```
 5. Wait 5 minutes to make sure all components have read the new password from the updated secret
-6. in case this cluster is participating in Active-Active database via REAADB follow the instructions [here](active_active_database_readme.md) under `Update existing participating cluster (RERC) secret`.
-7. Exec into a Redis Enterprise Cluster node pod (see above) and run the following command to remove the previous password so only the new one applies. Important: replace OLD PASSWORD with the one being replaced, see step 1 above.
+6. Exec into a Redis Enterprise Cluster node pod (see above) and run the following command to remove the previous password so only the new one applies. Important: replace OLD PASSWORD with the one being replaced, see step 1 above.
     ```
     REC_USER="`cat /opt/redislabs/credentials/username`"; REC_PASSWORD="`cat /opt/redislabs/credentials/password`";curl -k --request DELETE --url https://localhost:9443/v1/users/password -u "$REC_USER:$REC_PASSWORD" --header 'Content-Type: application/json' --data "{\"username\":\"$REC_USER\",\"old_password\":\"<OLD PASSWORD\"}"
     ```
@@ -69,8 +68,7 @@ Please follow the following steps:
     ```
     > Note: the username to be used with the K8s secret is the email displayed on the Redis Enterprise UI
 5. Wait 5 minutes to make sure all components have read the new password from the updated secret
-6. in case this cluster is participating in Active-Active database via REAADB follow the instructions [here](active_active_database_readme.md) under `Update existing participating cluster (RERC) secret`.
-7. Delete the previous admin user using the Redis Enterprise Cluster UI
+6. Delete the previous admin user using the Redis Enterprise Cluster UI
    > Note: this procedure is only supported for version 6.0.20-5 or above
    > Note: the operator might log errors in the time period between updating the username in the REC spec and the secret update
 
