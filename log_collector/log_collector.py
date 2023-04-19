@@ -29,7 +29,7 @@ RS_LOG_FOLDER_PATH = "/var/opt/redislabs/log"
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
-VERSION_LOG_COLLECTOR = "6.4.2-4b"
+VERSION_LOG_COLLECTOR = "6.4.2-5"
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
 

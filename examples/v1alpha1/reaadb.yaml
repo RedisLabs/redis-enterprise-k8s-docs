@@ -2,6 +2,8 @@ apiVersion: app.redislabs.com/v1alpha1
 kind: RedisEnterpriseActiveActiveDatabase
 metadata:
   name: reaadb-1
+  labels:
+    app: redis-enterprise
 spec:
   # The Redis Enterprise Cluster Object this Resource is associated with 
   redisEnterpriseCluster:
