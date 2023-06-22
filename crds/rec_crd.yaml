@@ -268,12 +268,16 @@ spec:
               containerTimezone:
                 description: Container timezone configuration. While the default timezone
                   on all containers is UTC, this setting can be used to set the timezone
-                  on services rigger/bootstrapper/RS containers. Currently the only
-                  supported value is to propagate the host timezone to all containers.
+                  on services rigger/bootstrapper/RS containers. You can either propagate
+                  the hosts timezone to RS pods or set it manually via timezoneName.
                 properties:
                   propagateHost:
-                    description: Identifies that container timezone should be in sync with the host.
+                    description: Identifies that container timezone should be in sync with the host, this
+                      option mounts a hostPath volume onto RS pods that could be restricted in some systems.
                     type: object
+                  timezoneName:
+                    description: POSIX-style timezone name as a string to be passed as EnvVar to RE pods, e.g. "Europe/London".
+                    type: string
                 type: object
               createServiceAccount:
                 description: Whether to create service account
@@ -320,12 +324,75 @@ spec:
               enforceIPv4:
                 description: Sets ENFORCE_IPV4 environment variable
                 type: boolean
+              extraEnvVars:
+                description: 'ADVANCED USAGE: use carefully. Add environment variables
+                  to RS StatefulSet''s containers.'
+                items:
+                  properties:
+                    name:
+                      type: string
+                    value:
+                      type: string
+                    valueFrom:
+                      properties:
+                        configMapKeyRef:
+                          properties:
+                            key:
+                              type: string
+                            name:
+                              type: string
+                            optional:
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        fieldRef:
+                          properties:
+                            apiVersion:
+                              type: string
+                            fieldPath:
+                              type: string
+                          required:
+                          - fieldPath
+                          type: object
+                        resourceFieldRef:
+                          properties:
+                            containerName:
+                              type: string
+                            divisor:
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
+                            resource:
+                              type: string
+                          required:
+                          - resource
+                          type: object
+                        secretKeyRef:
+                          properties:
+                            key:
+                              type: string
+                            name:
+                              type: string
+                            optional:
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                      type: object
+                  required:
+                  - name
+                  type: object
+                type: array
               extraLabels:
                 additionalProperties:
                   type: string
                 description: Labels that the user defines for their convenience
                 type: object
               hostAliases:
+                description: Adds hostAliases entries to the Redis Enterprise pods
                 items:
                   description: HostAlias holds the mapping between IP and hostnames
                     that will be injected as an entry in the pod's hosts file.
@@ -342,11 +409,7 @@ spec:
                 type: array
               ingressOrRouteSpec:
                 description: Access configurations for the Redis Enterprise Cluster
-                  and Databases. Note - this feature is currently in preview. For
-                  this feature to take effect, set a boolean environment variable
-                  with the name "ENABLE_ALPHA_FEATURES" to True. This variable can
-                  be set via the redis-enterprise-operator pod spec, or through the
-                  operator-environment-config Config Map. At most one of ingressOrRouteSpec
+                  and Databases. At most one of ingressOrRouteSpec
                   or activeActive fields can be set at the same time.
                 properties:
                   apiFqdnUrl:
@@ -502,16 +565,13 @@ spec:
                       the protocol is LDAPS or STARTTLS.
                     type: string
                   cacheTTLSeconds:
-                    default: 300
                     description: The maximum TTL of cached entries.
                     type: integer
                   enabledForControlPlane:
-                    default: false
                     description: Whether to enable LDAP for control plane access.
                       Disabled by default.
                     type: boolean
                   enabledForDataPlane:
-                    default: false
                     description: Whether to enable LDAP for data plane access. Disabled
                       by default.
                     type: boolean
@@ -620,7 +680,12 @@ spec:
               podAnnotations:
                 additionalProperties:
                   type: string
-                description: pod annotations
+                description: annotations for the service rigger and redis enterprise pods
+                type: object
+              redisEnterprisePodAnnotations:
+                additionalProperties:
+                  type: string
+                description: annotations for redis enterprise pod
                 type: object
               podAntiAffinity:
                 description: 'Override for the default anti-affinity rules of the Redis
@@ -3685,6 +3750,9 @@ spec:
                       type: object
                     type: array
                   serviceNaming:
+                    description: Used to determine how to name the services created automatically when a database is created.
+                      When bdb_name is used, the database name will be also used for the service name.
+                      When redis-port is used, the service will be named redis-<port>.
                     enum:
                     - bdb_name
                     - redis-port
@@ -6220,6 +6288,11 @@ spec:
                           type: object
                         type: array
                     type: object
+                  podAnnotations:
+                    additionalProperties:
+                      type: string
+                    description: annotations for the service rigger pod
+                    type: object
                 type: object
               sideContainersSpec:
                 items:
@@ -7671,6 +7744,8 @@ spec:
                 properties:
                   propagateHost:
                     type: object
+                  timezoneName:
+                    type: string
                 type: object
               createServiceAccount:
                 type: boolean
@@ -7695,11 +7770,74 @@ spec:
                 type: object
               enforceIPv4:
                 type: boolean
+              extraEnvVars:
+                description: 'ADVANCED USAGE: use carefully. Add environment variables
+                  to RS StatefulSet''s containers.'
+                items:
+                  properties:
+                    name:
+                      type: string
+                    value:
+                      type: string
+                    valueFrom:
+                      properties:
+                        configMapKeyRef:
+                          properties:
+                            key:
+                              type: string
+                            name:
+                              type: string
+                            optional:
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        fieldRef:
+                          properties:
+                            apiVersion:
+                              type: string
+                            fieldPath:
+                              type: string
+                          required:
+                          - fieldPath
+                          type: object
+                        resourceFieldRef:
+                          properties:
+                            containerName:
+                              type: string
+                            divisor:
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
+                            resource:
+                              type: string
+                          required:
+                          - resource
+                          type: object
+                        secretKeyRef:
+                          properties:
+                            key:
+                              type: string
+                            name:
+                              type: string
+                            optional:
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                      type: object
+                  required:
+                  - name
+                  type: object
+                type: array
               extraLabels:
                 additionalProperties:
                   type: string
                 type: object
               hostAliases:
+                description: Adds hostAliases entries to the Redis Enterprise pods
                 items:
                   properties:
                     hostnames:
@@ -7798,13 +7936,10 @@ spec:
                   caCertificateSecretName:
                     type: string
                   cacheTTLSeconds:
-                    default: 300
                     type: integer
                   enabledForControlPlane:
-                    default: false
                     type: boolean
                   enabledForDataPlane:
-                    default: false
                     type: boolean
                   protocol:
                     enum:
@@ -7870,6 +8005,12 @@ spec:
               podAnnotations:
                 additionalProperties:
                   type: string
+                description: annotations for the service rigger and redis enterprise pods
+                type: object
+              redisEnterprisePodAnnotations:
+                additionalProperties:
+                  type: string
+                description: annotations for redis enterprise pod
                 type: object
               podAntiAffinity:
                 properties:
@@ -10815,6 +10956,9 @@ spec:
                       type: object
                     type: array
                   serviceNaming:
+                    description: Used to determine how to name the services created automatically when a database is created.
+                      When bdb_name is used, the database name will be also used for the service name.
+                      When redis-port is used, the service will be named redis-<port>.
                     enum:
                     - bdb_name
                     - redis-port
@@ -13342,6 +13486,11 @@ spec:
                           - name
                           type: object
                         type: array
+                    type: object
+                  podAnnotations:
+                    additionalProperties:
+                      type: string
+                    description: annotations for the service rigger pod
                     type: object
                 type: object
               sideContainersSpec:

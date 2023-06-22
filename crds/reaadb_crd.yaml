@@ -29,6 +29,9 @@ spec:
         - jsonPath: .status.linkedRedbs[*]
           name: Linked REDBs
           type: string
+        - jsonPath: .status.replicationStatus
+          name: Replication Status
+          type: string
       subresources:
         status: {}
       schema:
@@ -69,6 +72,12 @@ spec:
                         description: The corresponding ID of the instance in the active-active database.
                         format: int64
                         type: integer
+                      replicationStatus:
+                        description: The replication status of the participating cluster
+                        enum:
+                        - up
+                        - down
+                        type: string
                     required:
                       - name
                     type: object
@@ -82,6 +91,12 @@ spec:
                 redisEnterpriseCluster:
                   description: The Redis Enterprise Cluster Object this Resource is associated
                     with
+                  type: string
+                replicationStatus:
+                  description: The overall replication status
+                  enum:
+                  - up
+                  - down
                   type: string
                 secretsStatus:
                   description: The status of the secrets
@@ -541,7 +556,12 @@ spec:
                         not be below 1GB.
                       type: string
                     modulesList:
-                      description: List of modules associated with database
+                      description: List of modules associated with database.
+                        Note - For Active-Active databases this feature is currently in preview. For
+                        this feature to take effect for Active-Active databases, set a boolean environment variable
+                        with the name "ENABLE_ALPHA_FEATURES" to True. This variable can
+                        be set via the redis-enterprise-operator pod spec, or through the
+                        operator-environment-config Config Map.
                       items:
                         description: 'Redis Enterprise Module: https://redislabs.com/redis-enterprise/modules/'
                         properties:

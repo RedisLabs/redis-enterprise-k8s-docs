@@ -38,7 +38,7 @@ The operator deploys a `RedisEnterpriseCluster` with default configurations valu
 Some examples [have moved](https://docs.redis.com/latest/kubernetes/reference/cluster-options/) to the Redis Enterprise doc site, [docs.redis.com](https://docs.redis.com/latest/kubernetes/).
 
 
-* Cluster username (Default is demo@redislabs.com)
+* Cluster username (Default is demo@redis.com)
   ```yaml
   username: "admin@acme.com"
   ```

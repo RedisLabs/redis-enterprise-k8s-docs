@@ -19,6 +19,9 @@ How to use Hashicorp Vault as a source for secrets:
 6. [ Deploy REDB admission Controller ](#redb-admission)
 7. [ Creating an REDB](#deployment_redb)
 8. [ REDB secrets ](#redb_secrets)
+9. [ RERC secrets ](#rerc_secrets)
+10. [ REAADB secrets ](#reaadb_secrets)
+
 
 > Note: when using Openshift it might be recommended to use oc instead of kubectl 
 <a name="prerequisites"></a>
@@ -264,3 +267,10 @@ An REDB has several secrets associate with it as detailed here.<br>
 4. [Client Auth](../redis_enterprise_database_api.md#redisenterprisedatabasespec) (optional) - The Secrets containing TLS Client Certificate to use for Authentication
 > The full and detailed REDB fields documentation can be found [here](../redis_enterprise_database_api.md#redisenterprisedatabasespec)
 
+<a name="rerc_secrets"></a>
+### RERC secrets
+The secretName field is supported and should be stored in Hashicorp Vault if the Redis Enterprise Cluster uses Hashicorp Vault as a secret source.
+
+<a name="reaadb_secrets"></a>
+### REAADB secrets
+A REDB specification is built into REAADB (the globalConfigurations field). All secret names specified there are supported and should be stored in Hashicorp Vault if the Redis Enterprise Cluster uses Hashicorp Vault as a secret source.

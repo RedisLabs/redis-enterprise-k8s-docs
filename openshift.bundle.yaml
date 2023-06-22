@@ -2,7 +2,7 @@
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
-  name: redis-enterprise-scc
+  name: redis-enterprise-scc-v2
   annotations:
     kubernetes.io/description: redis-enterprise-scc is the minimal SCC needed to run Redis Enterprise nodes on Kubernetes.
       It provides the same features as restricted-v2 SCC, but allows pods to enable the SYS_RESOURCE capability,
@@ -405,12 +405,16 @@ spec:
               containerTimezone:
                 description: Container timezone configuration. While the default timezone
                   on all containers is UTC, this setting can be used to set the timezone
-                  on services rigger/bootstrapper/RS containers. Currently the only
-                  supported value is to propagate the host timezone to all containers.
+                  on services rigger/bootstrapper/RS containers. You can either propagate
+                  the hosts timezone to RS pods or set it manually via timezoneName.
                 properties:
                   propagateHost:
-                    description: Identifies that container timezone should be in sync with the host.
+                    description: Identifies that container timezone should be in sync with the host, this
+                      option mounts a hostPath volume onto RS pods that could be restricted in some systems.
                     type: object
+                  timezoneName:
+                    description: POSIX-style timezone name as a string to be passed as EnvVar to RE pods, e.g. "Europe/London".
+                    type: string
                 type: object
               createServiceAccount:
                 description: Whether to create service account
@@ -457,12 +461,75 @@ spec:
               enforceIPv4:
                 description: Sets ENFORCE_IPV4 environment variable
                 type: boolean
+              extraEnvVars:
+                description: 'ADVANCED USAGE: use carefully. Add environment variables
+                  to RS StatefulSet''s containers.'
+                items:
+                  properties:
+                    name:
+                      type: string
+                    value:
+                      type: string
+                    valueFrom:
+                      properties:
+                        configMapKeyRef:
+                          properties:
+                            key:
+                              type: string
+                            name:
+                              type: string
+                            optional:
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        fieldRef:
+                          properties:
+                            apiVersion:
+                              type: string
+                            fieldPath:
+                              type: string
+                          required:
+                          - fieldPath
+                          type: object
+                        resourceFieldRef:
+                          properties:
+                            containerName:
+                              type: string
+                            divisor:
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
+                            resource:
+                              type: string
+                          required:
+                          - resource
+                          type: object
+                        secretKeyRef:
+                          properties:
+                            key:
+                              type: string
+                            name:
+                              type: string
+                            optional:
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                      type: object
+                  required:
+                  - name
+                  type: object
+                type: array
               extraLabels:
                 additionalProperties:
                   type: string
                 description: Labels that the user defines for their convenience
                 type: object
               hostAliases:
+                description: Adds hostAliases entries to the Redis Enterprise pods
                 items:
                   description: HostAlias holds the mapping between IP and hostnames
                     that will be injected as an entry in the pod's hosts file.
@@ -479,11 +546,7 @@ spec:
                 type: array
               ingressOrRouteSpec:
                 description: Access configurations for the Redis Enterprise Cluster
-                  and Databases. Note - this feature is currently in preview. For
-                  this feature to take effect, set a boolean environment variable
-                  with the name "ENABLE_ALPHA_FEATURES" to True. This variable can
-                  be set via the redis-enterprise-operator pod spec, or through the
-                  operator-environment-config Config Map. At most one of ingressOrRouteSpec
+                  and Databases. At most one of ingressOrRouteSpec
                   or activeActive fields can be set at the same time.
                 properties:
                   apiFqdnUrl:
@@ -639,16 +702,13 @@ spec:
                       the protocol is LDAPS or STARTTLS.
                     type: string
                   cacheTTLSeconds:
-                    default: 300
                     description: The maximum TTL of cached entries.
                     type: integer
                   enabledForControlPlane:
-                    default: false
                     description: Whether to enable LDAP for control plane access.
                       Disabled by default.
                     type: boolean
                   enabledForDataPlane:
-                    default: false
                     description: Whether to enable LDAP for data plane access. Disabled
                       by default.
                     type: boolean
@@ -757,7 +817,12 @@ spec:
               podAnnotations:
                 additionalProperties:
                   type: string
-                description: pod annotations
+                description: annotations for the service rigger and redis enterprise pods
+                type: object
+              redisEnterprisePodAnnotations:
+                additionalProperties:
+                  type: string
+                description: annotations for redis enterprise pod
                 type: object
               podAntiAffinity:
                 description: 'Override for the default anti-affinity rules of the Redis
@@ -3822,6 +3887,9 @@ spec:
                       type: object
                     type: array
                   serviceNaming:
+                    description: Used to determine how to name the services created automatically when a database is created.
+                      When bdb_name is used, the database name will be also used for the service name.
+                      When redis-port is used, the service will be named redis-<port>.
                     enum:
                     - bdb_name
                     - redis-port
@@ -6357,6 +6425,11 @@ spec:
                           type: object
                         type: array
                     type: object
+                  podAnnotations:
+                    additionalProperties:
+                      type: string
+                    description: annotations for the service rigger pod
+                    type: object
                 type: object
               sideContainersSpec:
                 items:
@@ -7808,6 +7881,8 @@ spec:
                 properties:
                   propagateHost:
                     type: object
+                  timezoneName:
+                    type: string
                 type: object
               createServiceAccount:
                 type: boolean
@@ -7832,11 +7907,74 @@ spec:
                 type: object
               enforceIPv4:
                 type: boolean
+              extraEnvVars:
+                description: 'ADVANCED USAGE: use carefully. Add environment variables
+                  to RS StatefulSet''s containers.'
+                items:
+                  properties:
+                    name:
+                      type: string
+                    value:
+                      type: string
+                    valueFrom:
+                      properties:
+                        configMapKeyRef:
+                          properties:
+                            key:
+                              type: string
+                            name:
+                              type: string
+                            optional:
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                        fieldRef:
+                          properties:
+                            apiVersion:
+                              type: string
+                            fieldPath:
+                              type: string
+                          required:
+                          - fieldPath
+                          type: object
+                        resourceFieldRef:
+                          properties:
+                            containerName:
+                              type: string
+                            divisor:
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
+                            resource:
+                              type: string
+                          required:
+                          - resource
+                          type: object
+                        secretKeyRef:
+                          properties:
+                            key:
+                              type: string
+                            name:
+                              type: string
+                            optional:
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                      type: object
+                  required:
+                  - name
+                  type: object
+                type: array
               extraLabels:
                 additionalProperties:
                   type: string
                 type: object
               hostAliases:
+                description: Adds hostAliases entries to the Redis Enterprise pods
                 items:
                   properties:
                     hostnames:
@@ -7935,13 +8073,10 @@ spec:
                   caCertificateSecretName:
                     type: string
                   cacheTTLSeconds:
-                    default: 300
                     type: integer
                   enabledForControlPlane:
-                    default: false
                     type: boolean
                   enabledForDataPlane:
-                    default: false
                     type: boolean
                   protocol:
                     enum:
@@ -8007,6 +8142,12 @@ spec:
               podAnnotations:
                 additionalProperties:
                   type: string
+                description: annotations for the service rigger and redis enterprise pods
+                type: object
+              redisEnterprisePodAnnotations:
+                additionalProperties:
+                  type: string
+                description: annotations for redis enterprise pod
                 type: object
               podAntiAffinity:
                 properties:
@@ -10952,6 +11093,9 @@ spec:
                       type: object
                     type: array
                   serviceNaming:
+                    description: Used to determine how to name the services created automatically when a database is created.
+                      When bdb_name is used, the database name will be also used for the service name.
+                      When redis-port is used, the service will be named redis-<port>.
                     enum:
                     - bdb_name
                     - redis-port
@@ -13480,6 +13624,11 @@ spec:
                           type: object
                         type: array
                     type: object
+                  podAnnotations:
+                    additionalProperties:
+                      type: string
+                    description: annotations for the service rigger pod
+                    type: object
                 type: object
               sideContainersSpec:
                 items:
@@ -15119,7 +15268,12 @@ spec:
                   and it must not be below 1GB.
                 type: string
               modulesList:
-                description: List of modules associated with database
+                description: List of modules associated with database.
+                  Note - For Active-Active databases this feature is currently in preview. For
+                  this feature to take effect for Active-Active databases, set a boolean environment variable
+                  with the name "ENABLE_ALPHA_FEATURES" to True. This variable can
+                  be set via the redis-enterprise-operator pod spec, or through the
+                  operator-environment-config Config Map.
                 items:
                   description: 'Redis Enterprise Module: https://redislabs.com/redis-enterprise/modules/'
                   properties:
@@ -15465,6 +15619,840 @@ spec:
             type: object
         type: object
 ---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: redisenterpriseremoteclusters.app.redislabs.com
+  labels:
+    app: redis-enterprise
+spec:
+  group: app.redislabs.com
+  names:
+    kind: RedisEnterpriseRemoteCluster
+    listKind: RedisEnterpriseRemoteClusterList
+    plural: redisenterpriseremoteclusters
+    singular: redisenterpriseremotecluster
+    shortNames:
+      - rerc
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+    additionalPrinterColumns:
+    - jsonPath: .status.status
+      name: Status
+      type: string
+    - jsonPath: .status.specStatus
+      name: Spec Status
+      type: string
+    - jsonPath: .status.local
+      name: Local
+      type: string
+    subresources:
+      status: {}
+    schema:
+      openAPIV3Schema:
+        description: RedisEntepriseRemoteCluster represents a remote participating
+          cluster.
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          status:
+            properties:
+              local:
+                description: Indicates whether this object represents a local or a
+                  remote cluster.
+                type: boolean
+              specStatus:
+                description: Whether the desired specification is valid.
+                type: string
+              status:
+                description: The status of the remote cluster.
+                type: string
+              observedGeneration:
+                description: The most recent generation observed for this RERC. It corresponds to the RERC's generation, which is updated by the API Server.
+                type: integer
+            type: object
+          spec:
+            properties:
+              apiFqdnUrl:
+                description: The URL of the cluster, will be used for the active-active
+                  database URL.
+                type: string
+              dbFqdnSuffix:
+                description: The database URL suffix, will be used for the active-active
+                  database replication endpoint and replication endpoint SNI.
+                type: string
+              recNamespace:
+                description: The namespace of the REC that the RERC is pointing at
+                type: string
+              recName:
+                description: The name of the REC that the RERC is pointing at
+                type: string
+              secretName:
+                description: 'The name of the secret containing cluster credentials.
+                  Must be of the following format: "redis-enterprise-<RERC name>"'
+                type: string
+            required:
+              - apiFqdnUrl
+              - recName
+              - recNamespace
+            type: object
+        type: object
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: redisenterpriseactiveactivedatabases.app.redislabs.com
+  labels:
+    app: redis-enterprise
+spec:
+  group: app.redislabs.com
+  names:
+    kind: RedisEnterpriseActiveActiveDatabase
+    listKind: RedisEnterpriseActiveActiveDatabaseList
+    plural: redisenterpriseactiveactivedatabases
+    singular: redisenterpriseactiveactivedatabase
+    shortNames:
+      - reaadb
+  preserveUnknownFields: false
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      additionalPrinterColumns:
+        - jsonPath: .status.status
+          name: Status
+          type: string
+        - jsonPath: .status.specStatus
+          name: Spec Status
+          type: string
+        - jsonPath: .status.linkedRedbs[*]
+          name: Linked REDBs
+          type: string
+        - jsonPath: .status.replicationStatus
+          name: Replication Status
+          type: string
+      subresources:
+        status: {}
+      schema:
+        openAPIV3Schema:
+          description: RedisEnterpriseActiveActiveDatabase is the Schema for the redisenterpriseactiveactivedatabase
+            API
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            status:
+              description: RedisEnterpriseActiveActiveDatabaseStatus defines the observed
+                state of RedisEnterpriseActiveActiveDatabase
+              properties:
+                status:
+                  description: The status of the active active database.
+                  type: string
+                specStatus:
+                  description: Whether the desired specification is valid
+                  type: string
+                linkedRedbs:
+                  description: The linked REDBs.
+                  items:
+                    type: string
+                  type: array
+                participatingClusters:
+                  description: The list of instances/ clusters statuses.
+                  items:
+                    description: Status of participating cluster.
+                    properties:
+                      name:
+                        description: The name of the remote cluster CR that is linked.
+                        type: string
+                      id:
+                        description: The corresponding ID of the instance in the active-active database.
+                        format: int64
+                        type: integer
+                      replicationStatus:
+                        description: The replication status of the participating cluster
+                        enum:
+                        - up
+                        - down
+                        type: string
+                    required:
+                      - name
+                    type: object
+                  type: array
+                guid:
+                  description: The active-active database corresponding GUID.
+                  type: string
+                lastTaskUid:
+                  description: The last active-active database task UID.
+                  type: string
+                redisEnterpriseCluster:
+                  description: The Redis Enterprise Cluster Object this Resource is associated
+                    with
+                  type: string
+                replicationStatus:
+                  description: The overall replication status
+                  enum:
+                  - up
+                  - down
+                  type: string
+                secretsStatus:
+                  description: The status of the secrets
+                  items:
+                    description: Status of secrets.
+                    properties:
+                      name:
+                        description: The name of the secret.
+                        type: string
+                      status:
+                        description: The status of the secret.
+                        enum:
+                        - Valid
+                        - Invalid
+                        type: string
+                    required:
+                    - name
+                    type: object
+                  type: array
+              type: object
+            spec:
+              description: RedisEnterpriseActiveActiveDatabaseSpec defines the desired
+                state of RedisEnterpriseActiveActiveDatabase
+              properties:
+                redisEnterpriseCluster:
+                  description: Connection to Redis Enterprise Cluster
+                  properties:
+                    name:
+                      description: The name of the Redis Enterprise Cluster where the
+                        database should be stored.
+                      type: string
+                  required:
+                    - name
+                  type: object
+                participatingClusters:
+                  description: The list of instances/ clusters specifications and configurations.
+                  items:
+                    properties:
+                      name:
+                        description: The name of the remote cluster CR to link.
+                        type: string
+                    required:
+                      - name
+                    type: object
+                  type: array
+                globalConfigurations:
+                  description: The Active-Active database global configurations,
+                    contains the global properties for each of the participating clusters/ instances databases within the Active-Active database.
+                  properties:
+                    activeActive:
+                      description: Connection/ association to the Active-Active database.
+                      properties:
+                        name:
+                          description: 'The the corresponding Active-Active database name,
+                            Redis Enterprise Active Active Database custom resource name,
+                            this Resource is associated with. In case this resource is
+                            created manually at the active active database creation this
+                            field must be filled via the user, otherwise, the operator
+                            will assign this field automatically. Note: this feature is
+                            currently unsupported.'
+                          type: string
+                        participatingClusterName:
+                          description: 'The corresponding participating cluster name,
+                            Redis Enterprise Remote Cluster custom resource name, in the
+                            Active-Active database, In case this resource is created manually
+                            at the active active database creation this field must be
+                            filled via the user, otherwise, the operator will assign this
+                            field automatically. Note: this feature is currently unsupported.'
+                          type: string
+                      required:
+                        - name
+                        - participatingClusterName
+                      type: object
+                    alertSettings:
+                      description: Settings for database alerts
+                      properties:
+                        bdb_backup_delayed:
+                          description: Periodic backup has been delayed for longer than
+                            specified threshold value [minutes]
+                          properties:
+                            enabled:
+                              description: Alert enabled or disabled
+                              type: boolean
+                            threshold:
+                              description: Threshold for alert going on/off
+                              type: string
+                          required:
+                          - enabled
+                          - threshold
+                          type: object
+                        bdb_crdt_src_high_syncer_lag:
+                          description: Active-active source - sync lag is higher than
+                            specified threshold value [seconds]
+                          properties:
+                            enabled:
+                              description: Alert enabled or disabled
+                              type: boolean
+                            threshold:
+                              description: Threshold for alert going on/off
+                              type: string
+                          required:
+                          - enabled
+                          - threshold
+                          type: object
+                        bdb_crdt_src_syncer_connection_error:
+                          description: Active-active source - sync has connection error
+                            while trying to connect replica source
+                          properties:
+                            enabled:
+                              description: Alert enabled or disabled
+                              type: boolean
+                            threshold:
+                              description: Threshold for alert going on/off
+                              type: string
+                          required:
+                          - enabled
+                          - threshold
+                          type: object
+                        bdb_crdt_src_syncer_general_error:
+                          description: Active-active source - sync encountered in general
+                            error
+                          properties:
+                            enabled:
+                              description: Alert enabled or disabled
+                              type: boolean
+                            threshold:
+                              description: Threshold for alert going on/off
+                              type: string
+                          required:
+                          - enabled
+                          - threshold
+                          type: object
+                        bdb_high_latency:
+                          description: Latency is higher than specified threshold value
+                            [micro-sec]
+                          properties:
+                            enabled:
+                              description: Alert enabled or disabled
+                              type: boolean
+                            threshold:
+                              description: Threshold for alert going on/off
+                              type: string
+                          required:
+                          - enabled
+                          - threshold
+                          type: object
+                        bdb_high_throughput:
+                          description: Throughput is higher than specified threshold
+                            value [requests / sec.]
+                          properties:
+                            enabled:
+                              description: Alert enabled or disabled
+                              type: boolean
+                            threshold:
+                              description: Threshold for alert going on/off
+                              type: string
+                          required:
+                          - enabled
+                          - threshold
+                          type: object
+                        bdb_long_running_action:
+                          description: An alert for state-machines that are running
+                            for too long
+                          properties:
+                            enabled:
+                              description: Alert enabled or disabled
+                              type: boolean
+                            threshold:
+                              description: Threshold for alert going on/off
+                              type: string
+                          required:
+                          - enabled
+                          - threshold
+                          type: object
+                        bdb_low_throughput:
+                          description: Throughput is lower than specified threshold
+                            value [requests / sec.]
+                          properties:
+                            enabled:
+                              description: Alert enabled or disabled
+                              type: boolean
+                            threshold:
+                              description: Threshold for alert going on/off
+                              type: string
+                          required:
+                          - enabled
+                          - threshold
+                          type: object
+                        bdb_ram_dataset_overhead:
+                          description: Dataset RAM overhead of a shard has reached the
+                            threshold value [% of its RAM limit]
+                          properties:
+                            enabled:
+                              description: Alert enabled or disabled
+                              type: boolean
+                            threshold:
+                              description: Threshold for alert going on/off
+                              type: string
+                          required:
+                          - enabled
+                          - threshold
+                          type: object
+                        bdb_ram_values:
+                          description: Percent of values kept in a shard's RAM is lower
+                            than [% of its key count]
+                          properties:
+                            enabled:
+                              description: Alert enabled or disabled
+                              type: boolean
+                            threshold:
+                              description: Threshold for alert going on/off
+                              type: string
+                          required:
+                          - enabled
+                          - threshold
+                          type: object
+                        bdb_replica_src_high_syncer_lag:
+                          description: Replica-of source - sync lag is higher than specified
+                            threshold value [seconds]
+                          properties:
+                            enabled:
+                              description: Alert enabled or disabled
+                              type: boolean
+                            threshold:
+                              description: Threshold for alert going on/off
+                              type: string
+                          required:
+                          - enabled
+                          - threshold
+                          type: object
+                        bdb_replica_src_syncer_connection_error:
+                          description: Replica-of source - sync has connection error
+                            while trying to connect replica source
+                          properties:
+                            enabled:
+                              description: Alert enabled or disabled
+                              type: boolean
+                            threshold:
+                              description: Threshold for alert going on/off
+                              type: string
+                          required:
+                          - enabled
+                          - threshold
+                          type: object
+                        bdb_shard_num_ram_values:
+                          description: Number of values kept in a shard's RAM is lower
+                            than [values]
+                          properties:
+                            enabled:
+                              description: Alert enabled or disabled
+                              type: boolean
+                            threshold:
+                              description: Threshold for alert going on/off
+                              type: string
+                          required:
+                          - enabled
+                          - threshold
+                          type: object
+                        bdb_size:
+                          description: Dataset size has reached the threshold value
+                            [% of the memory limit]
+                          properties:
+                            enabled:
+                              description: Alert enabled or disabled
+                              type: boolean
+                            threshold:
+                              description: Threshold for alert going on/off
+                              type: string
+                          required:
+                          - enabled
+                          - threshold
+                          type: object
+                      type: object
+                    backup:
+                      description: Target for automatic database backups.
+                      properties:
+                        abs:
+                          properties:
+                            absSecretName:
+                              description: The name of the secret that holds ABS credentials.
+                                The secret must contain the keys "AccountName" and "AccountKey",
+                                and these must hold the corresponding credentials
+                              type: string
+                            container:
+                              description: Azure Blob Storage container name.
+                              type: string
+                            subdir:
+                              description: Optional. Azure Blob Storage subdir under
+                                container.
+                              type: string
+                          required:
+                          - absSecretName
+                          - container
+                          type: object
+                        ftp:
+                          properties:
+                            url:
+                              description: a URI of the "ftps://[USER[:PASSWORD]@]HOST[:PORT]/PATH[/]"
+                                format
+                              type: string
+                          required:
+                          - url
+                          type: object
+                        gcs:
+                          description: GoogleStorage
+                          properties:
+                            bucketName:
+                              description: Google Storage bucket name.
+                              type: string
+                            gcsSecretName:
+                              description: The name of the secret that holds the Google
+                                Cloud Storage credentials. The secret must contain the
+                                keys "CLIENT_ID", "PRIVATE_KEY", "PRIVATE_KEY_ID", "CLIENT_EMAIL"
+                                and these must hold the corresponding credentials. The
+                                keys should correspond to the values in the key JSON.
+                              type: string
+                            subdir:
+                              description: Optional. Google Storage subdir under bucket.
+                              type: string
+                          required:
+                          - bucketName
+                          - gcsSecretName
+                          type: object
+                        interval:
+                          description: Backup Interval in seconds
+                          type: integer
+                        mount:
+                          description: MountPointStorage
+                          properties:
+                            path:
+                              description: Path to the local mount point. You must create
+                                the mount point on all nodes, and the redislabs:redislabs
+                                user must have read and write permissions on the local
+                                mount point.
+                              type: string
+                          required:
+                          - path
+                          type: object
+                        s3:
+                          properties:
+                            awsSecretName:
+                              description: The name of the secret that holds the AWS
+                                credentials. The secret must contain the keys "AWS_ACCESS_KEY_ID"
+                                and "AWS_SECRET_ACCESS_KEY", and these must hold the
+                                corresponding credentials.
+                              type: string
+                            bucketName:
+                              description: Amazon S3 bucket name.
+                              type: string
+                            subdir:
+                              description: Optional. Amazon S3 subdir under bucket.
+                              type: string
+                          required:
+                          - awsSecretName
+                          - bucketName
+                          type: object
+                        sftp:
+                          properties:
+                            sftp_url:
+                              description: SFTP url
+                              type: string
+                            sftpSecretName:
+                              description: The name of the secret that holds SFTP credentials.
+                                The secret must contain the "Key" key, which is the
+                                SSH private key for connecting to the sftp server.
+                              type: string
+                          required:
+                          - sftpSecretName
+                          - sftp_url
+                          type: object
+                        swift:
+                          properties:
+                            auth_url:
+                              description: Swift service authentication URL.
+                              type: string
+                            container:
+                              description: Swift object store container for storing
+                                the backup files.
+                              type: string
+                            prefix:
+                              description: Optional. Prefix (path) of backup files in
+                                the swift container.
+                              type: string
+                            swiftSecretName:
+                              description: 'The name of the secret that holds Swift
+                                credentials. The secret must contain the keys "Key"
+                                and "User", and these must hold the corresponding credentials:
+                                service access key and service user name (pattern for
+                                the latter does not allow special characters &,<,>,")'
+                              type: string
+                          required:
+                          - auth_url
+                          - container
+                          - swiftSecretName
+                          type: object
+                      type: object
+                    clientAuthenticationCertificates:
+                      description: The Secrets containing TLS Client Certificate to
+                        use for Authentication
+                      items:
+                        type: string
+                      type: array
+                    dataInternodeEncryption:
+                      description: Internode encryption (INE) setting. An optional boolean
+                        setting, overriding a similar cluster-wide policy. If set to
+                        False, INE is guaranteed to be turned off for this DB (regardless
+                        of cluster-wide policy). If set to True, INE will be turned
+                        on, unless the capability is not supported by the DB ( in such
+                        a case we will get an error and database creation will fail).
+                        If left unspecified, will be disabled if internode encryption
+                        is not supported by the DB (regardless of cluster default).
+                        Deleting this property after explicitly setting its value shall
+                        have no effect.
+                      type: boolean
+                    databasePort:
+                      description: Database port number. TCP port on which the database
+                        is available. Will be generated automatically if omitted. can
+                        not be changed after creation
+                      type: integer
+                    databaseSecretName:
+                      description: The name of the secret that holds the password to
+                        the database (redis databases only). If secret does not exist,
+                        it will be created. To define the password, create an opaque
+                        secret and set the name in the spec. The password will be taken
+                        from the value of the 'password' key. Use an empty string as
+                        value within the secret to disable authentication for the database.
+                        Note - memcached databases must not be set with a value, and
+                        a secret/password will not be automatically created for them.
+                        Use the memcachedSaslSecretName field to set authentication
+                        parameters for memcached databases.
+                      type: string
+                    defaultUser:
+                      description: Is connecting with a default user allowed?  If disabled,
+                        the DatabaseSecret will not be created or updated
+                      type: boolean
+                    evictionPolicy:
+                      description: Database eviction policy. see more https://docs.redislabs.com/latest/rs/administering/database-operations/eviction-policy/
+                      type: string
+                    isRof:
+                      description: Whether it is an RoF database or not. Applicable
+                        only for databases of type "REDIS". Assumed to be false if left
+                        blank.
+                      type: boolean
+                    memcachedSaslSecretName:
+                      description: Credentials used for binary authentication in memcached
+                        databases. The credentials should be saved as an opaque secret
+                        and the name of that secret should be configured using this
+                        field. For username, use 'username' as the key and the actual
+                        username as the value. For password, use 'password' as the key
+                        and the actual password as the value. Note that connections
+                        are not encrypted.
+                      type: string
+                    memorySize:
+                      description: memory size of database. use formats like 100MB,
+                        0.1GB. minimum value in 100MB. When redis on flash (RoF) is
+                        enabled, this value refers to RAM+Flash memory, and it must
+                        not be below 1GB.
+                      type: string
+                    modulesList:
+                      description: List of modules associated with database.
+                        Note - For Active-Active databases this feature is currently in preview. For
+                        this feature to take effect for Active-Active databases, set a boolean environment variable
+                        with the name "ENABLE_ALPHA_FEATURES" to True. This variable can
+                        be set via the redis-enterprise-operator pod spec, or through the
+                        operator-environment-config Config Map.
+                      items:
+                        description: 'Redis Enterprise Module: https://redislabs.com/redis-enterprise/modules/'
+                        properties:
+                          config:
+                            description: Module command line arguments e.g. VKEY_MAX_ENTITY_COUNT
+                              30
+                            type: string
+                          name:
+                            description: The module's name e.g "ft" for redissearch
+                            type: string
+                          uid:
+                            description: Module's uid - do not set, for system use only
+                              nolint:staticcheck // custom json tag unknown to the linter
+                            type: string
+                          version:
+                            description: Module's semantic version e.g "1.6.12"
+                            type: string
+                        required:
+                        - name
+                        - version
+                        type: object
+                      type: array
+                    ossCluster:
+                      description: OSS Cluster mode option. Note that not all client
+                        libraries support OSS cluster mode.
+                      type: boolean
+                    persistence:
+                      description: Database on-disk persistence policy
+                      enum:
+                      - disabled
+                      - aofEverySecond
+                      - aofAlways
+                      - snapshotEvery1Hour
+                      - snapshotEvery6Hour
+                      - snapshotEvery12Hour
+                      type: string
+                    proxyPolicy:
+                      description: 'The policy used for proxy binding to the endpoint.
+                        Supported proxy policies are: single/all-master-shards/all-nodes
+                        When left blank, the default value will be chosen according
+                        to the value of ossCluster - single if disabled, all-master-shards
+                        when enabled'
+                      type: string
+                    rackAware:
+                      description: 'Whether database should be rack aware. This improves
+                        availability - more information: https://docs.redislabs.com/latest/rs/concepts/high-availability/rack-zone-awareness/'
+                      type: boolean
+                    redisEnterpriseCluster:
+                      description: Connection to Redis Enterprise Cluster
+                      properties:
+                        name:
+                          description: The name of the Redis Enterprise Cluster where
+                            the database should be stored.
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    redisVersion:
+                      description: Redis OSS version. For existing databases - Upgrade
+                        Redis OSS version. For new databases - the version which the
+                        database will be created with. If set to 'major' - will always
+                        upgrade to the most recent major Redis version. If set to 'latest'
+                        - will always upgrade to the most recent Redis version. Depends
+                        on 'redisUpgradePolicy' - if you want to set the value to 'latest'
+                        for some databases, you must set redisUpgradePolicy on the cluster
+                        before. Possible values are 'major' or 'latest' When using upgrade
+                        - make sure to backup the database before. This value is used
+                        only for database type 'redis'
+                      enum:
+                      - major
+                      - latest
+                      type: string
+                    replicaSources:
+                      description: What databases to replicate from
+                      items:
+                        properties:
+                          clientKeySecret:
+                            description: 'Secret that defines the client certificate
+                              and key used by the syncer in the target database cluster.
+                              The secret must have 2 keys in its map: "cert" which is
+                              the PEM encoded certificate, and "key" which is the PEM
+                              encoded private key.'
+                            type: string
+                          compression:
+                            description: GZIP compression level (0-6) to use for replication.
+                            type: integer
+                          replicaSourceName:
+                            description: The name of the resource from which the source
+                              database URI is derived. The type of resource must match
+                              the type specified in the ReplicaSourceType field.
+                            type: string
+                          replicaSourceType:
+                            description: The type of resource from which the source
+                              database URI is derived. If set to 'SECRET', the source
+                              database URI is derived from the secret named in the ReplicaSourceName
+                              field. The secret must have a key named 'uri' that defines
+                              the URI of the source database in the form of 'redis://...'.
+                              The type of secret (kubernetes, vault, ...) is determined
+                              by the secret mechanism used by the underlying REC object.
+                              If set to 'REDB', the source database URI is derived from
+                              the RedisEnterpriseDatabase resource named in the ReplicaSourceName
+                              field.
+                            type: string
+                          serverCertSecret:
+                            description: 'Secret that defines the server certificate
+                              used by the proxy in the source database cluster. The
+                              secret must have 1 key in its map: "cert" which is the
+                              PEM encoded certificate.'
+                            type: string
+                          tlsSniName:
+                            description: TLS SNI name to use for the replication link.
+                            type: string
+                        required:
+                        - replicaSourceName
+                        - replicaSourceType
+                        type: object
+                      type: array
+                    replication:
+                      description: In-memory database replication. When enabled, database
+                        will have replica shard for every master - leading to higher
+                        availability.
+                      type: boolean
+                    rofRamSize:
+                      description: The size of the RAM portion of an RoF database. Similarly
+                        to "memorySize" use formats like 100MB, 0.1GB It must be at
+                        least 10% of combined memory size (RAM+Flash), as specified
+                        by "memorySize".
+                      type: string
+                    rolesPermissions:
+                      description: List of Redis Enteprise ACL and Role bindings to
+                        apply
+                      items:
+                        description: Redis Enterprise Role and ACL Binding
+                        properties:
+                          acl:
+                            description: 'Acl Name of RolePermissionType (note: use
+                              exact name of the ACL from the Redis Enterprise ACL list,
+                              case sensitive)'
+                            type: string
+                          role:
+                            description: 'Role Name of RolePermissionType (note: use
+                              exact name of the role from the Redis Enterprise role
+                              list, case sensitive)'
+                            type: string
+                          type:
+                            description: Type of Redis Enterprise Database Role Permission
+                            type: string
+                        required:
+                        - acl
+                        - role
+                        - type
+                        type: object
+                      type: array
+                    shardCount:
+                      description: Number of database server-side shards
+                      type: integer
+                    shardsPlacement:
+                      description: Control the density of shards - should they reside
+                        on as few or as many nodes as possible. Available options are
+                        "dense" or "sparse". If left unset, defaults to "dense".
+                      type: string
+                    tlsMode:
+                      description: Require SSL authenticated and encrypted connections
+                        to the database. enabled - all incoming connections to the Database
+                        must use SSL. disabled - no incoming connection to the Database
+                        should use SSL. replica_ssl - databases that replicate from
+                        this one need to use SSL.
+                      enum:
+                      - disabled
+                      - enabled
+                      - replica_ssl
+                      type: string
+                    type:
+                      description: The type of the database.
+                      enum:
+                      - redis
+                      - memcached
+                      type: string
+                  type: object
+              required:
+              - participatingClusters
+              type: object
+          type: object
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15476,6 +16464,8 @@ spec:
   selector:
     matchLabels:
       name: redis-enterprise-operator
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
@@ -15485,11 +16475,12 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.4.2-5
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.4.2-6
           securityContext:
             runAsUser: 1001
           command:
-          - redis-enterprise-operator
+          - operator-root
+          - operator
           imagePullPolicy: Always
           envFrom:
             - configMapRef:
@@ -15531,9 +16522,10 @@ spec:
               port: 8080
               scheme: HTTP
         - name: admission
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.4.2-5
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.4.2-6
           command:
-            - /usr/local/bin/admission
+          - operator-root
+          - admission
           imagePullPolicy: Always
           envFrom:
             - configMapRef:
