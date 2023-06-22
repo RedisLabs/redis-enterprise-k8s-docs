@@ -3,14 +3,10 @@
 
 This document describes how to deploy an Active-Active database with Redis Enterprise for Kubernetes.
 
-**Disclaimer:**
-  This feature is in public preview.
-
 
 **This document assumes the following:**
   - You have at least two running Redis Enterprise clusters that will be used as your participating clusters.
   - On each Kubernetes cluster you have Ingress controller or Openshift Routes deployed.
-  - You have admin access level for each Kubernetes cluster.
 
 ## Table of contents
   * [Overview](#overview)
@@ -19,9 +15,11 @@ This document describes how to deploy an Active-Active database with Redis Enter
   * [Remove participating cluster from an existing Active-Active database](#remove-participating-cluster-from-an-existing-active-active-database)
   * [Set the database global configurations specifications](#set-the-database-global-configurations-specifications)
   * [Set global database secret](#set-global-database-secret)
+  * [Manage global configurations secrets](#manage-global-configurations-secrets)
   * [Delete an existing Active-Active database](#delete-an-existing-active-active-database)
   * [Update existing participating cluster (RERC) details](#update-existing-participating-cluster-rerc-details)
   * [Update existing participating cluster (RERC) secret](#update-existing-participating-cluster-rerc-secret)
+  * [Active-Active database with Redis modules](#active-active-database-with-redis-modules)
   * [Test your Active-Active database](#test-your-active-active-database)
   * [Limitations](#limitations)
 
@@ -34,6 +32,9 @@ The new custom resources for declaring Active-Active databases in Redis Enterpri
 
 For example, an Active-Active database with two participating clusters should have two Redis Enterprise Remote Cluster (RERC) custom resources and one Redis Enterprise Active Active Database (REAADB) custom resource on each participating cluster.
 
+### General note about Hashicorp Vault secrets
+The operator supports the use of Hashicorp Vault Secrets for the Active-Active database REAADB/RERC custom resources secrets. Throughout this document there are explanations about using K8s secrets. If Hashicorp Vault is used by the REC, the secrets should be saved within the Hashicorp Vault server in the same path that is used for other REC/REDB secrets, and the name should be used appropriately with RERC/REAADB. For some explanations/examples of how to store secrets in vault, see [the Hashicorp Vault integration document.](vault/README.md)
+
 ## Create a new Active-Active database
 
 **For each participating cluster with a namespace that hosts the Redis Enterprise operator, follow the [Participating cluster preparation setup](#participating-cluster-preparation-setup)**  
@@ -45,25 +46,9 @@ For example, an Active-Active database with two participating clusters should ha
 Note:
   * This part is for new participating clusters that are not already configured to use the Redis Enterprise Operator active-active databases.
 
-1. Apply the following CRDs:
-```
-  kubectl apply -f crds/reaadb_crd.yaml
-  kubectl apply -f crds/rerc_crd.yaml
-```
+1. In case your REC is not configured with the 'spec.ingressOrRouteSpec', please configure a Ingress or Route, follow the instructions [here](setting_ingress_or_route_readme.md)
 
-Note:
-  * This step requires "cluster role" permissions for applying CRD resources.
-
-2. Add the following environment variables to enable the active active and remote cluster controllers on the Redis Enterprise operator Configmap:
-```
-  kubectl patch cm  operator-environment-config --type merge --patch "{\"data\": \
-    {\"ACTIVE_ACTIVE_DATABASE_CONTROLLER_ENABLED\":\"true\", \
-    \"REMOTE_CLUSTER_CONTROLLER_ENABLED\":\"true\"}}"
-```
-
-3. Configure a Ingress or Route, follow the instructions [here](setting_ingress_or_route_readme.md)
-
-4. Configure ValidatingWebhookConfiguration, follow the instructions [here](admission/README.md)  
+2. Configure ValidatingWebhookConfiguration, follow the instructions [here](admission/README.md)  
 Note: this is a must for managing Active-Active database via the operator.
 
 #### Part 2: participating cluster info preparation setup
@@ -106,7 +91,7 @@ type: Opaque
 ```
 
 2. For each of the secrets you collected, generate a new secret with the credentials data and name it with the following convention: `redis-enterprise-<RERC name>`, replace the `<RERC name>` with the RERC name.
-The new secret generated from the previous example of Redis Enterprise cluster named "rec1" that resides in "ns1" namespace that will be used for the RERC name: "rerc1" should look as follows:
+The new secret generated from the previous example of Redis Enterprise cluster named "rec1" that resides in "ns1" namespace that will be used for the RERC name: "new-york-1" should look as follows:
 ```
 apiVersion: v1
 data:
@@ -114,7 +99,7 @@ data:
   username: PHNvbWUgdXNlcj4
 kind: Secret
 metadata:
-  name: redis-enterprise-rerc1
+  name: redis-enterprise-new-york-1
 type: Opaque
 ```
 
@@ -134,26 +119,26 @@ a. The example for a REC named "rec1" in the namespace "ns1":
 apiVersion: app.redislabs.com/v1alpha1
 kind: RedisEnterpriseRemoteCluster
 metadata:
-  name: rerc1
+  name: new-york-1
 spec:
   recName: rec1
   recNamespace: ns1
-  apiFqdnUrl: test-example-api-rec1-ns1.redis.com
-  dbFqdnSuffix: -example-cluster-rec1-ns1.redis.com
-  secretName: redis-enterprise-rerc1
+  apiFqdnUrl: test-example-api-new-york-1.redis.com
+  dbFqdnSuffix: -example-cluster-new-york-1.redis.com
+  secretName: redis-enterprise-new-york-1
 ```
 b. The example for a REC named "rec2" in the namespace "ns2":
 ```
 apiVersion: app.redislabs.com/v1alpha1
 kind: RedisEnterpriseRemoteCluster
 metadata:
-  name: rerc2
+  name: boston-1
 spec:
   recName: rec2
   recNamespace: ns2
-  apiFqdnUrl: test-example-api-rec2-ns2.redis.com
-  dbFqdnSuffix: -example-cluster-rec2-ns2.redis.com
-  secretName: redis-enterprise-rerc2
+  apiFqdnUrl: test-example-api-boston-1.redis.com
+  dbFqdnSuffix: -example-cluster-boston-1.redis.com
+  secretName: redis-enterprise-boston-1
 ```
 
 Notes:
@@ -168,14 +153,14 @@ To follow the statuses of the applied RERC custom resources, run the following:
 ```
   kubectl get rerc <Created RERC name>
 ```
-For example to view the status of the RERC named "rerc1":
+For example to view the status of the RERC named "new-york-1":
 ```
-  kubectl get rerc rerc1
+  kubectl get rerc new-york-1
 ```
 The output should be as below:
 ```
   NAME        STATUS   SPEC STATUS   LOCAL
-  rerc1   Active   Valid         true
+  new-york-1   Active   Valid         true
 ```
 
 Note:
@@ -190,8 +175,8 @@ metadata:
   name: example-aadb-1
 spec:
   participatingClusters:
-    - name: rerc1
-    - name: rerc2
+    - name: new-york-1
+    - name: boston-1
   globalConfigurations:
     shardCount: 3
 ```
@@ -350,7 +335,7 @@ For example, to get the REAADB named: "example-aadb-1" participating clusters st
 ```
 Following is the output of the example above:
 ```
-  [{"id":1,"name":"rerc1"},{"id":2,"name":"rerc2"},{"id":3,"name":"rerc3"}]
+  [{"id":1,"name":"new-york-1"},{"id":2,"name":"boston-1"},{"id":3,"name":"rerc3"}]
 ```
 
 ## Remove participating cluster from an existing Active-Active database
@@ -376,7 +361,7 @@ For example, to view the status of the REAADB named "example-aadb-1" after remov
 ```
 the output should be as below:
 ```
-  {... ,"participatingClusters":[{"id":1,"name":"rerc1"},{"id":2,"name":"rerc2"}],"redisEnterpriseCluster":"rec1","specStatus":"Valid","status":"active"}
+  {... ,"participatingClusters":[{"id":1,"name":"new-york-1"},{"id":2,"name":"boston-1"}],"redisEnterpriseCluster":"rec1","specStatus":"Valid","status":"active"}
 ```
 
 **On the participating cluster that you removed do the following:**  
@@ -424,6 +409,10 @@ To get the REAADB run the following:
   kubectl get reaadb <REAADB name> -o yaml
 ```
 
+For example, to view the status of the REAADB named "example-aadb-1":
+```
+  kubectl get reaadb example-aadb-1 -o=jsonpath='{.status.secretsStatus}'
+```
 ## Set global database secret
 
 Notes:
@@ -480,13 +469,80 @@ To get the REAADB secrets status run the following:
 ```
   kubectl get reaadb <REAADB name> -o=jsonpath='{.status.secretsStatus}'
 ```
-For example, to view the status of the REAADB named "example-aadb-1":
-```
-  kubectl get reaadb example-aadb-1 -o=jsonpath='{.status.secretsStatus}'
 ```
 The output should be as below (with the secret used in previous steps):
 ```
   [{"name":"my-db-secret","status":"Invalid"}]
+```
+ Note: as the secret status is 'Invalid' it means that the secret isn't synced yet on the participating cluster.
+
+2. Sync the secret on the other participating clusters.
+Apply the generated secret from the previous steps, replace `<generated secret file>` with a file containing the secret you generated in the previous step.
+```
+  kubectl apply -f <generated secret file>
+```
+
+## Manage global configurations secrets
+
+The secrets under the REAADBs' 'spec.globalConfigurations' sync with the correct data on all of the participating clusters is the users' responsibility.
+
+Notes:
+* This section is regarding the secrets that are under the REAADB '.spec.globalConfigurations'. For more information and all the fields please view the [REAADB API readme](redis_enterprise_active_active_database_api.md)
+* For setting the global database secret please view [Set global database secret](#set-global-database-secret).
+
+**On one of the participating clusters that already exists do the following:**  
+
+1. Generate the yaml containing the secret with the relevant data.
+For example a secret named 'my-secret' with the data: password 'my-pass' as base 64 encoded:
+```
+apiVersion: v1
+data:
+  password: bXktcGFzcw
+kind: Secret
+metadata:
+  name: my-secret
+type: Opaque
+```
+
+2. Apply the generated secret from the previous step, replace `<generated secret file>` with a file containing the secret you generated in the previous step.
+```
+  kubectl apply -f <generated secret file>
+```
+
+3. Set the required field under the REAADBs' 'spec.globalConfigurations' with the secret name.
+For example, to patch a REAADB named 'example-aadb-1' with the field containing the secret name from the previous steps on the global configurations run the following:
+```
+  kubectl patch reaadb example-aadb-1 --type merge --patch '{"spec": {"globalConfigurations": {"<field>": "my-secret"}}}'
+```
+
+4. Follow the statuses of the REAADB custom resource run the following:
+```
+  kubectl get reaadb <REAADB name>
+```
+For example, to view the status of the REAADB named "example-aadb-1":
+```
+  kubectl get reaadb example-aadb-1
+```
+The output should be as below:
+```
+  NAME             STATUS   SPEC STATUS   GLOBAL CONFIGURATIONS REDB   LINKED REDBS
+  example-aadb-1   active   Valid                                      
+```
+
+Note:
+  * As the 'STATUS' and the 'SPEC STATUS' are 'Active' and 'Valid' respectively it means the configurations are correct. In case of an error status, view the REAADB custom resource events and the Redis Enterprise operator logs.
+
+**On the other participating clusters that already exists do the following:**  
+
+1. View the secret status on the REAADB (on the other participating clusters).
+To get the REAADB secrets status run the following:
+```
+  kubectl get reaadb <REAADB name> -o=jsonpath='{.status.secretsStatus}'
+```
+```
+The output should be as below (with the secret used in previous steps):
+```
+  [{"name":"my-secret","status":"Invalid"}]
 ```
  Note: as the secret status is 'Invalid' it means that the secret isn't synced yet on the participating cluster.
 
@@ -519,22 +575,22 @@ To get all the REAADB that exists run the following:
 **On the participating cluster you want to modify (with the local RERC) do the following:**  
 
 1. Patch the participating cluster corresponding local RERC that you want to update.
-For example updating the DB FQDN suffix of an RERC named: "rerc1":
+For example updating the DB FQDN suffix of an RERC named: "new-york-1":
 ```
-  kubectl patch rerc rerc1 --type merge --patch '{"spec": {"dbFqdnSuffix": "-example2-cluster-rec1-ns1.redis.com"}}'
+  kubectl patch rerc new-york-1 --type merge --patch '{"spec": {"dbFqdnSuffix": "-example2-cluster-new-york-1.redis.com"}}'
 ```
 To follow the statuses of the updated RERC custom resources run the following:
 ```
   kubectl get rerc <Updated RERC name>
 ```
-For example to view the status of the RERC named "rerc1":
+For example to view the status of the RERC named "new-york-1":
 ```
-  kubectl get rerc rerc1
+  kubectl get rerc new-york-1
 ```
 The output should be as below:
 ```
   NAME        STATUS   SPEC STATUS   LOCAL
-  rerc1   Active   Valid         true
+  new-york-1  Active   Valid         true
 ```
 
 Note:
@@ -567,7 +623,7 @@ Note:
 **On the participating cluster that you changed the REC secret (with the local RERC) do the following:**  
 
 1. update the secret with the new credentials data and name it with the following convention: `redis-enterprise-<RERC name>`, replace the `<RERC name>` with the RERC name.
-For example, a secret generated with the RERC name 'rerc1':
+For example, a secret generated with the RERC name 'new-york-1':
 ```
 apiVersion: v1
 data:
@@ -575,7 +631,7 @@ data:
   username: PHNvbWUgdXNlcj4
 kind: Secret
 metadata:
-  name: redis-enterprise-rerc1
+  name: redis-enterprise-new-york-1
 type: Opaque
 ```
 
@@ -589,14 +645,14 @@ To follow the statuses of the updated RERC custom resources run the following:
 ```
   kubectl get rerc <RERC name>
 ```
-For example to view the status of the RERC named "rerc1":
+For example to view the status of the RERC named "new-york-1":
 ```
-  kubectl get rerc rerc1
+  kubectl get rerc new-york-1
 ```
 The output should be as below:
 ```
   NAME        STATUS   SPEC STATUS   LOCAL
-  rerc1   Active   Valid         true
+  new-york-1  Active   Valid         true
 ```
 
 Note:
@@ -624,7 +680,7 @@ Note:
 **On the other clusters that are participating in the Active-Active database do the following:**  
 
 1. update the secret with the new credentials data and name it with the following convention: `redis-enterprise-<RERC name>`, replace the `<RERC name>` with the RERC name.
-For example, a secret generated with the RERC name 'rerc1':
+For example, a secret generated with the RERC name 'new-york-1':
 ```
 apiVersion: v1
 data:
@@ -632,7 +688,7 @@ data:
   username: PHNvbWUgdXNlcj4
 kind: Secret
 metadata:
-  name: redis-enterprise-rerc1
+  name: redis-enterprise-new-york-1
 type: Opaque
 ```
 
@@ -646,18 +702,28 @@ To follow the statuses of the updated RERC custom resources run the following:
 ```
   kubectl get rerc <RERC name>
 ```
-For example to view the status of the RERC named "rerc1":
+For example to view the status of the RERC named "new-york-1":
 ```
-  kubectl get rerc rerc1
+  kubectl get rerc new-york-1
 ```
 The output should be as below:
 ```
   NAME        STATUS   SPEC STATUS   LOCAL
-  rerc1   Active   Valid         true
+  new-york-1  Active   Valid         true
 ```
 
 Note:
   * As the 'STATUS' and the 'SPEC STATUS' are 'Active' and 'Valid' respectively it means the configurations are correct, in case of an error please view the RERC custom resource events and/ or the Redis Enterprise operator logs.
+
+## Active-Active database with Redis modules
+
+Note - Modules are currently in preview for Active-Active databases.
+
+To use modules with Active-Active databases enable the alpha feature flag on all participating clusters:  
+To enable modules for Active-Active databases, set a boolean environment variable with the name "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map.
+
+Importent note:
+upgrading modules with Active-Active databases is currently not supported via the operator, to upgrade please use the RS APIs directly and after the module has successfully upgraded update the module version on the REAADB custom resource.
 
 ## Test your Active-Active database
 
@@ -692,17 +758,5 @@ From the output fetch the redis 'targetPort':
 ### No migration from the previous AA method
 migrating Active-Active database with non-operator managed Active-Active database is currently not supported.
 
-### HashiCorp Vault secret storage
-Storing the secrets in HashiCorp Vault is currently not supported for operator managed Active-Active database .
-
 ### database version is currently not supported
-Setting database specific version is currently not supported for operator managed Active-Active database .
-
-### Modules are currently not supported
-Redis modules are currently not supported for operator managed Active-Active database .
-
-### Backup are currently not supported
-Database backups are currently not supported for operator managed Active-Active database .
-
-### client authentication certificates are currently not supported
-client authentication certificates are currently not supported for operator managed Active-Active database .
+Setting database specific version is currently not supported for operator managed Active-Active database.

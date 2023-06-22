@@ -9,6 +9,8 @@ spec:
   selector:
     matchLabels:
       name: redis-enterprise-operator
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
@@ -18,9 +20,10 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:6.4.2-5
+          image: redislabs/operator:6.4.2-6
           command:
-          - redis-enterprise-operator
+          - operator-root
+          - operator
           imagePullPolicy: Always
           envFrom:
             - configMapRef:
@@ -60,9 +63,10 @@ spec:
               port: 8080
               scheme: HTTP
         - name: admission
-          image: redislabs/operator:6.4.2-5
+          image: redislabs/operator:6.4.2-6
           command:
-            - /usr/local/bin/admission
+          - operator-root
+          - admission
           imagePullPolicy: Always
           envFrom:
             - configMapRef:

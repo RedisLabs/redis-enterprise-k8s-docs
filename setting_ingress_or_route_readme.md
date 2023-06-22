@@ -72,13 +72,7 @@ For example, wildcard DB FQDN suffix DNS of a REC named "rec1", with the namespa
 
 On the namespace where the REC resides, do the following:
 
-1. Add the following environment variables to enable alpha features on the Redis Enterprise operator Configmap:
-```
-  kubectl patch cm  operator-environment-config --type merge --patch "{\"data\": \
-    {\"ENABLE_ALPHA_FEATURES\":\"true\"}}"
-```
-
-2. Configure the Ingress controller or Openshift Routes configurations via the 'ingressOrRouteSpec' field on the REC spec.
+Please configure the Ingress controller or Openshift Routes configurations via the 'ingressOrRouteSpec' field on the REC spec.
 For example, configuring a Nginx ingress via the above configurations on a REC named "rec1" with the namespace "ns1":
 ```
   kubectl patch rec  rec1 --type merge --patch "{\"spec\": \

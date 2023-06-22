@@ -22,7 +22,11 @@ rules:
   - apiGroups:
       - app.redislabs.com
     resources: ["redisenterpriseclusters", "redisenterpriseclusters/status", "redisenterpriseclusters/finalizers",
-                "redisenterprisedatabases", "redisenterprisedatabases/status", "redisenterprisedatabases/finalizers"]
+                "redisenterprisedatabases", "redisenterprisedatabases/status", "redisenterprisedatabases/finalizers",
+                "redisenterpriseremoteclusters", "redisenterpriseremoteclusters/status",
+                "redisenterpriseremoteclusters/finalizers",
+                "redisenterpriseactiveactivedatabases", "redisenterpriseactiveactivedatabases/status",
+                "redisenterpriseactiveactivedatabases/finalizers"]
     verbs: ["delete", "deletecollection", "get", "list", "patch", "create", "update", "watch"]
   - apiGroups: [""]
     resources: ["secrets"]

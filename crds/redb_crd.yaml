@@ -391,7 +391,12 @@ spec:
                   and it must not be below 1GB.
                 type: string
               modulesList:
-                description: List of modules associated with database
+                description: List of modules associated with database.
+                  Note - For Active-Active databases this feature is currently in preview. For
+                  this feature to take effect for Active-Active databases, set a boolean environment variable
+                  with the name "ENABLE_ALPHA_FEATURES" to True. This variable can
+                  be set via the redis-enterprise-operator pod spec, or through the
+                  operator-environment-config Config Map.
                 items:
                   description: 'Redis Enterprise Module: https://redislabs.com/redis-enterprise/modules/'
                   properties:

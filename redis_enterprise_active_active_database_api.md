@@ -13,6 +13,7 @@ This document describes the parameters for the Redis Enterprise Active Active Da
 * [Enums](#enums)
   * [ActiveActiveDatabaseSecretStatus](#activeactivedatabasesecretstatus)
   * [ActiveActiveDatabaseStatus](#activeactivedatabasestatus)
+  * [ReplicationStatus](#replicationstatus)
 ## Objects
 
 ### ParticipatingCluster
@@ -30,6 +31,7 @@ Status of participating cluster.
 | ----- | ----------- | ------ | -------- | -------- |
 | name | The name of the remote cluster CR that is linked. | string |  | true |
 | id | The corresponding ID of the instance in the active-active database. | *int64 |  | false |
+| replicationStatus | The replication status of the participating cluster | [ReplicationStatus](#replicationstatus) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseActiveActiveDatabase
@@ -67,7 +69,7 @@ RedisEnterpriseActiveActiveDatabaseStatus defines the observed state of RedisEnt
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | specStatus | Whether the desired specification is valid | [SpecStatusName](#specstatusname) |  | false |
-| status | The status of the active active database. | [ActiveActiveDatabaseStatus](#activeactivedatabasestatus) |  | false |
+| status | The status of the active active database. This status does not include the replication link (data-path) status For the replication link status please view the 'Replication Status' or the 'status.replicationStatus' on the custom resource. | [ActiveActiveDatabaseStatus](#activeactivedatabasestatus) |  | false |
 | participatingClusters | The list of instances/ clusters statuses. | []*[ParticipatingClusterStatus](#participatingclusterstatus) |  | false |
 | globalConfigurations | The active-active default global configurations linked REDB | string |  | false |
 | linkedRedbs | The linked REDBs. | []string |  | false |
@@ -75,6 +77,7 @@ RedisEnterpriseActiveActiveDatabaseStatus defines the observed state of RedisEnt
 | lastTaskUid | The last active-active database task UID. | string |  | false |
 | redisEnterpriseCluster | The Redis Enterprise Cluster Object this Resource is associated with | string |  | false |
 | secretsStatus | The status of the secrets | []*[SecretStatus](#secretstatus) |  | false |
+| replicationStatus | The overall replication status | [ReplicationStatus](#replicationstatus) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### SecretStatus
@@ -106,4 +109,12 @@ Status of secrets.
 | "creation-failed" | Active-active database creation has failed. |
 | "error" | Active-active database is in recovery. ActiveActiveDatabaseStatusRecovery ActiveActiveDatabaseStatus = "recovery" Active-active database status error. |
 | "" | Active-active database status unknown. |
+[Back to Table of Contents](#table-of-contents)
+
+### ReplicationStatus
+
+| Value | Description |
+| ----- | ----------- |
+| "up" |  |
+| "down" |  |
 [Back to Table of Contents](#table-of-contents)

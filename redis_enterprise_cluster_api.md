@@ -108,11 +108,12 @@ Customization options for the REC API service.
 [Back to Table of Contents](#table-of-contents)
 
 ### ContainerTimezoneSpec
-Used to set the timezone across all redis enterprise containers.
+Used to set the timezone across all redis enterprise containers - You can either propagate the hosts timezone to RS pods or set it manually via timezoneName.
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| propagateHost | Identifies that container timezone should be in sync with the host. | *[PropagateHost](#propagatehost) |  | false |
+| propagateHost | Identifies that container timezone should be in sync with the host, this option mounts a hostPath volume onto RS pods that could be restricted in some systems. | *[PropagateHost](#propagatehost) |  | false |
+| timezoneName | POSIX-style timezone name as a string to be passed as EnvVar to RE pods, e.g. "Europe/London". | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### CrdbCoordinator
@@ -339,7 +340,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | redisEnterpriseAdditionalPodSpecAttributes | ADVANCED USAGE USE AT YOUR OWN RISK - specify pod attributes that are required for the statefulset - Redis Enterprise pods. Pod attributes managed by the operator might override these settings. Also make sure the attributes are supported by the K8s version running on the cluster - the operator does not validate that. | *[v1.PodSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podspec-v1-core) |  | false |
 | license | Redis Enterprise License | string | Empty string which is a [Trial Mode licesne](https://docs.redislabs.com/latest/rs/administering/cluster-operations/settings/license-keys/#trial-mode) | false |
 | licenseSecretName | K8s secret or Vault Secret Name/Path to use for Cluster License. When left blank, the license is read from the "license" field. Note that you can't specify non-empty values in both "license" and "licenseSecretName", only one of these fields can be used to pass the license string. The license needs to be stored under the key "license". | string | Empty string | false |
-| username | Username for the admin user of Redis Enterprise | string | demo@redislabs.com | false |
+| username | Username for the admin user of Redis Enterprise | string | demo@redis.com | false |
 | nodeSelector | Selector for nodes that could fit Redis Enterprise pod | *map[string]string |  | false |
 | redisEnterpriseImageSpec | Specification for Redis Enterprise container image | *[ImageSpec](#imagespec) | the default Redis Enterprise image for this version | false |
 | redisEnterpriseServicesRiggerImageSpec | Specification for Services Rigger container image | *[ImageSpec](#imagespec) | the default Services Rigger image for this version | false |
@@ -360,9 +361,11 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | clusterRecovery | ClusterRecovery initiates cluster recovery when set to true. Note that this field is cleared automatically after the cluster is recovered | *bool |  | false |
 | rackAwarenessNodeLabel | Node label that specifies rack ID - if specified, will create rack aware cluster. Rack awareness requires node label must exist on all nodes. Additionally, operator needs a special cluster role with permission to list nodes. | string |  | false |
 | priorityClassName | Adds the priority class to pods managed by the operator | string |  | false |
+| hostAliases | Adds hostAliases entries to the Redis Enterprise pods | []v1.HostAlias |  | false |
 | volumes | additional volumes | [][v1.Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volume-v1-core) |  | false |
 | redisEnterpriseVolumeMounts | additional volume mounts within the redis enterprise containers | [][v1.VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#volumemount-v1-core) |  | false |
-| podAnnotations | pod annotations | map[string]string |  | false |
+| podAnnotations | annotations for the service rigger and redis enterprise pods | map[string]string |  | false |
+| redisEnterprisePodAnnotations | annotations for redis enterprise pod | map[string]string |  | false |
 | podTolerations | Tolerations that are added to all managed pods. for more information: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/ | [][v1.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#toleration-v1-core) | empty | false |
 | slaveHA | Slave high availability mechanism configuration. | *[SlaveHA](#slaveha) |  | false |
 | clusterCredentialSecretName | Secret Name/Path to use for Cluster Credentials. To be used only if ClusterCredentialSecretType is vault. If left blank, will use cluster name. | string |  | false |
@@ -379,9 +382,10 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | ocspConfiguration | An API object that represents the cluster's OCSP configuration. To enable OCSP, the cluster's proxy certificate should contain the OCSP responder URL. | *[OcspConfiguration](#ocspconfiguration) |  | false |
 | encryptPkeys | Private key encryption Possible values: true/false | *bool |  | false |
 | containerTimezone | Container timezone configuration. While the default timezone on all containers is UTC, this setting can be used to set the timezone on services rigger/bootstrapper/RS containers. Currently the only supported value is to propagate the host timezone to all containers. | *[ContainerTimezoneSpec](#containertimezonespec) |  | false |
-| ingressOrRouteSpec | Access configurations for the Redis Enterprise Cluster and Databases. Note - this feature is currently in preview. For this feature to take effect, set a boolean environment variable with the name "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. At most one of ingressOrRouteSpec or activeActive fields can be set at the same time. | *[IngressOrRouteSpec](#ingressorroutespec) |  | false |
+| ingressOrRouteSpec | Access configurations for the Redis Enterprise Cluster and Databases. At most one of ingressOrRouteSpec or activeActive fields can be set at the same time. | *[IngressOrRouteSpec](#ingressorroutespec) |  | false |
 | services | Customization options for operator-managed service resources created for Redis Enterprise clusters and databases | *[Services](#services) |  | false |
 | ldap | Cluster-level LDAP configuration, such as server addresses, protocol, authentication and query settings. | *[LDAPSpec](#ldapspec) |  | false |
+| extraEnvVars | ADVANCED USAGE: use carefully. Add environment variables to RS StatefulSet's containers. | []v1.EnvVar |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseClusterStatus
@@ -446,9 +450,10 @@ Specification for service rigger
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | databaseServiceType | Service types for access to databases. should be a comma separated list. The possible values are cluster_ip, headless and load_balancer. | string | cluster_ip,headless | true |
-| serviceNaming |  | string |  | true |
+| serviceNaming | Used to determine how to name the services created automatically when a database is created. When bdb_name is used, the database name will be also used for the service name. When redis-port is used, the service will be named redis-<port> | string | bdb_name | true |
 | extraEnvVars |  | []v1.EnvVar |  | false |
 | servicesRiggerAdditionalPodSpecAttributes | ADVANCED USAGE USE AT YOUR OWN RISK - specify pod attributes that are required for the rigger deployment pod. Pod attributes managed by the operator might override these settings (Containers, serviceAccountName, podTolerations, ImagePullSecrets, nodeSelector, PriorityClassName, PodSecurityContext). Also make sure the attributes are supported by the K8s version running on the cluster - the operator does not validate that. | *[v1.PodSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podspec-v1-core) |  | false |
+| podAnnotations | annotations for the service rigger pod | map[string]string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### SlaveHA

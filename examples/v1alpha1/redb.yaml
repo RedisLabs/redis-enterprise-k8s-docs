@@ -4,6 +4,3 @@ metadata:
   name: redis-enterprise-database
   labels:
     app: redis-enterprise
-spec:
-  redisEnterpriseCluster:
-    name: redis-enterprise
