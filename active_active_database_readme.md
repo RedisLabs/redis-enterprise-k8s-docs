@@ -19,7 +19,6 @@ This document describes how to deploy an Active-Active database with Redis Enter
   * [Delete an existing Active-Active database](#delete-an-existing-active-active-database)
   * [Update existing participating cluster (RERC) details](#update-existing-participating-cluster-rerc-details)
   * [Update existing participating cluster (RERC) secret](#update-existing-participating-cluster-rerc-secret)
-  * [Active-Active database with Redis modules](#active-active-database-with-redis-modules)
   * [Test your Active-Active database](#test-your-active-active-database)
   * [Limitations](#limitations)
 
@@ -715,16 +714,6 @@ The output should be as below:
 Note:
   * As the 'STATUS' and the 'SPEC STATUS' are 'Active' and 'Valid' respectively it means the configurations are correct, in case of an error please view the RERC custom resource events and/ or the Redis Enterprise operator logs.
 
-## Active-Active database with Redis modules
-
-Note - Modules are currently in preview for Active-Active databases.
-
-To use modules with Active-Active databases enable the alpha feature flag on all participating clusters:  
-To enable modules for Active-Active databases, set a boolean environment variable with the name "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map.
-
-Importent note:
-upgrading modules with Active-Active databases is currently not supported via the operator, to upgrade please use the RS APIs directly and after the module has successfully upgraded update the module version on the REAADB custom resource.
-
 ## Test your Active-Active database
 
 The easiest way to test your Active-Active database is to set a key-value pair in one database and retrieve it from the other.
@@ -758,5 +747,8 @@ From the output fetch the redis 'targetPort':
 ### No migration from the previous AA method
 migrating Active-Active database with non-operator managed Active-Active database is currently not supported.
 
+### HashiCorp Vault secret storage
+Storing the secrets in HashiCorp Vault is currently not supported for operator managed Active-Active database .
+
 ### database version is currently not supported
-Setting database specific version is currently not supported for operator managed Active-Active database.
+Setting database specific version is currently not supported for operator managed Active-Active database .
