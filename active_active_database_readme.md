@@ -19,8 +19,8 @@ This document describes how to deploy an Active-Active database with Redis Enter
   * [Delete an existing Active-Active database](#delete-an-existing-active-active-database)
   * [Update existing participating cluster (RERC) details](#update-existing-participating-cluster-rerc-details)
   * [Update existing participating cluster (RERC) secret](#update-existing-participating-cluster-rerc-secret)
-  * [Test your Active-Active database](#test-your-active-active-database)
   * [Active-Active database with Redis modules](#active-active-database-with-redis-modules)
+  * [Test your Active-Active database](#test-your-active-active-database)
   * [Limitations](#limitations)
 
 ## Overview
