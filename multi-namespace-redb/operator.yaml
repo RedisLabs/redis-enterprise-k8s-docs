@@ -20,7 +20,7 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:6.4.2-6
+          image: redislabs/operator:6.4.2-8
           command:
           - operator-root
           - operator
@@ -63,7 +63,7 @@ spec:
               port: 8080
               scheme: HTTP
         - name: admission
-          image: redislabs/operator:6.4.2-6
+          image: redislabs/operator:6.4.2-8
           command:
           - operator-root
           - admission

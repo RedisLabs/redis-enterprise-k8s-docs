@@ -722,7 +722,7 @@ Note - Modules are currently in preview for Active-Active databases.
 To use modules with Active-Active databases enable the alpha feature flag on all participating clusters:  
 To enable modules for Active-Active databases, set a boolean environment variable with the name "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map.
 
-Importent note:
+Important note:
 upgrading modules with Active-Active databases is currently not supported via the operator, to upgrade please use the RS APIs directly and after the module has successfully upgraded update the module version on the REAADB custom resource.
 
 ## Test your Active-Active database
@@ -753,7 +753,6 @@ From the output fetch the redis 'targetPort':
  to test externally you may use the instructions under 'Test your external access' [here](https://docs.redis.com/latest/kubernetes/re-databases/set-up-ingress-controller/)
 
 ## Limitations
-
 
 ### No migration from the previous AA method
 migrating Active-Active database with non-operator managed Active-Active database is currently not supported.

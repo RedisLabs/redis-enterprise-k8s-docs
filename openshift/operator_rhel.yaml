@@ -20,7 +20,7 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.4.2-6
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.4.2-8
           securityContext:
             runAsUser: 1001
           command:
@@ -67,7 +67,7 @@ spec:
               port: 8080
               scheme: HTTP
         - name: admission
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.4.2-6
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.4.2-8
           command:
           - operator-root
           - admission
