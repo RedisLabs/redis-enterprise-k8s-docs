@@ -219,6 +219,8 @@ spec:
                   properties:
                     dbType:
                       type: string
+                    major:
+                      type: boolean
                     version:
                       type: string
                   required:
@@ -240,6 +242,9 @@ spec:
                       field in the RedisEnterpriseCluster resource.
                     type: boolean
                 type: object
+              ingressOrRouteMethodStatus:
+                description: The ingressOrRouteSpec/ActiveActive spec method that exist
+                type: string
           spec:
             description: RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
             properties:
@@ -7033,9 +7038,13 @@ spec:
                     - type: string
                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                     x-kubernetes-int-or-string: true
+                  bigStoreDriver:
+                    type: string
+                    enum:
+                    - rocksdb
+                    - speedb
                 required:
                 - enabled
-                - flashStorageEngine
                 - storageClassName
                 type: object
               upgradeSpec:
@@ -7746,11 +7755,15 @@ spec:
                       type: string
                     version:
                       type: string
+                    major:
+                      type: boolean
                   required:
                   - dbType
                   - version
                   type: object
                 type: array
+              ingressOrRouteMethodStatus:
+                type: string
               managedAPIs:
                 properties:
                   ldap:
@@ -14221,9 +14234,13 @@ spec:
                     - type: string
                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                     x-kubernetes-int-or-string: true
+                  bigStoreDriver:
+                    type: string
+                    enum:
+                      - rocksdb
+                      - speedb
                 required:
                 - enabled
-                - flashStorageEngine
                 - storageClassName
                 type: object
               upgradeSpec:
@@ -16438,10 +16455,14 @@ spec:
         name: redis-enterprise-operator
         app: redis-enterprise
     spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:6.4.2-8
+          image: redislabs/operator:7.2.4-2
           command:
           - operator-root
           - operator
@@ -16483,8 +16504,15 @@ spec:
               path: /healthz
               port: 8080
               scheme: HTTP
+          securityContext:
+            privileged: false
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
         - name: admission
-          image: redislabs/operator:6.4.2-8
+          image: redislabs/operator:7.2.4-2
           command:
           - operator-root
           - admission
@@ -16530,4 +16558,11 @@ spec:
               path: /liveness
               port: 8443
               scheme: HTTPS
+          securityContext:
+            privileged: false
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
 ---

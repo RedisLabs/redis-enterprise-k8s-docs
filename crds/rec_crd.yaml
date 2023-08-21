@@ -124,6 +124,8 @@ spec:
                   properties:
                     dbType:
                       type: string
+                    major:
+                      type: boolean
                     version:
                       type: string
                   required:
@@ -145,6 +147,9 @@ spec:
                       field in the RedisEnterpriseCluster resource.
                     type: boolean
                 type: object
+              ingressOrRouteMethodStatus:
+                description: The ingressOrRouteSpec/ActiveActive spec method that exist
+                type: string
           spec:
             description: RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
             properties:
@@ -6938,9 +6943,13 @@ spec:
                     - type: string
                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                     x-kubernetes-int-or-string: true
+                  bigStoreDriver:
+                    type: string
+                    enum:
+                    - rocksdb
+                    - speedb
                 required:
                 - enabled
-                - flashStorageEngine
                 - storageClassName
                 type: object
               upgradeSpec:
@@ -7651,11 +7660,15 @@ spec:
                       type: string
                     version:
                       type: string
+                    major:
+                      type: boolean
                   required:
                   - dbType
                   - version
                   type: object
                 type: array
+              ingressOrRouteMethodStatus:
+                type: string
               managedAPIs:
                 properties:
                   ldap:
@@ -14126,9 +14139,13 @@ spec:
                     - type: string
                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                     x-kubernetes-int-or-string: true
+                  bigStoreDriver:
+                    type: string
+                    enum:
+                      - rocksdb
+                      - speedb
                 required:
                 - enabled
-                - flashStorageEngine
                 - storageClassName
                 type: object
               upgradeSpec:
