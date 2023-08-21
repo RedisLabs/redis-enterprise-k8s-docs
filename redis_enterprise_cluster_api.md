@@ -78,6 +78,7 @@ Customization options for the REC API service.
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | version |  | string |  | true |
+| major |  | bool |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### BundledDatabaseVersions
@@ -87,6 +88,7 @@ Customization options for the REC API service.
 | ----- | ----------- | ------ | -------- | -------- |
 | dbType |  | string |  | true |
 | version |  | string |  | true |
+| major |  | bool |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ClusterCertificate
@@ -372,7 +374,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | clusterCredentialSecretType | Type of Secret to use for ClusterCredential: vault, kubernetes,... If left blank, will default to kubernetes secrets | string |  | true |
 | clusterCredentialSecretRole | Used only if ClusterCredentialSecretType is vault, to define vault role to be used.  If blank, defaults to "redis-enterprise-rec" | string |  | true |
 | vaultCASecret | K8s secret name containing Vault's CA cert - defaults to "vault-ca-cert" | string |  | false |
-| redisEnterpriseServicesConfiguration | RS Cluster optional services settings. Note that when disabling the CM Server service, the cluster's UI Service will be removed from the k8s cluster | *[RedisEnterpriseServicesConfiguration](#redisenterpriseservicesconfiguration) |  | false |
+| redisEnterpriseServicesConfiguration | RS Cluster optional services settings. Notes: When disabling the CM Server service, the cluster's UI Service will be removed from the k8s cluster. Also the saslauthd entry is deprecated and will be removed (the service was already removed from the cluster and is always disabled). | *[RedisEnterpriseServicesConfiguration](#redisenterpriseservicesconfiguration) |  | false |
 | dataInternodeEncryption | Internode encryption (INE) cluster wide policy. An optional boolean setting. Specifies if INE should be on/off for new created REDBs. May be overridden for specific REDB via similar setting, please view the similar setting for REDB for more info. | *bool |  | false |
 | redisUpgradePolicy | Redis upgrade policy to be set on the Redis Enterprise Cluster. Possible values: major/latest This value is used by the cluster to choose the Redis version of the database when an upgrade is performed. The Redis Enterprise Cluster includes multiple versions of OSS Redis that can be used for databases. | string |  | false |
 | certificates | RS Cluster Certificates. Used to modify the certificates used by the cluster. See the "RSClusterCertificates" struct described above to see the supported certificates. | *[RSClusterCertificates](#rsclustercertificates) |  | false |
@@ -400,6 +402,7 @@ RedisEnterpriseClusterStatus defines the observed state of RedisEnterpriseCluste
 | bundledDatabaseVersions | Versions of open source databases bundled by Redis Enterprise Software - please note that in order to use a specific version it should be supported by the ‘upgradePolicy’ - ‘major’ or ‘latest’ according to the desired version (major/minor) | []*[BundledDatabaseVersions](#bundleddatabaseversions) |  | false |
 | ocspStatus | An API object that represents the cluster's OCSP status | *[OcspStatus](#ocspstatus) |  | false |
 | managedAPIs | Indicates cluster APIs that are being managed by the operator. This only applies to cluster APIs which are optionally-managed by the operator, such as cluster LDAP configuration. Most other APIs are automatically managed by the operator, and are not listed here. | *[ManagedAPIs](#managedapis) |  | false |
+| ingressOrRouteMethodStatus | The ingressOrRouteSpec/ActiveActive spec method that exist | [IngressMethod](#ingressmethod) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseServicesConfiguration
@@ -422,9 +425,10 @@ RedisOnFlashSpec contains all the parameters needed to configure in order to ena
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | enabled | Indicates whether RoF is turned on or not. | bool |  | true |
-| flashStorageEngine | The type of DB engine used on flash. Currently the only supported value is "rocksdb", but this will change in the future. | [RedisOnFlashsStorageEngine](#redisonflashsstorageengine) |  | true |
+| flashStorageEngine | The type of DB engine used on flash. This field is DEPRECATED, if you wish to change the driver from RocksDB to Speedb use bigStoreDriver | [RedisOnFlashsStorageEngine](#redisonflashsstorageengine) |  | false |
 | storageClassName | Used to identify the storage class name of the corresponding volume claim template. | string |  | true |
 | flashDiskSize | Required flash disk size. | resource.Quantity |  | false |
+| bigStoreDriver | Used to change the bigstore_driver when REC is up and running. | [RedisOnFlashsStorageEngine](#redisonflashsstorageengine) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### Saslauthd
@@ -552,6 +556,7 @@ The search scope for an LDAP query.
 | Value | Description |
 | ----- | ----------- |
 | "rocksdb" |  |
+| "speedb" |  |
 [Back to Table of Contents](#table-of-contents)
 
 ### ServiceType

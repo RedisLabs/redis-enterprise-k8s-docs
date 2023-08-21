@@ -17,12 +17,19 @@ spec:
         name: redis-enterprise-operator
         app: redis-enterprise
     spec:
+      securityContext:
+        runAsNonRoot: true
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.4.2-8
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.2.4-2
           securityContext:
-            runAsUser: 1001
+            privileged: false
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
           command:
           - operator-root
           - operator
@@ -67,7 +74,14 @@ spec:
               port: 8080
               scheme: HTTP
         - name: admission
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:6.4.2-8
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.2.4-2
+          securityContext:
+            privileged: false
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
           command:
           - operator-root
           - admission

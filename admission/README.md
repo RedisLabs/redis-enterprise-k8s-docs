@@ -2,8 +2,6 @@
 
 Redis Labs' Redis Enterprise Operator provides an installable admission control that can be used to verify RedisEnterpriseDatabase, RedisEnterpriseActiveActiveDatabase and RedisEnterpriseRemoteCluster resources on creation and modification for correctness.  This prevents end users from creating syntatically valid but functionally invalid database configurations.  The admission control leverages Kubernetes' built in [Dynamic Admission Control](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/).
 
-**Note:** Redis Labs' Redis Enterprise Operator can also be installed through the [Gesher Admission Proxy](GESHER.md) 
-
 ## Hooking up the Admission controller directly with Kubernetes
 **NOTE**: This only has to be done the first time setting up the redis enterprise operator, it can be skipped on update
 

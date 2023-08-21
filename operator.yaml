@@ -17,10 +17,14 @@ spec:
         name: redis-enterprise-operator
         app: redis-enterprise
     spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:6.4.2-8
+          image: redislabs/operator:7.2.4-2
           command:
           - operator-root
           - operator
@@ -62,8 +66,15 @@ spec:
               path: /healthz
               port: 8080
               scheme: HTTP
+          securityContext:
+            privileged: false
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
         - name: admission
-          image: redislabs/operator:6.4.2-8
+          image: redislabs/operator:7.2.4-2
           command:
           - operator-root
           - admission
@@ -109,3 +120,10 @@ spec:
               path: /liveness
               port: 8443
               scheme: HTTPS
+          securityContext:
+            privileged: false
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
