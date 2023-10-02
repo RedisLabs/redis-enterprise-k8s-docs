@@ -16462,7 +16462,7 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: redislabs/operator:7.2.4-2
+          image: redislabs/operator:7.2.4-7
           command:
           - operator-root
           - operator
@@ -16512,7 +16512,7 @@ spec:
               drop:
               - ALL
         - name: admission
-          image: redislabs/operator:7.2.4-2
+          image: redislabs/operator:7.2.4-7
           command:
           - operator-root
           - admission

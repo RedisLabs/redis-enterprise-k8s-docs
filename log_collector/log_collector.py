@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 LOGGER_FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 logging.basicConfig(format=LOGGER_FORMAT)
-VERSION_LOG_COLLECTOR = "7.2.4-2"
+VERSION_LOG_COLLECTOR = "7.2.4-7"
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
 
