@@ -16502,7 +16502,7 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.2.4-2
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.2.4-7
           securityContext:
             privileged: false
             readOnlyRootFilesystem: true
@@ -16554,7 +16554,7 @@ spec:
               port: 8080
               scheme: HTTP
         - name: admission
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.2.4-2
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.2.4-7
           securityContext:
             privileged: false
             readOnlyRootFilesystem: true
