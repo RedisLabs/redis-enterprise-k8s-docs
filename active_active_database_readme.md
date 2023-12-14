@@ -20,6 +20,7 @@ This document describes how to deploy an Active-Active database with Redis Enter
   * [Update existing participating cluster (RERC) details](#update-existing-participating-cluster-rerc-details)
   * [Update existing participating cluster (RERC) secret](#update-existing-participating-cluster-rerc-secret)
   * [Active-Active database with Redis modules](#active-active-database-with-redis-modules)
+  * [Upgrade REC with Active-Active database](#upgrade-rec-with-active-active-database)
   * [Test your Active-Active database](#test-your-active-active-database)
   * [Limitations](#limitations)
 
@@ -724,6 +725,16 @@ To enable modules for Active-Active databases, set a boolean environment variabl
 
 Important note:
 upgrading modules with Active-Active databases is currently not supported via the operator, to upgrade please use the RS APIs directly and after the module has successfully upgraded update the module version on the REAADB custom resource.
+
+## Upgrade REC with Active-Active database
+
+Upgrading REC with REAADBs  is supported.
+Please follow [upgrade Redis Enterprise Cluster documentation](https://docs.redis.com/latest/kubernetes/re-clusters/upgrade-redis-cluster/).
+
+Notes:
+- It is recommended to upgrade all of the participating clusters to the same operator version.
+- [Optional] - Please view following documentation regarding upgrade the Active-Active database  [here](https://docs.redis.com/latest/rs/installing-upgrading/upgrading/upgrade-active-active/)
+- In case you are upgrading from version with the Active-Active database controller as public preview you may remove the following flags from the environment variables: `ACTIVE_ACTIVE_DATABASE_CONTROLLER_ENABLED` and `REMOTE_CLUSTER_CONTROLLER_ENABLED`, and in case the alpha features flag is enabled only for the REC 'ingressOrRoutesSpec' field you may remove the: `ENABLE_ALPHA_FEATURES` as well.`
 
 ## Test your Active-Active database
 

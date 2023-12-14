@@ -383,6 +383,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | redisOnFlashSpec | Stores configurations specific to redis on flash. If provided, the cluster will be capable of creating redis on flash databases. | *[RedisOnFlashSpec](#redisonflashspec) |  | false |
 | ocspConfiguration | An API object that represents the cluster's OCSP configuration. To enable OCSP, the cluster's proxy certificate should contain the OCSP responder URL. | *[OcspConfiguration](#ocspconfiguration) |  | false |
 | encryptPkeys | Private key encryption Possible values: true/false | *bool |  | false |
+| redisEnterpriseIPFamily | Reserved, future use, only for use if instructed by Redis. IPFamily dictates what IP family to choose for pods' internal and external communication. | v1.IPFamily |  | false |
 | containerTimezone | Container timezone configuration. While the default timezone on all containers is UTC, this setting can be used to set the timezone on services rigger/bootstrapper/RS containers. Currently the only supported value is to propagate the host timezone to all containers. | *[ContainerTimezoneSpec](#containertimezonespec) |  | false |
 | ingressOrRouteSpec | Access configurations for the Redis Enterprise Cluster and Databases. At most one of ingressOrRouteSpec or activeActive fields can be set at the same time. | *[IngressOrRouteSpec](#ingressorroutespec) |  | false |
 | services | Customization options for operator-managed service resources created for Redis Enterprise clusters and databases | *[Services](#services) |  | false |
@@ -403,6 +404,7 @@ RedisEnterpriseClusterStatus defines the observed state of RedisEnterpriseCluste
 | ocspStatus | An API object that represents the cluster's OCSP status | *[OcspStatus](#ocspstatus) |  | false |
 | managedAPIs | Indicates cluster APIs that are being managed by the operator. This only applies to cluster APIs which are optionally-managed by the operator, such as cluster LDAP configuration. Most other APIs are automatically managed by the operator, and are not listed here. | *[ManagedAPIs](#managedapis) |  | false |
 | ingressOrRouteMethodStatus | The ingressOrRouteSpec/ActiveActive spec method that exist | [IngressMethod](#ingressmethod) |  | false |
+| redisEnterpriseIPFamily | The chosen IP family of the cluster if was specified in REC spec. | v1.IPFamily |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseServicesConfiguration

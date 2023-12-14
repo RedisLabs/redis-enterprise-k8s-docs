@@ -24,6 +24,7 @@ OPERATOR_LABEL = "app=redis-enterprise"
 MODE_RESTRICTED = "restricted"
 MODE_ALL = "all"
 FIRST_VERSION_SUPPORTING_RESTRICTED = "6.2.18-3"
+HELM = "helm"
 
 MIN_KUBECTL_VERSION_SUPPORT_RETRIES = "1.23"
 MIN_OC_VERSION_SUPPORT_RETRIES = "4.10"
@@ -36,13 +37,14 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 LOGGER_FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 logging.basicConfig(format=LOGGER_FORMAT)
-VERSION_LOG_COLLECTOR = "7.2.4-7"
+VERSION_LOG_COLLECTOR = "7.2.4-12"
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
 
 KUBCTL_DESCRIBE_RETRIES = 3
 KUBCTL_GET_YAML_RETRIES = 3
 DEBUG_INFO_PACKAGE_RETRIES = 3
+HELM_RETRIES = 3
 
 TIMEOUT = 180
 
@@ -69,6 +71,8 @@ RESTRICTED_MODE_API_RESOURCES = NON_LABELED_RESOURCES + [
     "Ingress",
     "Role",
     "RoleBinding",
+    "ClusterRole",
+    "ClusterRoleBinding",
     "PersistentVolume",
     "PersistentVolumeClaim",
     "PodDisruptionBudget",
@@ -79,7 +83,8 @@ RESTRICTED_MODE_API_RESOURCES = NON_LABELED_RESOURCES + [
     "NamespacedValidatingType",
     "NamespacedValidatingRule",
     "PodSecurityPolicy",
-    "Namespace"
+    "Namespace",
+    "Job"
 ]
 
 OLM_RESOURCES = [
@@ -94,8 +99,6 @@ ALL_ONLY_API_RESOURCES = [
     "ResourceQuota",
     "NetworkPolicy",
     "CertificateSigningRequest",
-    "ClusterRole",
-    "ClusterRoleBinding",
     "ClusterServiceVersion",
     "Subscription",
     "InstallPlan",
@@ -209,7 +212,7 @@ def collect_k8s_version_info(ns_output_dir, k8s_cli):
 
 
 def collect_from_ns(namespace, output_dir, api_resources, logs_from_all_pods=False, k8s_cli_input="",
-                    mode=MODE_RESTRICTED, skip_support_package=False, collect_empty_files=False):
+                    mode=MODE_RESTRICTED, skip_support_package=False, collect_empty_files=False, helm_release_name=""):
     "Collect the context of a specific namespace. Typically runs in parallel processes."
     set_file_logger(output_dir)
     k8s_cli = detect_k8s_cli(k8s_cli_input)
@@ -232,6 +235,7 @@ def collect_from_ns(namespace, output_dir, api_resources, logs_from_all_pods=Fal
     collect_api_resources_description(namespace, ns_output_dir, k8s_cli, api_resources, selector, collect_empty_files)
     collect_olm_auto_generated_resources_description(namespace, ns_output_dir, k8s_cli)
     collect_pods_logs(namespace, ns_output_dir, k8s_cli, logs_from_all_pods)
+    collect_helm_output(namespace, ns_output_dir, helm_release_name)
 
 
 # pylint: disable=R0913
@@ -246,6 +250,42 @@ def collect_resources(namespace, output_dir, api_resources, k8s_cli_input="", se
     collect_api_resources(namespace, ns_output_dir, k8s_cli, api_resources, selector)
     collect_api_resources_description(namespace, ns_output_dir, k8s_cli, api_resources, selector)
     collect_pods_logs(namespace, ns_output_dir, k8s_cli, logs_from_all_pods=True)
+
+
+def collect_helm_output(namespace, output_dir, helm_release_name):
+    """
+        Collect info related to helm chart
+    :param namespace: namespace to collect helm resources from
+    :param output_dir: helm output directory
+    :param helm_release_name: helm release name to collect its information
+    :return:
+    """
+    if not helm_release_name:
+        return
+    helm_output_dir = os.path.join(output_dir, HELM)
+    make_dir(helm_output_dir)
+
+    logger.info("Namespace '%s': Collecting Helm output", namespace)
+
+    cmd = "helm list --filter {} -n {}".format(helm_release_name, namespace)
+    get_helm_output(namespace, cmd, helm_output_dir, "helm_list")
+
+    cmd = "helm get all {} -n {}".format(helm_release_name, namespace)
+    get_helm_output(namespace, cmd, helm_output_dir, "helm_all")
+
+    cmd = "helm status {} --show-resources --show-desc -n {}".format(helm_release_name, namespace)
+    get_helm_output(namespace, cmd, helm_output_dir, "helm_status")
+
+
+def get_helm_output(namespace, cmd, helm_output_dir, file_name):
+    """
+    Get output related to helm by the release name given.
+    """
+    error_template = "Namespace '{}': Failed to get Helm output, command: {}.".format(namespace, cmd)
+    output = run_shell_command_with_retries(cmd, HELM_RETRIES, error_template)
+    if output:
+        with open(os.path.join(helm_output_dir, file_name), "w+", encoding='UTF-8') as file_handle:
+            file_handle.write(output)
 
 
 def detect_k8s_cli(k8s_cli_input=""):
@@ -337,6 +377,26 @@ def parse_operator_deployment(k8s_cli, namespaces):
             logger.info("Failed to parse operator deployment, ignoring ns %s", namespace)
     logger.info("could not find operator version")
     return "", False
+
+
+def detect_helm(k8s_cli, namespaces):
+    """
+        Detect if helm was used by the deployment annotations.
+    """
+    for namespace in namespaces:
+        try:
+            cmd = "{} get deployment redis-enterprise-operator -o json -n {}".format(k8s_cli, namespace)
+            return_code, out = run_shell_command(cmd)
+            if not return_code and out:
+                parsed = json.loads("".join(out))
+                if "meta.helm.sh/release-name" in parsed["metadata"]["annotations"]:
+                    release_name = parsed["metadata"]["annotations"]["meta.helm.sh/release-name"]
+                    logger.info("detected operator was installed using helm. Helm release name is %s", release_name)
+                    return release_name
+        # pylint: disable=W0703
+        except Exception:
+            logger.info("Failed to detect if helm was used, ignoring ns %s", namespace)
+    return ""
 
 
 def validate_mode(mode, operator_tag, is_sha_digest):
@@ -446,7 +506,6 @@ def run(results):
     namespace_input = results.namespace
 
     namespaces = _get_namespaces_to_run_on(namespace_input, k8s_cli)
-    logs_from_all_pods = results.logs_from_all_pods
 
     # pylint: disable=global-statement, invalid-name
     global TIMEOUT
@@ -460,6 +519,8 @@ def run(results):
     else:
         mode = determine_default_mode(operator_tag, is_sha_digest)
 
+    helm_release_name = results.helm_release_name or detect_helm(k8s_cli, namespaces)
+
     api_resources = RESTRICTED_MODE_API_RESOURCES
     if mode == MODE_ALL:
         api_resources = api_resources + ALL_ONLY_API_RESOURCES
@@ -469,8 +530,9 @@ def run(results):
     processes = []
     for namespace in namespaces:
         proc = Process(target=collect_from_ns,
-                       args=[namespace, output_dir, api_resources, logs_from_all_pods,
-                             k8s_cli, mode, results.skip_support_package, results.collect_empty_files])
+                       args=[namespace, output_dir, api_resources, results.logs_from_all_pods,
+                             k8s_cli, mode, results.skip_support_package, results.collect_empty_files,
+                             helm_release_name])
         proc.start()
         processes.append(proc)
 
@@ -1391,5 +1453,7 @@ if __name__ == "__main__":
                         help="not collect RS support package")
     parser.add_argument('--collect_empty_files', action="store_true",
                         help='collect empty log files for missing resources')
+    parser.add_argument('--helm_release_name', action="store", type=str,
+                        help='collect resources related to helm release name')
     parser.set_defaults(collect_istio=False)
     run(parser.parse_args())

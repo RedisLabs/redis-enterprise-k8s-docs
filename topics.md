@@ -15,62 +15,15 @@
 
 ## Guaranteed Quality of Service
 
-To make sure that all pods created by operator receive enough CPU and memory, we make sure k8s [quality of service is guaranteed](https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod).
-This means that for all containers in operator managed pods:
-
-- Every Container must have a memory limit and a memory request, and they must be the same.
-- Every Container must have a CPU limit and a CPU request, and they must be the same.
-
-This is always the case with default settings, but if the user changes the resources of services rigger, redis enterprise, or bootstrapper, they should take care to keep quality of service.
-If the user defines a side container, that runs alongside redis enterprise, they should also take care to keep the above mentioned settings.
+This content has moved to [docs.redis.com](https://docs.redis.com/latest); see [Manage pod stability](https://docs.redis.com/latest/kubernetes/recommendations/pod-stability/).
 
 ## Priority Class
 
-We recommend that users set a high [priority class](https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption) for pods managed by operator.
-This can be set by creating a dedicated PriorityClass resource, or using an existing one:
-
-```yaml
-apiVersion: scheduling.k8s.io/v1
-kind: PriorityClass
-metadata:
-  name: redis-enterprise-priority
-value: 1000000000
-globalDefault: false
-description: "This priority class should be used for Redis Enterprise pods only."
-```
-
-And specifying the priorityClassName in REC spec.
+This content has moved to [docs.redis.com](https://docs.redis.com/latest); see [Manage pod stability](https://docs.redis.com/latest/kubernetes/recommendations/pod-stability/).
 
 ## Node Pool
 
-Kubernetes is a multi-tenant environment, so we want to protect Redis Enterprise from competing with [noisy neighbours](https://en.wikipedia.org/wiki/Cloud_computing_issues#Performance_interference_and_noisy_neighbors) for resources.  
-Therefore for production environments, it's a good idea to run Redis Enterprise Cluster on a dedicated Node Pool.
-How to set up a node pool depends very much on how you run k8s, but it's fair to assume each pool of nodes has a label.
-For example, in GKE, the nodes node pool name is found in the nodes label `cloud.google.com/gke-nodepool`.
-
-```bash
-> kubectl get nodes -o jsonpath='{range .items[*]}node name: {.metadata.name}{"\t"}node pool: {.metadata.labels.cloud\.google\.com/gke-nodepool}{"\n"}{end}'
-node name: gke-pool1-55d1ac88-213c 	node pool: pool1
-node name: gke-pool1-55d1ac88-vrpp 	node pool: pool1
-node name: gke-pool1-7253cc19-42g0 	node pool: pool1
-node name: gke-pool2-f36f7402-6w9b 	node pool: pool2
-node name: gke-pool2-f36f7402-qffp 	node pool: pool2
-```
-
-To run only on nodes with a specific label (pool name label in this case), we specify `nodeSelector` in REC spec.
-
-```yaml
-apiVersion: app.redislabs.com/v1
-kind: RedisEnterpriseCluster
-metadata:
-  name: example-redisenterprisecluster
-  labels:
-    app: redis-enterprise
-spec:
-  nodes: 3
-  nodeSelector:
-    cloud.google.com/gke-nodepool: pool1
-```
+This content has moved to [docs.redis.com](https://docs.redis.com); see [Control node selection](https://docs.redis.com/latest/kubernetes/recommendations/node-selection/).
 
 ## K8s Out of Resource Handling recommendations
 
@@ -78,30 +31,12 @@ We highly recommend reading [k8s documentation of out of resource administration
 
 ### Monitoring
 
-We recommend monitoring node conditions, and specifically `MemoryPressure` and `DiskPressure`.
-These conditions are true if an [eviction threshold](https://kubernetes.io/docs/tasks/administer-cluster/out-of-resource/#eviction-thresholds)
- has been met - meaning pod eviction is immanent.
-
-```bash
-> kubectl get nodes -o jsonpath='{range .items[*]}name:{.metadata.name}{"\t"}MemoryPressure:{.status.conditions[?(@.type == "MemoryPressure")].status}{"\t"}DiskPressure:{.status.conditions[?(@.type == "DiskPressure")].status}{"\n"}{end}'
-name:gke-55d1ac88-213c	MemoryPressure:False	DiskPressure:False
-name:gke-55d1ac88-vrpp	MemoryPressure:False	DiskPressure:False
-name:gke-7253cc19-42g0	MemoryPressure:False	DiskPressure:False
-```
+This content has moved to [docs.redis.com](https://docs.redis.com); see [Manage node resources](https://docs.redis.com/latest/kubernetes/recommendations/node-resources/).
 
 ### Eviction Thresholds
 
-We recommend setting high a [soft eviction threshold](https://kubernetes.io/docs/tasks/administer-cluster/out-of-resource/#soft-eviction-thresholds),
-relative to the [hard eviction threshold](https://kubernetes.io/docs/tasks/administer-cluster/out-of-resource/#hard-eviction-thresholds).
-The high soft threshold mean the node condition will change earlier, alerting the administrator.
-We also recommend setting `eviction-max-pod-grace-period` high enough to allow RS pods to migrate redis databases itself, before being force killed.
-
-The `eviction-soft-grace-period` should be set high enough for the administrator (or a k8s auto-scaling mechanism) to scale k8s up or out.
-
-In general, eviction thresholds are managed by [kubelet arguments](https://kubernetes.io/docs/reference/command-line-tools-reference/kubelet).
-For OpenShift, eviction thresholds can be managed via [config file](https://docs.openshift.com/container-platform/3.11/admin_guide/out_of_resource_handling.html#out-of-resource-create-config).
-On GKE, these thresholds are [managed](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-architecture#node_allocatable).
-
+This content has moved to [docs.redis.com](https://docs.redis.com); see [Manage node resources](https://docs.redis.com/latest/kubernetes/recommendations/node-resources/).
+ 
 ## Pod Security Policy (PSP)
 
 ### `WARNING`:
@@ -134,34 +69,7 @@ SideCar containers- images that will run along side the redis enterprise contain
 
 ## Resource Limits and Quotas
 
-All the pods created by the operator are set with a resources section to their spec, so it is possible to apply a ResourceQuota on the namespace of the Redis Enterprise Cluster. The operator itself is set with resources limits and requests.
-The recommended settings are set in the operator.yaml file and the bundles. The operator was tested and proved to be working in minimal workloads with the following settings in operator.yaml:
-
-
-```yaml
-  resources:
-    limits:
-      cpu: 0.5
-      memory: 256Mi
-    requests:
-      cpu: 0.5
-      memory: 256Mi
-```
-
-When creating ResourceQuota, be careful when applying quotas on ConfigMaps. When testing the operator the limit was found to be met even when one ConfigMap was used, perhaps due to enforcement logic of some sort. The following ResourceQuota worked on internal testing, but might need tweaking according to the deployment scenario:
-```yaml
-  hard:
-    secrets: "40"
-    persistentvolumeclaims: "20"
-    replicationcontrollers: "40"
-    pods: "40"
-    requests.storage: "120400Mi"
-    services: "20"
-    requests.memory: "43344Mi"
-    limits.memory: "57792Mi"
-    limits.cpu: "64"
-    requests.cpu: "48"
-```
+This content has moved to [docs.redis.com](https://docs.redis.com); see [Manage node resources](https://docs.redis.com/latest/kubernetes/recommendations/node-resources/).
 
 ## Custom Resource Deletion
 
