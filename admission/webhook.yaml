@@ -17,7 +17,7 @@ webhooks:
     resources:   ["redisenterprisedatabases", "redisenterpriseactiveactivedatabases", "redisenterpriseremoteclusters"]
   clientConfig:
     service:
-      namespace: NAMESPACE_OF_SERVICE_ACCOUNT
+      namespace: OPERATOR_NAMESPACE
       name: admission
       path: /admission
     caBundle: "" # Fill in with BASE64 encoded signed cert

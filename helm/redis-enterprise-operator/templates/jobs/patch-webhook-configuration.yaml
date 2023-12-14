@@ -1,0 +1,134 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: redis-admission-configuration
+  labels:
+    app: redis-enterprise
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+    "redis/operator-ver": {{ .Values.operator.image.tag }}
+    "redis/helm-chart-ver": {{ .Chart.Version }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: redis-admission-configuration
+  labels:
+    app: redis-enterprise
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+    "redis/operator-ver": {{ .Values.operator.image.tag }}
+    "redis/helm-chart-ver": {{ .Chart.Version }}
+rules:
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources: ["validatingwebhookconfigurations"]
+  verbs: ["patch", "get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: redis-admission-configuration
+  labels:
+    app: redis-enterprise
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+    "redis/operator-ver": {{ .Values.operator.image.tag }}
+    "redis/helm-chart-ver": {{ .Chart.Version }}
+subjects:
+- kind: ServiceAccount
+  name: redis-admission-configuration
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: redis-admission-configuration
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: redis-admission-configuration
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+    "redis/operator-ver": {{ .Values.operator.image.tag }}
+    "redis/helm-chart-ver": {{ .Chart.Version }}
+  labels:
+    app: redis-enterprise
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "secrets" ]
+    verbs: [ "get"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: redis-admission-configuration
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+    "redis/operator-ver": {{ .Values.operator.image.tag }}
+    "redis/helm-chart-ver": {{ .Chart.Version }}
+  labels:
+    app: redis-enterprise
+subjects:
+- kind: ServiceAccount
+  name: redis-admission-configuration
+roleRef:
+  kind: Role
+  name: redis-admission-configuration
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: redis-webhook-configuration
+  labels:
+    app: redis-enterprise
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+    "redis/operator-ver": {{ .Values.operator.image.tag }}
+    "redis/helm-chart-ver": {{ .Chart.Version }}
+spec:
+  backoffLimit: 6
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app: redis-enterprise
+    spec:
+      containers:
+        - name: patch-admission-webhook-configuration
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          image: {{ include "redis-enterprise-operator.operator.image" . | printf "%s" | trim }}
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            runAsNonRoot: true
+            seccompProfile:
+              type: "RuntimeDefault"
+          command:
+            - crd-installer
+          args:
+            - "-action=patchWebhook"
+            - "-webhookName=redis-enterprise-admission"
+            - -namespace={{ .Release.Namespace }}
+      restartPolicy: OnFailure
+      serviceAccountName: redis-admission-configuration

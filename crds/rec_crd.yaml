@@ -150,6 +150,8 @@ spec:
               ingressOrRouteMethodStatus:
                 description: The ingressOrRouteSpec/ActiveActive spec method that exist
                 type: string
+              redisEnterpriseIPFamily:
+                type: string
           spec:
             description: RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
             properties:
@@ -270,6 +272,14 @@ spec:
                   true. Note that this field is cleared automatically after the cluster
                   is recovered
                 type: boolean
+              redisEnterpriseIPFamily:
+                description: Reserved, future use, only for use if instructed by Redis.
+                  IPFamily dictates what IP family to choose for pods' internal
+                  and external communication.
+                type: string
+                enum:
+                  - IPv4
+                  - IPv6
               containerTimezone:
                 description: Container timezone configuration. While the default timezone
                   on all containers is UTC, this setting can be used to set the timezone
@@ -7674,6 +7684,8 @@ spec:
                   ldap:
                     type: boolean
                 type: object
+              redisEnterpriseIPFamily:
+                type: string
           spec:
             properties:
               activeActive:
@@ -7753,6 +7765,11 @@ spec:
                 type: string
               clusterRecovery:
                 type: boolean
+              redisEnterpriseIPFamily:
+                type: string
+                enum:
+                  - IPv4
+                  - IPv6
               containerTimezone:
                 properties:
                   propagateHost:
