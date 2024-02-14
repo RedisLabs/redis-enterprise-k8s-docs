@@ -1,0 +1,35 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+    annotations:
+        redis/helm-chart-ver: {{ .Chart.Version }}
+        redis/operator-ver: {{ .Values.operator.image.tag }}
+    labels:
+        app: redis-enterprise
+    name: redis-enterprise-admission
+    namespace: {{ .Release.Namespace }}
+webhooks:
+    - admissionReviewVersions:
+        - v1beta1
+      clientConfig:
+        service:
+            name: admission
+            namespace: {{ .Release.Namespace }}
+            path: /admission
+      failurePolicy: Fail
+      matchPolicy: Exact
+      name: redisenterprise.admission.redislabs
+      rules:
+        - apiGroups:
+            - app.redislabs.com
+          apiVersions:
+            - v1alpha1
+          operations:
+            - CREATE
+            - UPDATE
+          resources:
+            - redisenterprisedatabases
+            - redisenterpriseactiveactivedatabases
+            - redisenterpriseremoteclusters
+      sideEffects: None
+      timeoutSeconds: 30

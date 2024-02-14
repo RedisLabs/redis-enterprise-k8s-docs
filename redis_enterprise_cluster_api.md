@@ -389,6 +389,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | services | Customization options for operator-managed service resources created for Redis Enterprise clusters and databases | *[Services](#services) |  | false |
 | ldap | Cluster-level LDAP configuration, such as server addresses, protocol, authentication and query settings. | *[LDAPSpec](#ldapspec) |  | false |
 | extraEnvVars | ADVANCED USAGE: use carefully. Add environment variables to RS StatefulSet's containers. | []v1.EnvVar |  | false |
+| resp3Default | Whether databases will turn on RESP3 compatibility upon database upgrade. Note - Deleting this property after explicitly setting its value shall have no effect. Please view the corresponding field in RS doc for more info. | *bool |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseClusterStatus

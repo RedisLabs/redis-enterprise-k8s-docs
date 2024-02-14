@@ -3664,6 +3664,12 @@ spec:
                   - major
                   - latest
                 type: string
+              resp3Default:
+                description: Whether databases will turn on RESP3 compatibility upon
+                  database upgrade. Note - Deleting this property after explicitly
+                  setting its value shall have no effect. Please view the corresponding
+                  field in RS doc for more info.
+                type: boolean
               serviceAccountName:
                 description: Name of the service account to use
                 type: string
@@ -10919,6 +10925,8 @@ spec:
                   - major
                   - latest
                 type: string
+              resp3Default:
+                type: boolean
               serviceAccountName:
                 type: string
               servicesRiggerSpec:

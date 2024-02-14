@@ -1,0 +1,17 @@
+apiVersion: v2
+type: application
+
+name: redis-enterprise-operator
+description: A Helm chart for Redis Enterprise Operator for Kubernetes
+
+version: 0.1.0
+appVersion: 7.4.2-2
+
+home: https://redis.com
+icon: https://redis.com/wp-content/themes/wpx/assets/images/logo-redis.svg
+keywords:
+- redis
+- database
+maintainers:
+- name: Redis
+  url: https://redis.com/company/contact/

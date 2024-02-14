@@ -1,0 +1,30 @@
+# This file includes the values that can be customized for the chart.
+#
+# For instructions how to override these default values,
+# see https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing
+
+# Set to true if deploying to an OpenShift cluster
+isOpenshift: false
+
+# Image pull secret to use for registry authentication
+imagePullSecret: ""
+
+# Configuration options for the operator
+operator:
+
+  # Configuration options for the operator image
+  image:
+
+    # Image repository for the operator image.
+    # Leave blank to use the default image repository,
+    # which is `redislabs/operator` for non-OpenShift deployments,
+    # and `registry.connect.redhat.com/redislabs/redis-enterprise-operator` for OpenShift deployments.
+    repository: ""
+
+    # Image tag for the operator image.
+    # This typically represents the operator version.
+    tag: 7.4.2-2
+
+  # Whether to enable the Active-Active database controller within the operator.
+  # When disabled, RedisEnterpriseActiveActiveDatabase custom resources are not reconciled.
+  activeActiveDatabaseControllerEnabled: true
