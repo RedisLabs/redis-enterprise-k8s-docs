@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 LOGGER_FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 logging.basicConfig(format=LOGGER_FORMAT)
-VERSION_LOG_COLLECTOR = "7.2.4-12"
+VERSION_LOG_COLLECTOR = "7.4.2-2"
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
 
@@ -60,6 +60,7 @@ OPERATOR_CUSTOM_RESOURCES = [
 
 NON_LABELED_RESOURCES = OPERATOR_CUSTOM_RESOURCES + [
     "VolumeAttachment",
+    "NetworkPolicy",
 ]
 
 RESTRICTED_MODE_API_RESOURCES = NON_LABELED_RESOURCES + [
@@ -97,7 +98,6 @@ OLM_RESOURCES = [
 ALL_ONLY_API_RESOURCES = [
     "Node",
     "ResourceQuota",
-    "NetworkPolicy",
     "CertificateSigningRequest",
     "ClusterServiceVersion",
     "Subscription",

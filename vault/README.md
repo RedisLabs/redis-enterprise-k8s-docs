@@ -26,7 +26,7 @@ How to use Hashicorp Vault as a source for secrets:
 > Note: when using Openshift it might be recommended to use oc instead of kubectl 
 <a name="prerequisites"></a>
 ## Prerequisites
-* Deploy a Hashicorp Vault instance and make sure there is network access to it from the Kubernetes cluster. The solution has been tested with Hashicorp Vault v1.6.2. The Hashicorp Vault instance must be using TLS.
+* Deploy a Hashicorp Vault instance and make sure there is network access to it from the Kubernetes cluster. The solution has been tested with Hashicorp Vault v1.15.2. The Hashicorp Vault instance must be using TLS.
 * Configure the Hashicorp Vault Kubernetes authentication for the Kubernetes cluster the operator is being deployed. Refer to the Hashicorp Vault documentation for details.
 * Deploy the Hashicorp Vault agent sidecar controller on the Kubernetes cluster (https://learn.hashicorp.com/tutorials/vault/kubernetes-sidecar)
 * Note that Hashicorp offers a Vault Enterprise product. The Vault Enterprise product supports namespaces. Those namespaces should not be confused with Kubernetes namespaces. This document assumes that the Hashicorp Vault instance used is the Enterprise product, and a Vault namespace is used. The namespace is referred to as the <VAULT_NAMESPACE> below.

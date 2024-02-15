@@ -3801,6 +3801,12 @@ spec:
                   - major
                   - latest
                 type: string
+              resp3Default:
+                description: Whether databases will turn on RESP3 compatibility upon
+                  database upgrade. Note - Deleting this property after explicitly
+                  setting its value shall have no effect. Please view the corresponding
+                  field in RS doc for more info.
+                type: boolean
               serviceAccountName:
                 description: Name of the service account to use
                 type: string
@@ -11056,6 +11062,8 @@ spec:
                   - major
                   - latest
                 type: string
+              resp3Default:
+                type: boolean
               serviceAccountName:
                 type: string
               servicesRiggerSpec:
@@ -15438,6 +15446,12 @@ spec:
                   - type
                   type: object
                 type: array
+              shardingEnabled:
+                description: Toggles database sharding for REAADBs (Active Active
+                  databases) and enabled by default. This field is blocked for REDB
+                  (non-Active Active databases) and sharding is toggled via the shardCount
+                  field - when shardCount is 1 this is disabled otherwise enabled.
+                type: boolean
               shardCount:
                 description: Number of database server-side shards
                 type: integer
@@ -15515,6 +15529,11 @@ spec:
                   For password, use ''password'' as the key and the actual password as the value.
                   Note that connections are not encrypted.'
                 type: string
+              resp3:
+                description: Whether this database supports RESP3 protocol.
+                  Note - Deleting this property after explicitly setting its value shall have no effect.
+                  Please view the corresponding field in RS doc for more info.
+                type: boolean
             type: object
           status:
             description: RedisEnterpriseDatabaseStatus defines the observed state of
@@ -16435,6 +16454,11 @@ spec:
                         will have replica shard for every master - leading to higher
                         availability.
                       type: boolean
+                    resp3:
+                      description: Whether this database supports RESP3 protocol.
+                        Note - Deleting this property after explicitly setting its value shall have no effect.
+                        Please view the corresponding field in RS doc for more info.
+                      type: boolean
                     rofRamSize:
                       description: The size of the RAM portion of an RoF database. Similarly
                         to "memorySize" use formats like 100MB, 0.1GB It must be at
@@ -16466,6 +16490,12 @@ spec:
                         - type
                         type: object
                       type: array
+                    shardingEnabled:
+                      description: Toggles database sharding for REAADBs (Active Active
+                        databases) and enabled by default. This field is blocked for REDB
+                        (non-Active Active databases) and sharding is toggled via the shardCount
+                        field - when shardCount is 1 this is disabled otherwise enabled.
+                      type: boolean
                     shardCount:
                       description: Number of database server-side shards
                       type: integer
@@ -16521,7 +16551,7 @@ spec:
       serviceAccountName: redis-enterprise-operator
       containers:
         - name: redis-enterprise-operator
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.2.4-12
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.4.2-2
           securityContext:
             privileged: false
             readOnlyRootFilesystem: true
@@ -16573,7 +16603,7 @@ spec:
               port: 8080
               scheme: HTTP
         - name: admission
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.2.4-12
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.4.2-2
           securityContext:
             privileged: false
             readOnlyRootFilesystem: true
