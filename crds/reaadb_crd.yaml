@@ -577,11 +577,10 @@ spec:
                               nolint:staticcheck // custom json tag unknown to the linter
                             type: string
                           version:
-                            description: Module's semantic version e.g "1.6.12"
+                            description: Module's semantic version e.g "1.6.12" - optional only in REDB, must be set in REAADB
                             type: string
                         required:
                         - name
-                        - version
                         type: object
                       type: array
                     ossCluster:
@@ -620,7 +619,9 @@ spec:
                       - name
                       type: object
                     redisVersion:
-                      description: Redis OSS version. For existing databases - Upgrade
+                      description: Redis OSS version. 
+                        Version can be specified via <major.minor> prefix,
+                        or via channels - for existing databases - Upgrade
                         Redis OSS version. For new databases - the version which the
                         database will be created with. If set to 'major' - will always
                         upgrade to the most recent major Redis version. If set to 'latest'
@@ -630,10 +631,17 @@ spec:
                         before. Possible values are 'major' or 'latest' When using upgrade
                         - make sure to backup the database before. This value is used
                         only for database type 'redis'
-                      enum:
-                      - major
-                      - latest
                       type: string
+                    upgradeSpec:
+                      description: Specifications for DB upgrade.
+                      properties:
+                        upgradeModulesToLatest:
+                          description: Upgrades the modules to the latest version that supportes the DB version during a DB upgrade action, to upgrade the DB version view the 'redisVersion' field.
+                            Note - This field is currently not supported for Active-Active databases.
+                          type: boolean
+                      required:
+                      - upgradeModulesToLatest
+                      type: object
                     replicaSources:
                       description: What databases to replicate from
                       items:
@@ -682,7 +690,7 @@ spec:
                     replication:
                       description: In-memory database replication. When enabled, database
                         will have replica shard for every master - leading to higher
-                        availability.
+                        availability. Defaults to false.
                       type: boolean
                     resp3:
                       description: Whether this database supports RESP3 protocol.

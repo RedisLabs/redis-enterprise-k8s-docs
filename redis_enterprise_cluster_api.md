@@ -26,6 +26,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [OcspConfiguration](#ocspconfiguration)
   * [OcspStatus](#ocspstatus)
   * [PdnsServer](#pdnsserver)
+  * [PersistenceStatus](#persistencestatus)
   * [PersistentConfigurationSpec](#persistentconfigurationspec)
   * [PropagateHost](#propagatehost)
   * [RSClusterCertificates](#rsclustercertificates)
@@ -48,6 +49,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [LDAPProtocol](#ldapprotocol)
   * [LDAPSearchScope](#ldapsearchscope)
   * [OperatingMode](#operatingmode)
+  * [PvcStatus](#pvcstatus)
   * [RedisOnFlashsStorageEngine](#redisonflashsstorageengine)
   * [ServiceType](#servicetype)
   * [SpecStatusName](#specstatusname)
@@ -279,6 +281,15 @@ An API object that represents the cluster's OCSP status
 | operatingMode | Whether to enable/disable the pdns server | [OperatingMode](#operatingmode) |  | true |
 [Back to Table of Contents](#table-of-contents)
 
+### PersistenceStatus
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| status | The current status of the PVCs | [PvcStatus](#pvcstatus) |  | false |
+| succeeded | The number of PVCs that are provisioned with the expected size | string |  | false |
+[Back to Table of Contents](#table-of-contents)
+
 ### PersistentConfigurationSpec
 Specification for Redis Enterprise Cluster persistence
 
@@ -286,7 +297,8 @@ Specification for Redis Enterprise Cluster persistence
 | ----- | ----------- | ------ | -------- | -------- |
 | enabled | Whether to add persistent volume to Redis Enterprise pods | *bool | True | true |
 | storageClassName | Storage class for persistent volume in Redis Enterprise pods. Leave empty to use the default. If using the default this way, make sure the Kubernetes Cluster has a default Storage Class configured. This can be done by running a `kubectl get storageclass` and see if one of the Storage Classes' names contains a `(default)` mark. | string |  | true |
-| volumeSize |  | resource.Quantity |  | true |
+| volumeSize | To enable resizing after creating the cluster - please follow the instructions in the pvc_expansion readme | resource.Quantity |  | true |
+| enablePersistentVolumeResize | Whether to enable PersistentVolumes resize. Disabled by default. Read the instruction in pvc_expansion readme carefully before using this feature. | *bool |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### PropagateHost
@@ -383,7 +395,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | redisOnFlashSpec | Stores configurations specific to redis on flash. If provided, the cluster will be capable of creating redis on flash databases. | *[RedisOnFlashSpec](#redisonflashspec) |  | false |
 | ocspConfiguration | An API object that represents the cluster's OCSP configuration. To enable OCSP, the cluster's proxy certificate should contain the OCSP responder URL. | *[OcspConfiguration](#ocspconfiguration) |  | false |
 | encryptPkeys | Private key encryption Possible values: true/false | *bool |  | false |
-| redisEnterpriseIPFamily | Reserved, future use, only for use if instructed by Redis. IPFamily dictates what IP family to choose for pods' internal and external communication. | v1.IPFamily |  | false |
+| redisEnterpriseIPFamily | When the operator is running in a dual-stack environment (both IPv4 and IPv6 network interfaces are available), specifies the IP family of the network interface that will be used by the Redis Enterprise Cluster, as well as services created by the operator (API, UI, Prometheus services). | v1.IPFamily |  | false |
 | containerTimezone | Container timezone configuration. While the default timezone on all containers is UTC, this setting can be used to set the timezone on services rigger/bootstrapper/RS containers. Currently the only supported value is to propagate the host timezone to all containers. | *[ContainerTimezoneSpec](#containertimezonespec) |  | false |
 | ingressOrRouteSpec | Access configurations for the Redis Enterprise Cluster and Databases. At most one of ingressOrRouteSpec or activeActive fields can be set at the same time. | *[IngressOrRouteSpec](#ingressorroutespec) |  | false |
 | services | Customization options for operator-managed service resources created for Redis Enterprise clusters and databases | *[Services](#services) |  | false |
@@ -406,6 +418,7 @@ RedisEnterpriseClusterStatus defines the observed state of RedisEnterpriseCluste
 | managedAPIs | Indicates cluster APIs that are being managed by the operator. This only applies to cluster APIs which are optionally-managed by the operator, such as cluster LDAP configuration. Most other APIs are automatically managed by the operator, and are not listed here. | *[ManagedAPIs](#managedapis) |  | false |
 | ingressOrRouteMethodStatus | The ingressOrRouteSpec/ActiveActive spec method that exist | [IngressMethod](#ingressmethod) |  | false |
 | redisEnterpriseIPFamily | The chosen IP family of the cluster if was specified in REC spec. | v1.IPFamily |  | false |
+| persistenceStatus | The status of the Persistent Volume Claims that are used for Redis Enterprise Cluster persistence. The status will correspond to the status of one or more of the PVCs (failed/resizing if one of them is in resize or failed to resize) | [PersistenceStatus](#persistencestatus) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseServicesConfiguration
@@ -552,6 +565,16 @@ The search scope for an LDAP query.
 | ----- | ----------- |
 | "enabled" |  |
 | "disabled" |  |
+[Back to Table of Contents](#table-of-contents)
+
+### PvcStatus
+
+| Value | Description |
+| ----- | ----------- |
+| "Provisioned" |  |
+| "Provisioning" |  |
+| "Resizing" |  |
+| "ResizeFailed" |  |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisOnFlashsStorageEngine

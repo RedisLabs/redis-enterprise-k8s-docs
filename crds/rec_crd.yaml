@@ -150,6 +150,19 @@ spec:
               ingressOrRouteMethodStatus:
                 description: The ingressOrRouteSpec/ActiveActive spec method that exist
                 type: string
+              persistenceStatus:
+                description: The status of the Persistent Volume Claims that are used
+                  for Redis Enterprise Cluster persistence. The status will correspond
+                  to the status of one or more of the PVCs (failed/resizing if one of
+                  them is in resize or failed to resize)
+                properties:
+                  status:
+                    description: The current status of the PVCs
+                    type: string
+                  succeeded:
+                    description: The number of PVCs that are provisioned with the expected size
+                    type: string
+                type: object
               redisEnterpriseIPFamily:
                 type: string
           spec:
@@ -677,18 +690,29 @@ spec:
               persistentSpec:
                 description: Specification for Redis Enterprise Cluster persistence
                 properties:
+                  enablePersistentVolumeResize:
+                    description: Whether to enable PersistentVolumes resize. Disabled
+                      by default. Read the instruction in pvc_expansion readme carefully
+                      before using this feature.
+                    type: boolean
                   enabled:
                     description: Whether to add persistent volume to Redis Enterprise
                       pods
                     type: boolean
                   storageClassName:
                     description: Storage class for persistent volume in Redis Enterprise
-                      pods Leave empty to use the default
+                      pods. Leave empty to use the default. If using the default this
+                      way, make sure the Kubernetes Cluster has a default Storage Class
+                      configured. This can be done by running a `kubectl get storageclass`
+                      and see if one of the Storage Classes' names contains a `(default)`
+                      mark.
                     type: string
                   volumeSize:
                     anyOf:
                     - type: integer
                     - type: string
+                    description: To enable resizing after creating the cluster - please
+                      follow the instructions in the pvc_expansion readme
                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                     x-kubernetes-int-or-string: true
                 type: object
@@ -7690,6 +7714,13 @@ spec:
                   ldap:
                     type: boolean
                 type: object
+              persistenceStatus:
+                properties:
+                  status:
+                    type: string
+                  succeeded:
+                    type: string
+                type: object
               redisEnterpriseIPFamily:
                 type: string
           spec:
@@ -8027,6 +8058,8 @@ spec:
                 type: integer
               persistentSpec:
                 properties:
+                  enablePersistentVolumeResize:
+                    type: boolean
                   enabled:
                     type: boolean
                   storageClassName:
