@@ -1,83 +1,224 @@
 ---
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: redis-enterprise-operator
-  labels:
-    app: redis-enterprise
-rules:
-  - apiGroups: ["rbac.authorization.k8s.io", ""]
-    resources: ["roles", "serviceaccounts", "rolebindings"]
-    verbs: ["bind", "escalate", "impersonate", "userextras", "create", "get",
-            "list", "watch", "update", "patch", "delete", "deletecollection"]
-  - apiGroups: ["app.redislabs.com"]
-    resources: ["redisenterpriseclusters", "redisenterpriseclusters/status", "redisenterpriseclusters/finalizers",
-                "redisenterprisedatabases", "redisenterprisedatabases/status", "redisenterprisedatabases/finalizers",
-                "redisenterpriseremoteclusters", "redisenterpriseremoteclusters/status",
-                "redisenterpriseremoteclusters/finalizers",
-                "redisenterpriseactiveactivedatabases", "redisenterpriseactiveactivedatabases/status",
-                "redisenterpriseactiveactivedatabases/finalizers"]
-    verbs: ["delete", "deletecollection", "get", "list", "patch", "create", "update", "watch"]
-  - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["update", "get", "read", "list", "listallnamespaces", "watch", "watchlist",
-            "watchlistallnamespaces", "create", "patch", "replace", "delete", "deletecollection"]
-  - apiGroups: [""]
-    resources: ["endpoints"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["events"]
-    verbs: ["create", "patch"]
-  - apiGroups: ["apps"]
-    resources: ["deployments", "statefulsets", "replicasets"]
-    verbs: ["create", "delete", "deletecollection", "get", "list", "patch", "update", "watch"]
-  - apiGroups: ["policy"]
-    resources: ["poddisruptionbudgets"]
-    verbs: ["create", "delete", "get", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["configmaps"]
-    verbs: ["create", "delete", "get" , "update", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["persistentvolumeclaims"]
-    verbs: ["create", "delete", "get" , "update", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["pods"]
-    verbs: ["get", "watch", "list", "update", "patch", "delete"]
-  - apiGroups: [""]
-    resources: ["services"]
-    verbs: ["get", "watch", "list", "update", "patch", "create", "delete"]
-  - apiGroups: ["policy"]
-    resources: ["podsecuritypolicies"]
-    resourceNames: ["redis-enterprise-psp"]
-    verbs: ["use"]
-  - apiGroups: ["networking.k8s.io"]
-    resources: ["ingresses"]
-    verbs: ["create", "patch", "replace", "delete", "deletecollection", "read", "list", "listallnamespaces",
-            "watch", "watchlist", "watchlistallnamespaces", "patchstatus", "readstatus", "replacestatus", "update"]
-  - apiGroups: ["networking.istio.io"]
-    resources: ["gateways", "virtualservices"]
-    verbs: ["get", "watch", "list", "update", "patch", "create", "delete"]
 ---
-kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
 metadata:
-  name: redis-enterprise-operator
   labels:
     app: redis-enterprise
-subjects:
-- kind: ServiceAccount
+  name: redis-enterprise-operator
+rules:
+  - apiGroups:
+      - rbac.authorization.k8s.io
+      - ""
+    resources:
+      - roles
+      - serviceaccounts
+      - rolebindings
+    verbs:
+      - bind
+      - escalate
+      - impersonate
+      - userextras
+      - create
+      - get
+      - list
+      - watch
+      - update
+      - patch
+      - delete
+      - deletecollection
+  - apiGroups:
+      - app.redislabs.com
+    resources:
+      - redisenterpriseclusters
+      - redisenterpriseclusters/status
+      - redisenterpriseclusters/finalizers
+      - redisenterprisedatabases
+      - redisenterprisedatabases/status
+      - redisenterprisedatabases/finalizers
+      - redisenterpriseremoteclusters
+      - redisenterpriseremoteclusters/status
+      - redisenterpriseremoteclusters/finalizers
+      - redisenterpriseactiveactivedatabases
+      - redisenterpriseactiveactivedatabases/status
+      - redisenterpriseactiveactivedatabases/finalizers
+    verbs:
+      - delete
+      - deletecollection
+      - get
+      - list
+      - patch
+      - create
+      - update
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - update
+      - get
+      - read
+      - list
+      - listallnamespaces
+      - watch
+      - watchlist
+      - watchlistallnamespaces
+      - create
+      - patch
+      - replace
+      - delete
+      - deletecollection
+  - apiGroups:
+      - ""
+    resources:
+      - endpoints
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+      - statefulsets
+      - replicasets
+    verbs:
+      - create
+      - delete
+      - deletecollection
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - policy
+    resources:
+      - poddisruptionbudgets
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - create
+      - delete
+      - get
+      - update
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumeclaims
+    verbs:
+      - create
+      - delete
+      - get
+      - update
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - watch
+      - list
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - services
+    verbs:
+      - get
+      - watch
+      - list
+      - update
+      - patch
+      - create
+      - delete
+  - apiGroups:
+      - policy
+    resourceNames:
+      - redis-enterprise-psp
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - create
+      - patch
+      - replace
+      - delete
+      - deletecollection
+      - read
+      - list
+      - listallnamespaces
+      - watch
+      - watchlist
+      - watchlistallnamespaces
+      - patchstatus
+      - readstatus
+      - replacestatus
+      - update
+  - apiGroups:
+      - networking.istio.io
+    resources:
+      - gateways
+      - virtualservices
+    verbs:
+      - get
+      - watch
+      - list
+      - update
+      - patch
+      - create
+      - delete
+---
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app: redis-enterprise
   name: redis-enterprise-operator
 roleRef:
+  apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: redis-enterprise-operator
-  apiGroup: rbac.authorization.k8s.io
+subjects:
+  - kind: ServiceAccount
+    name: redis-enterprise-operator
+---
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: redis-enterprise-operator
   labels:
     app: redis-enterprise
+  name: redis-enterprise-operator
+---
 ---
 apiVersion: v1
 kind: Service
@@ -87,9 +228,9 @@ metadata:
     app: redis-enterprise
 spec:
   ports:
-  - port: 443
-    protocol: TCP
-    targetPort: 8443
+    - port: 443
+      protocol: TCP
+      targetPort: 8443
   selector:
     name: redis-enterprise-operator
 ---
@@ -245,6 +386,19 @@ spec:
               ingressOrRouteMethodStatus:
                 description: The ingressOrRouteSpec/ActiveActive spec method that exist
                 type: string
+              persistenceStatus:
+                description: The status of the Persistent Volume Claims that are used
+                  for Redis Enterprise Cluster persistence. The status will correspond
+                  to the status of one or more of the PVCs (failed/resizing if one of
+                  them is in resize or failed to resize)
+                properties:
+                  status:
+                    description: The current status of the PVCs
+                    type: string
+                  succeeded:
+                    description: The number of PVCs that are provisioned with the expected size
+                    type: string
+                type: object
               redisEnterpriseIPFamily:
                 type: string
           spec:
@@ -772,18 +926,29 @@ spec:
               persistentSpec:
                 description: Specification for Redis Enterprise Cluster persistence
                 properties:
+                  enablePersistentVolumeResize:
+                    description: Whether to enable PersistentVolumes resize. Disabled
+                      by default. Read the instruction in pvc_expansion readme carefully
+                      before using this feature.
+                    type: boolean
                   enabled:
                     description: Whether to add persistent volume to Redis Enterprise
                       pods
                     type: boolean
                   storageClassName:
                     description: Storage class for persistent volume in Redis Enterprise
-                      pods Leave empty to use the default
+                      pods. Leave empty to use the default. If using the default this
+                      way, make sure the Kubernetes Cluster has a default Storage Class
+                      configured. This can be done by running a `kubectl get storageclass`
+                      and see if one of the Storage Classes' names contains a `(default)`
+                      mark.
                     type: string
                   volumeSize:
                     anyOf:
                     - type: integer
                     - type: string
+                    description: To enable resizing after creating the cluster - please
+                      follow the instructions in the pvc_expansion readme
                     pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                     x-kubernetes-int-or-string: true
                 type: object
@@ -7785,6 +7950,13 @@ spec:
                   ldap:
                     type: boolean
                 type: object
+              persistenceStatus:
+                properties:
+                  status:
+                    type: string
+                  succeeded:
+                    type: string
+                type: object
               redisEnterpriseIPFamily:
                 type: string
           spec:
@@ -8122,6 +8294,8 @@ spec:
                 type: integer
               persistentSpec:
                 properties:
+                  enablePersistentVolumeResize:
+                    type: boolean
                   enabled:
                     type: boolean
                   storageClassName:
@@ -15295,11 +15469,10 @@ spec:
                       description: The module's name e.g "ft" for redissearch
                       type: string
                     version:
-                      description: Module's semantic version e.g "1.6.12"
+                      description: Module's semantic version e.g "1.6.12" - optional only in REDB, must be set in REAADB
                       type: string
                   required:
                   - name
-                  - version
                   type: object
                 type: array
               ossCluster:
@@ -15382,7 +15555,7 @@ spec:
                 type: array
               replication:
                 description: In-memory database replication. When enabled, database
-                  will have replica shard for every master - leading to higher availability.
+                  will have replica shard for every master - leading to higher availability. Defaults to false.
                 type: boolean
               rolesPermissions:
                 description: List of Redis Enteprise ACL and Role bindings to apply
@@ -15444,7 +15617,9 @@ spec:
                   size (RAM and Flash), as specified by "memorySize".
                 type: string
               redisVersion:
-                description: Redis OSS version. For existing databases - Upgrade Redis
+                description: Redis OSS version.
+                  Version can be specified via <major.minor> prefix,
+                  or via channels - for existing databases - Upgrade Redis
                   OSS version. For new databases - the version which the database will
                   be created with. If set to 'major' - will always upgrade to the most
                   recent major Redis version. If set to 'latest' - will always upgrade
@@ -15453,10 +15628,18 @@ spec:
                   must set redisUpgradePolicy on the cluster before. Possible values
                   are 'major' or 'latest' When using upgrade - make sure to backup the
                   database before. This value is used only for database type 'redis'
-                enum:
-                - major
-                - latest
                 type: string
+              upgradeSpec:
+                description: Specifications for DB upgrade.
+                properties:
+                  upgradeModulesToLatest:
+                    description: Upgrades the modules to the latest version that supportes the DB version during a DB upgrade action, to upgrade the DB version view the 'redisVersion' field.
+                      Notes - All modules must be without specifing the version.
+                      in addition, This field is currently not supported for Active-Active databases.
+                    type: boolean
+                required:
+                - upgradeModulesToLatest
+                type: object
               activeActive:
                 description: Connection/ association to the Active-Active database.
                 properties:
@@ -16305,11 +16488,10 @@ spec:
                               nolint:staticcheck // custom json tag unknown to the linter
                             type: string
                           version:
-                            description: Module's semantic version e.g "1.6.12"
+                            description: Module's semantic version e.g "1.6.12" - optional only in REDB, must be set in REAADB
                             type: string
                         required:
                         - name
-                        - version
                         type: object
                       type: array
                     ossCluster:
@@ -16348,7 +16530,9 @@ spec:
                       - name
                       type: object
                     redisVersion:
-                      description: Redis OSS version. For existing databases - Upgrade
+                      description: Redis OSS version. 
+                        Version can be specified via <major.minor> prefix,
+                        or via channels - for existing databases - Upgrade
                         Redis OSS version. For new databases - the version which the
                         database will be created with. If set to 'major' - will always
                         upgrade to the most recent major Redis version. If set to 'latest'
@@ -16358,10 +16542,17 @@ spec:
                         before. Possible values are 'major' or 'latest' When using upgrade
                         - make sure to backup the database before. This value is used
                         only for database type 'redis'
-                      enum:
-                      - major
-                      - latest
                       type: string
+                    upgradeSpec:
+                      description: Specifications for DB upgrade.
+                      properties:
+                        upgradeModulesToLatest:
+                          description: Upgrades the modules to the latest version that supportes the DB version during a DB upgrade action, to upgrade the DB version view the 'redisVersion' field.
+                            Note - This field is currently not supported for Active-Active databases.
+                          type: boolean
+                      required:
+                      - upgradeModulesToLatest
+                      type: object
                     replicaSources:
                       description: What databases to replicate from
                       items:
@@ -16410,7 +16601,7 @@ spec:
                     replication:
                       description: In-memory database replication. When enabled, database
                         will have replica shard for every master - leading to higher
-                        availability.
+                        availability. Defaults to false.
                       type: boolean
                     resp3:
                       description: Whether this database supports RESP3 protocol.
@@ -16485,12 +16676,13 @@ spec:
               type: object
           type: object
 ---
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: redis-enterprise-operator
   labels:
     app: redis-enterprise
+  name: redis-enterprise-operator
 spec:
   replicas: 1
   selector:
@@ -16501,27 +16693,13 @@ spec:
   template:
     metadata:
       labels:
-        name: redis-enterprise-operator
         app: redis-enterprise
+        name: redis-enterprise-operator
     spec:
-      securityContext:
-        seccompProfile:
-          type: RuntimeDefault
-        runAsNonRoot: true
-      serviceAccountName: redis-enterprise-operator
       containers:
-        - name: redis-enterprise-operator
-          image: redislabs/operator:7.4.2-2
-          command:
-          - operator-root
-          - operator
-          imagePullPolicy: Always
-          envFrom:
-            - configMapRef:
-                name: operator-environment-config
-                optional: true
-          ports:
-            - containerPort: 8080
+        - command:
+            - operator-root
+            - operator
           env:
             - name: POD_NAMESPACE
               valueFrom:
@@ -16536,7 +16714,25 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
-              value: "redis-enterprise-operator"
+              value: redis-enterprise-operator
+          envFrom:
+            - configMapRef:
+                name: "operator-environment-config"
+                optional: true
+          image: redislabs/operator:7.4.2-12
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: redis-enterprise-operator
+          ports:
+            - containerPort: 8080
           resources:
             limits:
               cpu: 4000m
@@ -16544,34 +16740,16 @@ spec:
             requests:
               cpu: 500m
               memory: 256Mi
-          livenessProbe:
-            failureThreshold: 3
-            successThreshold: 1
-            periodSeconds: 10
-            timeoutSeconds: 5
-            httpGet:
-              path: /healthz
-              port: 8080
-              scheme: HTTP
           securityContext:
-            privileged: false
-            readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
             capabilities:
               drop:
-              - ALL
-        - name: admission
-          image: redislabs/operator:7.4.2-2
-          command:
-          - operator-root
-          - admission
-          imagePullPolicy: Always
-          envFrom:
-            - configMapRef:
-                name: operator-environment-config
-                optional: true
-          ports:
-            - containerPort: 8443
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+        - command:
+            - operator-root
+            - admission
           env:
             - name: POD_NAMESPACE
               valueFrom:
@@ -16585,6 +16763,34 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+          envFrom:
+            - configMapRef:
+                name: "operator-environment-config"
+                optional: true
+          image: redislabs/operator:7.4.2-12
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /liveness
+              port: 8443
+              scheme: HTTPS
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: admission
+          ports:
+            - containerPort: 8443
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8443
+              scheme: HTTPS
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
           resources:
             limits:
               cpu: 1000m
@@ -16592,30 +16798,16 @@ spec:
             requests:
               cpu: 250m
               memory: 256Mi
-          readinessProbe:
-            failureThreshold: 3
-            successThreshold: 1
-            periodSeconds: 10
-            timeoutSeconds: 5
-            httpGet:
-              path: /healthz
-              port: 8443
-              scheme: HTTPS
-          livenessProbe:
-            failureThreshold: 3
-            successThreshold: 1
-            periodSeconds: 10
-            timeoutSeconds: 5
-            initialDelaySeconds: 15
-            httpGet:
-              path: /liveness
-              port: 8443
-              scheme: HTTPS
           securityContext:
-            privileged: false
-            readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
             capabilities:
               drop:
-              - ALL
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+        runAsNonRoot: true
+      serviceAccountName: redis-enterprise-operator
 ---
