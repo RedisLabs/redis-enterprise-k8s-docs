@@ -121,11 +121,12 @@ DbAlertsSettings An API object that represents the database alerts configuration
 [Back to Table of Contents](#table-of-contents)
 
 ### DbModule
-Redis Enterprise Module: https://redislabs.com/redis-enterprise/modules/
+Redis Enterprise Module: https://redislabs.com/redis-enterprise/modules/ 
+Module Name List: https://redis.io/docs/latest/operate/rs/references/rest-api/objects/module/
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| name | The module's name e.g "ft" for redissearch | string |  | true |
+| name | The module's name e.g "ft" for redissearch. Module_name one of https://redis.io/docs/latest/operate/rs/references/rest-api/objects/module/ | string |  | true |
 | version | Module's semantic version e.g "1.6.12" - optional only in REDB, must be set in REAADB | string |  | false |
 | config | Module command line arguments e.g. VKEY_MAX_ENTITY_COUNT 30 | string |  | false |
 [Back to Table of Contents](#table-of-contents)
