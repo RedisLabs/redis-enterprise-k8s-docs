@@ -5,6 +5,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
 * [Objects](#objects)
   * [APIServiceSpec](#apiservicespec)
   * [ActiveActive](#activeactive)
+  * [Backup](#backup)
   * [BundledDatabaseRedisVersions](#bundleddatabaseredisversions)
   * [BundledDatabaseVersions](#bundleddatabaseversions)
   * [ClusterCertificate](#clustercertificate)
@@ -36,6 +37,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [RedisEnterpriseClusterStatus](#redisenterpriseclusterstatus)
   * [RedisEnterpriseServicesConfiguration](#redisenterpriseservicesconfiguration)
   * [RedisOnFlashSpec](#redisonflashspec)
+  * [S3Backup](#s3backup)
   * [Saslauthd](#saslauthd)
   * [Services](#services)
   * [ServicesRiggerConfigurationSpec](#servicesriggerconfigurationspec)
@@ -72,6 +74,14 @@ Customization options for the REC API service.
 | apiIngressUrl | RS API URL | string |  | true |
 | dbIngressSuffix | DB ENDPOINT SUFFIX - will be used to set the db host ingress <db name><db ingress suffix>. Creates a host name so it should be unique if more than one db is created on the cluster with the same name | string |  | true |
 | ingressAnnotations | Used for ingress controllers such as ha-proxy or nginx in GKE | map[string]string |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### Backup
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| s3 | Configurations for backups to s3 and s3-compatible storage | *[S3Backup](#s3backup) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### BundledDatabaseRedisVersions
@@ -402,6 +412,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | ldap | Cluster-level LDAP configuration, such as server addresses, protocol, authentication and query settings. | *[LDAPSpec](#ldapspec) |  | false |
 | extraEnvVars | ADVANCED USAGE: use carefully. Add environment variables to RS StatefulSet's containers. | []v1.EnvVar |  | false |
 | resp3Default | Whether databases will turn on RESP3 compatibility upon database upgrade. Note - Deleting this property after explicitly setting its value shall have no effect. Please view the corresponding field in RS doc for more info. | *bool |  | false |
+| backup | Cluster-wide backup configurations | *[Backup](#backup) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseClusterStatus
@@ -445,6 +456,15 @@ RedisOnFlashSpec contains all the parameters needed to configure in order to ena
 | storageClassName | Used to identify the storage class name of the corresponding volume claim template. | string |  | true |
 | flashDiskSize | Required flash disk size. | resource.Quantity |  | false |
 | bigStoreDriver | Used to change the bigstore_driver when REC is up and running. | [RedisOnFlashsStorageEngine](#redisonflashsstorageengine) |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### S3Backup
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| url | Specifies the URL for S3 export and import | string |  | false |
+| caCertificateSecretName | Secret name that holds the S3 CA certificate, which contains the TLS certificate mapped to the key in the secret 'cert' | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### Saslauthd

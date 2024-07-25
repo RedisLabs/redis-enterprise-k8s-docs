@@ -8,11 +8,10 @@ rules:
   - apiGroups:
       - app.redislabs.com
     resources: ["redisenterprisedatabases", "redisenterprisedatabases/status", "redisenterprisedatabases/finalizers"]
-    verbs: ["delete", "deletecollection", "get", "list", "patch", "create", "update", "watch"]
+    verbs: ["delete", "get", "list", "patch", "create", "update", "watch"]
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["update", "get", "read", "list", "listallnamespaces", "watch", "watchlist",
-            "watchlistallnamespaces", "create","patch","replace","delete","deletecollection"]
+    verbs: ["update", "get", "watch", "create", "patch", "list"]
   - apiGroups: [""]
     resources: ["endpoints"]
     verbs: ["get", "list", "watch"]
@@ -21,4 +20,4 @@ rules:
     verbs: ["create"]
   - apiGroups: [""]
     resources: ["services"]
-    verbs: ["get", "watch", "list", "update", "patch", "create", "delete"]
+    verbs: ["get", "list", "update", "patch", "create", "delete", "watch"]
