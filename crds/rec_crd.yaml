@@ -3694,6 +3694,21 @@ spec:
                   setting its value shall have no effect. Please view the corresponding
                   field in RS doc for more info.
                 type: boolean
+              backup:
+                description: Cluster-wide backup configurations
+                properties:
+                  s3:
+                    description: Configurations for backups to s3 and s3-compatible
+                      storage
+                    properties:
+                      caCertificateSecretName:
+                        description: Secret name that holds the S3 CA certificate, which contains the TLS certificate mapped to the key in the secret 'cert'
+                        type: string
+                      url:
+                        description: Specifies the URL for S3 export and import
+                        type: string
+                    type: object
+                type: object
               serviceAccountName:
                 description: Name of the service account to use
                 type: string
@@ -10960,6 +10975,16 @@ spec:
                 type: string
               resp3Default:
                 type: boolean
+              backup:
+                properties:
+                  s3:
+                    properties:
+                      caCertificateSecretName:
+                        type: string
+                      url:
+                        type: string
+                    type: object
+                type: object
               serviceAccountName:
                 type: string
               servicesRiggerSpec:

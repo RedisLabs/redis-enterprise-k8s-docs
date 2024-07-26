@@ -47,18 +47,11 @@ rules:
       - serviceaccounts
       - rolebindings
     verbs:
-      - bind
-      - escalate
-      - impersonate
-      - userextras
       - create
       - get
-      - list
-      - watch
       - update
       - patch
       - delete
-      - deletecollection
   - apiGroups:
       - app.redislabs.com
     resources:
@@ -76,7 +69,6 @@ rules:
       - redisenterpriseactiveactivedatabases/finalizers
     verbs:
       - delete
-      - deletecollection
       - get
       - list
       - patch
@@ -90,17 +82,11 @@ rules:
     verbs:
       - update
       - get
-      - read
-      - list
-      - listallnamespaces
-      - watch
-      - watchlist
-      - watchlistallnamespaces
       - create
       - patch
-      - replace
       - delete
-      - deletecollection
+      - list
+      - watch
   - apiGroups:
       - ""
     resources:
@@ -125,11 +111,10 @@ rules:
     verbs:
       - create
       - delete
-      - deletecollection
       - get
-      - list
       - patch
       - update
+      - list
       - watch
   - apiGroups:
       - policy
@@ -150,8 +135,8 @@ rules:
       - delete
       - get
       - update
-      - list
       - watch
+      - list
   - apiGroups:
       - ""
     resources:
@@ -169,23 +154,23 @@ rules:
       - pods
     verbs:
       - get
-      - watch
       - list
       - update
       - patch
       - delete
+      - watch
   - apiGroups:
       - ""
     resources:
       - services
     verbs:
       - get
-      - watch
       - list
       - update
       - patch
       - create
       - delete
+      - watch
   - apiGroups:
       - policy
     resourceNames:
@@ -201,19 +186,11 @@ rules:
     verbs:
       - create
       - patch
-      - replace
       - delete
-      - deletecollection
-      - read
       - list
-      - listallnamespaces
-      - watch
-      - watchlist
-      - watchlistallnamespaces
-      - patchstatus
-      - readstatus
-      - replacestatus
       - update
+      - get
+      - watch
   - apiGroups:
       - networking.istio.io
     resources:
@@ -221,12 +198,12 @@ rules:
       - virtualservices
     verbs:
       - get
-      - watch
       - list
       - update
       - patch
       - create
       - delete
+      - watch
   - apiGroups:
       - route.openshift.io
     resources:
@@ -235,7 +212,6 @@ rules:
     verbs:
       - create
       - delete
-      - deletecollection
       - get
       - list
       - patch
@@ -3984,6 +3960,21 @@ spec:
                   setting its value shall have no effect. Please view the corresponding
                   field in RS doc for more info.
                 type: boolean
+              backup:
+                description: Cluster-wide backup configurations
+                properties:
+                  s3:
+                    description: Configurations for backups to s3 and s3-compatible
+                      storage
+                    properties:
+                      caCertificateSecretName:
+                        description: Secret name that holds the S3 CA certificate, which contains the TLS certificate mapped to the key in the secret 'cert'
+                        type: string
+                      url:
+                        description: Specifies the URL for S3 export and import
+                        type: string
+                    type: object
+                type: object
               serviceAccountName:
                 description: Name of the service account to use
                 type: string
@@ -11250,6 +11241,16 @@ spec:
                 type: string
               resp3Default:
                 type: boolean
+              backup:
+                properties:
+                  s3:
+                    properties:
+                      caCertificateSecretName:
+                        type: string
+                      url:
+                        type: string
+                    type: object
+                type: object
               serviceAccountName:
                 type: string
               servicesRiggerSpec:
@@ -16584,7 +16585,7 @@ spec:
                       - name
                       type: object
                     redisVersion:
-                      description: Redis OSS version. 
+                      description: Redis OSS version.
                         Version can be specified via <major.minor> prefix,
                         or via channels - for existing databases - Upgrade
                         Redis OSS version. For new databases - the version which the
@@ -16775,7 +16776,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.4.2-12
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.4.6-2
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -16823,7 +16824,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.4.2-12
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.4.6-2
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3

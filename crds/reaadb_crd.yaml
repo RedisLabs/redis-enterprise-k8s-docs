@@ -619,7 +619,7 @@ spec:
                       - name
                       type: object
                     redisVersion:
-                      description: Redis OSS version. 
+                      description: Redis OSS version.
                         Version can be specified via <major.minor> prefix,
                         or via channels - for existing databases - Upgrade
                         Redis OSS version. For new databases - the version which the
