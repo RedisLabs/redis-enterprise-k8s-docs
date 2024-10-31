@@ -1,0 +1,131 @@
+# .github/actions/helm-chart-generator/action.yml
+name: 'Helm Chart HTML Generator'
+description: 'Generates a static HTML page from Helm chart index.yaml file'
+
+inputs:
+  index_file:
+    description: 'Path to the index.yaml file'
+    required: false
+    default: 'index.yaml'
+  output_file:
+    description: 'Output HTML file path'
+    required: false
+    default: 'index.html'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install Dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyyaml
+
+    - name: Run Generator Script
+      shell: python
+      env:
+        INDEX_FILE: ${{ inputs.index_file }}
+        OUTPUT_FILE: ${{ inputs.output_file }}
+      run: |
+        import os
+        import sys
+        import yaml
+        from datetime import datetime
+        
+        # Debug information
+        print("Environment variables:")
+        for key, value in os.environ.items():
+            if key.startswith(('INDEX_', 'OUTPUT_')):
+                print(f"{key}: {value}")
+        
+        # Get input parameters directly from environment
+        index_file = os.environ['INDEX_FILE']
+        output_file = os.environ['OUTPUT_FILE']
+        
+        print(f"Looking for index file: {index_file}")
+        print(f"Will write to output file: {output_file}")
+        
+        # Verify input file exists
+        if not os.path.exists(index_file):
+            print(f"Error: Index file '{index_file}' not found!")
+            print(f"Absolute path attempted: {os.path.abspath(index_file)}")
+            sys.exit(1)
+        
+        # Read YAML file
+        try:
+            with open(index_file, 'r') as f:
+                data = yaml.safe_load(f)
+        except Exception as e:
+            print(f"Error reading YAML file: {e}")
+            sys.exit(1)
+        
+        # Generate HTML
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Helm Charts Repository</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 40px auto; max-width: 1200px; padding: 0 20px; }}
+                .chart {{ border: 1px solid #ddd; margin: 20px 0; padding: 20px; border-radius: 8px; }}
+                .chart-header {{ display: flex; align-items: center; justify-content: space-between; }}
+                .chart-icon {{ max-width: 100px; }}
+                .version {{ background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }}
+                .download-btn {{ 
+                    display: inline-block;
+                    padding: 10px 20px;
+                    background: #0066cc;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    margin-top: 10px;
+                }}
+                .download-btn:hover {{ background: #0052a3; }}
+            </style>
+        </head>
+        <body>
+            <h1>Helm Charts Repository</h1>
+        """
+        
+        # Add chart entries
+        for chart_name, versions in data.get('entries', {}).items():
+            for version in versions:
+                html += f"""
+                <div class="chart">
+                    <div class="chart-header">
+                        <h2>{chart_name}</h2>
+                        {f'<img src="{version["icon"]}" class="chart-icon" alt="Chart icon">' if 'icon' in version else ''}
+                    </div>
+                    <p>{version.get('description', '')}</p>
+                    <div class="version">
+                        <h3>Version {version['version']}</h3>
+                        <p>App Version: {version.get('appVersion', 'N/A')}</p>
+                        <p>Created: {version.get('created', 'N/A')}</p>
+                        <a href="{version['urls'][0]}" class="download-btn">Download Chart</a>
+                    </div>
+                </div>
+                """
+        
+        html += f"""
+            <footer>
+                <p>Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+            </footer>
+        </body>
+        </html>
+        """
+        
+        # Write HTML file
+        try:
+            with open(output_file, 'w') as f:
+                f.write(html)
+            print(f"Successfully generated {output_file}")
+        except Exception as e:
+            print(f"Error writing HTML file: {e}")
+            sys.exit(1)
