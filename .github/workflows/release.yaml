@@ -31,7 +31,7 @@ jobs:
         with:
           pages_branch: helm-webpage
           charts_dir: helm
-          skip_packaging: true
+          skip_existing: true
         env:
           CR_TOKEN: "${{ github.token }}"
 
