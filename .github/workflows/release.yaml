@@ -40,7 +40,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: gh-pages
+          ref: helm-webpage
           fetch-depth: 0
 
       - name: debug-print
