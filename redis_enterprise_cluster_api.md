@@ -9,6 +9,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [BundledDatabaseRedisVersions](#bundleddatabaseredisversions)
   * [BundledDatabaseVersions](#bundleddatabaseversions)
   * [ClusterCertificate](#clustercertificate)
+  * [ClusterCertificatesStatus](#clustercertificatesstatus)
   * [CmServer](#cmserver)
   * [ContainerTimezoneSpec](#containertimezonespec)
   * [CrdbCoordinator](#crdbcoordinator)
@@ -46,6 +47,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [StatsArchiver](#statsarchiver)
   * [UpgradeSpec](#upgradespec)
 * [Enums](#enums)
+  * [CertificatesUpdateStatus](#certificatesupdatestatus)
   * [ClusterState](#clusterstate)
   * [IngressMethod](#ingressmethod)
   * [LDAPProtocol](#ldapprotocol)
@@ -111,6 +113,15 @@ Customization options for the REC API service.
 | name |  | string |  | true |
 | certificate |  | string |  | true |
 | key |  | string |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### ClusterCertificatesStatus
+ClusterCertificatesStatus Stores information about cluster certificates and their update process. In Active-Active databases, this is used to detect updates to the certificates, and trigger synchronization across the participating clusters.
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| generation | Generation stores the version of the cluster's Proxy and Syncer certificate secrets. In Active-Active databases, when a user updates the proxy or syncer certificate, a crdb-update command needs to be triggered to avoid potential sync issues. This helps the REAADB controller detect a change in a certificate and trigger a crdb-update. The version of the cluster's Proxy certificate secret. | *int64 |  | false |
+| updateStatus | The status of the cluster's certificates update | [CertificatesUpdateStatus](#certificatesupdatestatus) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### CmServer
@@ -219,6 +230,7 @@ Address of an LDAP server.
 | cacheTTLSeconds | The maximum TTL of cached entries. | *int |  | false |
 | authenticationQuery | Configuration of authentication queries, mapping between the username, provided to the cluster for authentication, and the LDAP Distinguished Name. | [LDAPAuthenticationQuery](#ldapauthenticationquery) |  | true |
 | authorizationQuery | Configuration of authorization queries, mapping between a user's Distinguished Name and its group memberships. | [LDAPAuthorizationQuery](#ldapauthorizationquery) |  | true |
+| directoryTimeoutSeconds | The connection timeout to the LDAP server when authenticating a user, in seconds | *int |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### LicenseStatus
@@ -430,6 +442,7 @@ RedisEnterpriseClusterStatus defines the observed state of RedisEnterpriseCluste
 | ingressOrRouteMethodStatus | The ingressOrRouteSpec/ActiveActive spec method that exist | [IngressMethod](#ingressmethod) |  | false |
 | redisEnterpriseIPFamily | The chosen IP family of the cluster if was specified in REC spec. | v1.IPFamily |  | false |
 | persistenceStatus | The status of the Persistent Volume Claims that are used for Redis Enterprise Cluster persistence. The status will correspond to the status of one or more of the PVCs (failed/resizing if one of them is in resize or failed to resize) | [PersistenceStatus](#persistencestatus) |  | false |
+| certificatesStatus | Stores information about cluster certificates and their update process. In Active-Active databases, this is used to detect updates to the certificates, and trigger synchronization across the participating clusters. | *[ClusterCertificatesStatus](#clustercertificatesstatus) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseServicesConfiguration
@@ -530,23 +543,33 @@ Specification for upgrades of Redis Enterprise
 [Back to Table of Contents](#table-of-contents)
 ## Enums
 
+### CertificatesUpdateStatus
+CertificatesUpdateStatus stores the status of the cluster's certificates update
+
+| Value | Description |
+| ----- | ----------- |
+| "InProgress" | CertificatesUpdateStatusInProgress indicates that the certificates update is in progress |
+| "Completed" | CertificatesUpdateStatusCompleted indicates that the certificates update has been completed |
+[Back to Table of Contents](#table-of-contents)
+
 ### ClusterState
 State of the Redis Enterprise Cluster
 
 | Value | Description |
 | ----- | ----------- |
-| "PendingCreation" | ClusterPendingCreate means cluster is not created yet |
+| "PendingCreation" | PendingCreation means cluster is not created yet |
 | "BootstrappingFirstPod" | Bootstrapping first pod |
-| "Initializing" | ClusterInitializing means the cluster was created and nodes are in the process of joining the cluster |
-| "RecoveryReset" | ClusterRecoveryReset resets the cluster by deleting all pods |
-| "RecoveringFirstPod" | ClusterRecoveringFirstPod means the cluster entered cluster recovery |
-| "Running" | ClusterRunning means the cluster's sub-resources have been created and are in running state |
-| "Error" | ClusterError means the there was an error when starting creating/updating the one or more of the cluster's resources |
-| "Invalid" | ClusterConfigurationInvalid means an invalid spec was applied |
-| "InvalidUpgrade" | ClusterInvalidUpgrade means an upgrade is not possible at this time |
-| "Upgrade" | ClusterUpgrade |
-| "Deleting" | ClusterDeleting |
-| "ClusterRecreating" | ClusterRecreating - similar to ClusterRecoveryReset - delete all pods before recreation of the cluster. |
+| "Initializing" | Initializing means the cluster was created and nodes are in the process of joining the cluster |
+| "RecoveryReset" | RecoveryReset resets the cluster by deleting all pods |
+| "RecoveringFirstPod" | RecoveringFirstPod means the cluster entered cluster recovery |
+| "Running" | Running means the cluster's sub-resources have been created and are in running state |
+| "Error" | Error means the there was an error when starting creating/updating the one or more of the cluster's resources |
+| "Invalid" | Invalid means an invalid spec was applied |
+| "InvalidUpgrade" | InvalidUpgrade means an upgrade is not possible at this time |
+| "Upgrade" | Upgrade |
+| "Deleting" | Deleting |
+| "ClusterRecreating" | ClusterRecreating - similar to RecoveryReset - delete all pods before recreation of the cluster. |
+| "RunningRollingUpdate" | RunningRollingUpdate similar to Running state and the STS is during rolling-update |
 [Back to Table of Contents](#table-of-contents)
 
 ### IngressMethod

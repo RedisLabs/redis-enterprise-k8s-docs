@@ -28,8 +28,8 @@ By default, the operator creates a ClusterIP type service, which exposes a clust
 Install one of the supported ingresses, if not installed already on your K8s cluster:
   * [Nginx ingress controller installation guide](https://kubernetes.github.io/ingress-nginx/deploy/)
   * [HAProxy ingress getting started](https://haproxy-ingress.github.io/docs/getting-started/)
-  * Istio - follow the "Install and configure Istio for Redis Enterprise" [here](https://docs.redis.com/latest/kubernetes/re-databases/ingress_routing_with_istio/)
-  * [Openshift Routes](https://docs.redis.com/latest/kubernetes/re-databases/routes/)
+  * Istio - follow the "Install and configure Istio for Redis Enterprise" [here](https://redis.io/docs/latest/operate/kubernetes/networking/istio-ingress/)
+  * [Openshift Routes](https://redis.io/docs/latest/operate/kubernetes/networking/routes//)
 
 Warning - You’ll need to make sure `ssl-passthrough` is enabled. It’s enabled by default for HAProxy, but disabled by default for NGINX. See the [Nginx User Guide](https://kubernetes.github.io/ingress-nginx/user-guide/tls/#ssl-passthrough) for details.
 
@@ -91,6 +91,6 @@ Notes:
   * For more info please view the REC custom resource definition or the API doc.
 
 For more information please view the following links:
-  - [Redis doc - set up ingress controller](https://docs.redis.com/latest/kubernetes/re-databases/set-up-ingress-controller/)
-  - [Redis doc - create aa database](https://docs.redis.com/latest/kubernetes/re-clusters/create-aa-database/)
-  - [Redis doc - Openshift Routes](https://docs.redis.com/latest/kubernetes/re-databases/routes/)
+  - [Redis doc - set up ingress controller](https://redis.io/docs/latest/operate/kubernetes/networking/ingressorroutespec/)
+  - [Redis doc - create aa database](https://redis.io/docs/latest/operate/kubernetes/active-active/)
+  - [Redis doc - Openshift Routes](https://redis.io/docs/latest/operate/kubernetes/networking/routes//)

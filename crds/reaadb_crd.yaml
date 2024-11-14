@@ -98,6 +98,13 @@ spec:
                   - up
                   - down
                   type: string
+                clusterCertificatesGeneration:
+                  description: Versions of the cluster's Proxy and Syncer certificates.
+                    In Active-Active databases, these are used to detect updates to the
+                    certificates, and trigger synchronization across the participating
+                    clusters. .
+                  format: int64
+                  type: integer
                 secretsStatus:
                   description: The status of the secrets
                   items:
@@ -171,7 +178,8 @@ spec:
                         - participatingClusterName
                       type: object
                     alertSettings:
-                      description: Settings for database alerts
+                      description: Settings for database alerts.
+                        Note - Alert settings are not supported for Active-Active database.
                       properties:
                         bdb_backup_delayed:
                           description: Periodic backup has been delayed for longer than
@@ -630,7 +638,9 @@ spec:
                         for some databases, you must set redisUpgradePolicy on the cluster
                         before. Possible values are 'major' or 'latest' When using upgrade
                         - make sure to backup the database before. This value is used
-                        only for database type 'redis'
+                        only for database type 'redis'.
+                        Note - Specifying Redis version is currently not
+                        supported for Active-Active database.
                       type: string
                     upgradeSpec:
                       description: Specifications for DB upgrade.

@@ -13,29 +13,31 @@
 * [Supported K8S Distributions](#supported-k8s-distributions)
 
 This page describes how to deploy Redis Enterprise on Kubernetes using the Redis Enterprise Operator. The Redis Enterprise Operator supports two Custom Resource Definitions (CRDs):
+
 * Redis Enterprise Cluster (REC): an API to create Redis Enterprise clusters. Note that only one cluster is supported per operator deployment.
+
 * Redis Enterprise Database (REDB): an API to create Redis databases running on the Redis Enterprise cluster.
-Note that the Redis Enterprise Operator is namespaced.
-High level architecture and overview of the solution can be found [HERE](https://docs.redislabs.com/latest/platforms/kubernetes/).
+Note that the Redis Enterprise operator is namespaced.
+High level architecture and overview of the solution can be found [HERE](https://redis.io/docs/latest/operate/kubernetes/architecture/).
 
 ## Quick start guide
 
-This content [has moved](https://docs.redis.com/latest/kubernetes/deployment/quick-start/) to the Redis Enterprise doc site, [docs.redis.com](https://docs.redis.com/latest/kubernetes/).
+This content [has moved](https://redis.io/docs/latest/operate/kubernetes/deployment/quick-start/) to the Redis Enterprise doc site, [redis.io/docs](https://redis.io/docs/latest/operate/kubernetes/).
 
 ### Installation on OpenShift
 
-This content [has moved](https://docs.redis.com/latest/kubernetes/deployment/openshift/openshift-cli/) to the Redis Enterprise doc site, [docs.redis.com](https://docs.redis.com/latest/kubernetes/).
+This content [has moved](https://redis.io/docs/latest/operate/kubernetes/deployment/openshift/openshift-cli/) to the Redis Enterprise doc site, [redis.io/docs](https://redis.io/docs/latest/operate/kubernetes/).
 
 ### Installation on VMWare Tanzu
 
- This content [has moved](https://docs.redis.com/latest/kubernetes/deployment/tanzu/) to the [Redis Enterprise docs site](https://docs.redis.com/latest/kubernetes/).
+ This content [has moved](https://redis.io/docs/latest/operate/kubernetes/deployment/tanzu/) to the [Redis Enterprise docs site](https://redis.io/docs/latest/operate/kubernetes/).
  
 ## Configuration
 
 ### RedisEnterpriseCluster custom resource
 The operator deploys a `RedisEnterpriseCluster` with default configurations values, but those can be customized in the `RedisEnterpriseCluster` spec as follow:
 
-Some examples [have moved](https://docs.redis.com/latest/kubernetes/reference/cluster-options/) to the Redis Enterprise doc site, [docs.redis.com](https://docs.redis.com/latest/kubernetes/).
+Some examples [have moved](https://redis.io/docs/latest/operate/kubernetes/reference/cluster-options/) to the Redis Enterprise doc site, [redis.io/docs](https://redis.io/docs/latest/operate/kubernetes/).
 
 
 * Cluster username (Default is demo@redis.com)
@@ -92,11 +94,11 @@ Some examples [have moved](https://docs.redis.com/latest/kubernetes/reference/cl
 
 ### Private Repositories
 
-This content [has moved](https://docs.redis.com/latest/kubernetes/deployment/container-images/) to the Redis Enterprise doc site, [docs.redis.com](https://docs.redis.com/latest/kubernetes/).
+This content [has moved](https://redis.io/docs/latest/operate/kubernetes/deployment/container-images/) to the Redis Enterprise doc site, [redis.io/docs](https://redis.io/docs/latest/operate/kubernetes/).
 
 ### Pull secrets
 
-This content [has moved](https://docs.redis.com/latest/kubernetes/deployment/container-images/) to the Redis Enterprise doc site, [docs.redis.com](https://docs.redis.com/latest/kubernetes/).
+This content [has moved](https://redis.io/docs/latest/operate/kubernetes/deployment/container-images/) to the Redis Enterprise doc site, [redis.io/docs](https://redis.io/docs/latest/operate/kubernetes/).
 
 ### Advanced Configuration
 
@@ -107,13 +109,13 @@ This content [has moved](https://docs.redis.com/latest/kubernetes/deployment/con
 
 ## Connect to Redis Enterprise Software web console
 
-This content [has moved](https://docs.redis.com/latest/kubernetes/re-clusters/connect-to-admin-console/) to the Redis Enterprise doc site, [docs.redis.com](https://docs.redis.com/latest/kubernetes/).
+This content [has moved](https://redis.io/docs/latest/operate/kubernetes/re-clusters/connect-to-admin-console/) to the Redis Enterprise doc site, [redis.io/docs](https://redis.io/docs/latest/operate/kubernetes/).
 
 
 ## Upgrade
 
-This content [has moved](https://docs.redis.com/latest/kubernetes/re-clusters/upgrade-redis-cluster/) to the Redis Enterprise doc site, [docs.redis.com](https://docs.redis.com/latest/kubernetes/).
+This content [has moved](https://redis.io/docs/latest/operate/kubernetes/re-clusters/upgrade-redis-cluster/) to the Redis Enterprise doc site, [redis.io/docs](https://redis.io/docs/latest/operate/kubernetes/).
 
 ## Supported K8S Distributions
 
-This content [has moved](https://docs.redis.com/latest/kubernetes/reference/supported_k8s_distributions/) to the Redis Enterprise doc site, [docs.redis.com](https://docs.redis.com/latest/kubernetes/).
+This content [has moved](https://redis.io/docs/latest/operate/kubernetes/reference/supported_k8s_distributions/) to the Redis Enterprise doc site, [redis.io/docs](https://redis.io/docs/latest/operate/kubernetes/).

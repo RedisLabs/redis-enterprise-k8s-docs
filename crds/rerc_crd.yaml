@@ -56,6 +56,10 @@ spec:
               observedGeneration:
                 description: The most recent generation observed for this RERC. It corresponds to the RERC's generation, which is updated by the API Server.
                 type: integer
+              internalObservedSecretResourceVersion:
+                description: The observed secret resource version.
+                  Used for internal purposes only.
+                type: string
             type: object
           spec:
             properties:
@@ -67,6 +71,9 @@ spec:
                 description: The database URL suffix, will be used for the active-active
                   database replication endpoint and replication endpoint SNI.
                 type: string
+              apiPort:
+                description: The port number of the cluster's URL used for connectivity/sync
+                type: integer
               recNamespace:
                 description: The namespace of the REC that the RERC is pointing at
                 type: string
