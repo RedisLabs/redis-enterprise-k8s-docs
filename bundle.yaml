@@ -1,4 +1,5 @@
 ---
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -172,6 +173,7 @@ rules:
       - delete
       - watch
 ---
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -186,12 +188,14 @@ subjects:
   - kind: ServiceAccount
     name: redis-enterprise-operator
 ---
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
     app: redis-enterprise
   name: redis-enterprise-operator
+---
 ---
 apiVersion: v1
 kind: Service
@@ -355,26 +359,6 @@ spec:
                       the cluster LDAP configuration according to the '.spec.ldap'
                       field in the RedisEnterpriseCluster resource.
                     type: boolean
-                type: object
-              certificatesStatus:
-                description: Stores information about cluster certificates and their
-                  update process. In Active-Active databases, this is used to detect
-                  updates to the certificates, and trigger synchronization across the
-                  participating clusters.
-                properties:
-                  generation:
-                    description: Generation stores the version of the cluster's Proxy
-                      and Syncer certificate secrets. In Active-Active databases, when
-                      a user updates the proxy or syncer certificate, a crdb-update
-                      command needs to be triggered to avoid potential sync issues.
-                      This helps the REAADB controller detect a change in a certificate
-                      and trigger a crdb-update. The version of the cluster's Proxy
-                      certificate secret.
-                    format: int64
-                    type: integer
-                  updateStatus:
-                    description: The status of the cluster's certificates update
-                    type: string
                 type: object
               ingressOrRouteMethodStatus:
                 description: The ingressOrRouteSpec/ActiveActive spec method that exist
@@ -824,10 +808,6 @@ spec:
                   cacheTTLSeconds:
                     description: The maximum TTL of cached entries.
                     type: integer
-                  directoryTimeoutSeconds:
-                    description: The connection timeout to the LDAP server when authenticating
-                      a user, in seconds
-                    type: integer
                   enabledForControlPlane:
                     description: Whether to enable LDAP for control plane access.
                       Disabled by default.
@@ -1098,7 +1078,7 @@ spec:
                   on Kubernetes v1.25+. Future versions of the RedisEnterpriseCluster
                   API will remove support for this field altogether. For migration
                   instructions, see https://kubernetes.io/docs/tasks/configure-pod-container/migrate-from-psp/
-                  \n Name of pod security policy to use on pods"
+                  \n Name of pod security policy to use on pods"                
                 type: string
               podStartingPolicy:
                 description: Mitigation setting for STS pods stuck in "ContainerCreating"
@@ -6911,7 +6891,7 @@ spec:
                               type: string
                           required:
                           - port
-                          type: object
+                          type: object 
                         httpGet:
                           properties:
                             host:
@@ -7955,14 +7935,6 @@ spec:
                   - version
                   type: object
                 type: array
-              certificatesStatus:
-                properties:
-                  generation:
-                    format: int64
-                    type: integer
-                  updateStatus:
-                    type: string
-                type: object
               ingressOrRouteMethodStatus:
                 type: string
               managedAPIs:
@@ -8259,8 +8231,6 @@ spec:
                   caCertificateSecretName:
                     type: string
                   cacheTTLSeconds:
-                    type: integer
-                  directoryTimeoutSeconds:
                     type: integer
                   enabledForControlPlane:
                     type: boolean
@@ -14156,7 +14126,7 @@ spec:
                               type: string
                           required:
                           - port
-                          type: object
+                          type: object 
                         httpGet:
                           properties:
                             host:
@@ -15484,16 +15454,12 @@ spec:
                   and it must not be below 1GB.
                 type: string
               modulesList:
-                description: List of modules associated with database. Note - For Active-Active
-                  databases this feature is currently in preview. For this feature to
-                  take effect for Active-Active databases, set a boolean environment
-                  variable with the name "ENABLE_ALPHA_FEATURES" to True. This variable
-                  can be set via the redis-enterprise-operator pod spec, or through
-                  the operator-environment-config Config Map. Note - if you do not want
-                  to upgrade to the latest version you must set upgradeSpec -> upgradeModulesToLatest
-                  to false. if you specify a version and do not set the upgradeModulesToLatest
-                  it can result errors in the operator. in addition, the option to specify
-                  specific version is Deprecated and will be deleted in next releases.
+                description: List of modules associated with database.
+                  Note - For Active-Active databases this feature is currently in preview. For
+                  this feature to take effect for Active-Active databases, set a boolean environment variable
+                  with the name "ENABLE_ALPHA_FEATURES" to True. This variable can
+                  be set via the redis-enterprise-operator pod spec, or through the
+                  operator-environment-config Config Map.
                 items:
                   description: 'Redis Enterprise Module: https://redislabs.com/redis-enterprise/modules/'
                   properties:
@@ -15505,8 +15471,7 @@ spec:
                       description: The module's name e.g "ft" for redissearch
                       type: string
                     version:
-                      description: DEPRECATED - Module's semantic version e.g "1.6.12"
-                        - optional only in REDB, must be set in REAADB
+                      description: Module's semantic version e.g "1.6.12" - optional only in REDB, must be set in REAADB
                       type: string
                   required:
                   - name
@@ -15670,12 +15635,9 @@ spec:
                 description: Specifications for DB upgrade.
                 properties:
                   upgradeModulesToLatest:
-                    description: DEPRECATED Upgrades the modules to the latest version
-                      that supports the DB version during a DB upgrade action, to upgrade
-                      the DB version view the 'redisVersion' field. Notes - All modules
-                      must be without specifying the version. in addition, This field
-                      is currently not supported for Active-Active databases. The default
-                      is true
+                    description: Upgrades the modules to the latest version that supportes the DB version during a DB upgrade action, to upgrade the DB version view the 'redisVersion' field.
+                      Notes - All modules must be without specifing the version.
+                      in addition, This field is currently not supported for Active-Active databases.
                     type: boolean
                 required:
                 - upgradeModulesToLatest
@@ -15704,8 +15666,8 @@ spec:
                   - participatingClusterName
                 type: object
               memcachedSaslSecretName:
-                description: 'Credentials used for binary authentication in memcached databases.
-                  The credentials should be saved as an opaque secret and the name of that secret should be configured using this field.
+                description: 'Credentials used for binary authentication in memcached databases. 
+                  The credentials should be saved as an opaque secret and the name of that secret should be configured using this field. 
                   For username, use ''username'' as the key and the actual username as the value.
                   For password, use ''password'' as the key and the actual password as the value.
                   Note that connections are not encrypted.'
@@ -15921,10 +15883,6 @@ spec:
               observedGeneration:
                 description: The most recent generation observed for this RERC. It corresponds to the RERC's generation, which is updated by the API Server.
                 type: integer
-              internalObservedSecretResourceVersion:
-                description: The observed secret resource version.
-                  Used for internal purposes only.
-                type: string
             type: object
           spec:
             properties:
@@ -15936,9 +15894,6 @@ spec:
                 description: The database URL suffix, will be used for the active-active
                   database replication endpoint and replication endpoint SNI.
                 type: string
-              apiPort:
-                description: The port number of the cluster's URL used for connectivity/sync
-                type: integer
               recNamespace:
                 description: The namespace of the REC that the RERC is pointing at
                 type: string
@@ -16056,13 +16011,6 @@ spec:
                   - up
                   - down
                   type: string
-                clusterCertificatesGeneration:
-                  description: Versions of the cluster's Proxy and Syncer certificates.
-                    In Active-Active databases, these are used to detect updates to the
-                    certificates, and trigger synchronization across the participating
-                    clusters. .
-                  format: int64
-                  type: integer
                 secretsStatus:
                   description: The status of the secrets
                   items:
@@ -16136,8 +16084,7 @@ spec:
                         - participatingClusterName
                       type: object
                     alertSettings:
-                      description: Settings for database alerts.
-                        Note - Alert settings are not supported for Active-Active database.
+                      description: Settings for database alerts
                       properties:
                         bdb_backup_delayed:
                           description: Periodic backup has been delayed for longer than
@@ -16596,9 +16543,7 @@ spec:
                         for some databases, you must set redisUpgradePolicy on the cluster
                         before. Possible values are 'major' or 'latest' When using upgrade
                         - make sure to backup the database before. This value is used
-                        only for database type 'redis'.
-                        Note - Specifying Redis version is currently not
-                        supported for Active-Active database.
+                        only for database type 'redis'
                       type: string
                     upgradeSpec:
                       description: Specifications for DB upgrade.
@@ -16733,6 +16678,7 @@ spec:
               type: object
           type: object
 ---
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16775,7 +16721,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: redislabs/operator:7.8.2-2
+          image: redislabs/operator:7.4.6-2
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -16823,7 +16769,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: redislabs/operator:7.8.2-2
+          image: redislabs/operator:7.4.6-2
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3

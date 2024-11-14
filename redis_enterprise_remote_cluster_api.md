@@ -39,7 +39,6 @@ RedisEnterpriseRemoteClusterList contains a list of RedisEnterpriseRemoteCluster
 | recNamespace | The namespace of the REC that the RERC is pointing at | string |  | true |
 | secretName | The name of the secret containing cluster credentials. Must be of the following format: "redis-enterprise-<RERC name>" | string |  | false |
 | apiFqdnUrl | The URL of the cluster, will be used for the active-active database URL. | string |  | true |
-| apiPort | The port number of the cluster's URL used for connectivity/sync | *int |  | false |
 | dbFqdnSuffix | The database URL suffix, will be used for the active-active database replication endpoint and replication endpoint SNI. | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
@@ -52,7 +51,6 @@ RedisEnterpriseRemoteClusterList contains a list of RedisEnterpriseRemoteCluster
 | status | The status of the remote cluster. | [RemoteClusterStatus](#remoteclusterstatus) |  | false |
 | specStatus | Whether the desired specification is valid. | [SpecStatusName](#specstatusname) |  | false |
 | observedGeneration | observedGeneration is the most recent generation observed for this RERC. It corresponds to the RERC's generation, which is updated by the API Server. | int64 |  | false |
-| internalObservedSecretResourceVersion | The observed secret resource version. Used for internal purposes only. | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 ## Enums
 
