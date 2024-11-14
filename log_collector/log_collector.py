@@ -771,14 +771,14 @@ def get_redis_enterprise_debug_info(namespace, output_dir, k8s_cli, mode, skip_s
 
 
 def collect_resources_list(namespace, output_dir, k8s_cli, mode):
-    """
+     """
         Prints the output of kubectl get all to a file
     """
     selector = ""
     if mode == MODE_RESTRICTED:
-        selector = '--selector="{}"'.format(OPERATOR_LABEL)
+        selector = f'--selector="{OPERATOR_LABEL}"'
     collect_helper(output_dir,
-                   cmd="{} get all -o wide -n {} {}".format(k8s_cli, namespace, selector),
+                   cmd=f"{k8s_cli} get pod,service,deployment,replicaset,statefulset -o wide -n {namespace} {selector}",
                    file_name="resources_list",
                    resource_name="resources list",
                    namespace=namespace)
@@ -1085,7 +1085,7 @@ def collect_connectivity_check(namespace, output_dir, k8s_cli):
                            resource_name="connectivity check via curl")
     # Verify with kubectl.
     collect_helper(output_dir,
-                   cmd="{} get all -v=6 -n {}".format(k8s_cli, namespace),
+                   cmd=f"{k8s_cli} get version -n {namespace}",
                    file_name="connectivity_check_via_k8s_cli",
                    resource_name="connectivity check via k8s cli",
                    namespace=namespace)
