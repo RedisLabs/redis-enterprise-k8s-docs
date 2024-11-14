@@ -16829,7 +16829,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.8.2-3
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.8.2-6
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -16877,7 +16877,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.8.2-3
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.8.2-6
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
