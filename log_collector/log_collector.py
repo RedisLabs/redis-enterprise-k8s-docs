@@ -1085,7 +1085,7 @@ def collect_connectivity_check(namespace, output_dir, k8s_cli):
                            resource_name="connectivity check via curl")
     # Verify with kubectl.
     collect_helper(output_dir,
-                   cmd=f"{k8s_cli} get version -n {namespace}",
+                   cmd=f"{k8s_cli} version --v=9",
                    file_name="connectivity_check_via_k8s_cli",
                    resource_name="connectivity check via k8s cli",
                    namespace=namespace)
