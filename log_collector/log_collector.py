@@ -771,7 +771,7 @@ def get_redis_enterprise_debug_info(namespace, output_dir, k8s_cli, mode, skip_s
 
 
 def collect_resources_list(namespace, output_dir, k8s_cli, mode):
-     """
+    """
         Prints the output of kubectl get all to a file
     """
     selector = ""
