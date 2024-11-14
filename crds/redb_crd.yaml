@@ -401,16 +401,12 @@ spec:
                   and it must not be below 1GB.
                 type: string
               modulesList:
-                description: List of modules associated with database. Note - For Active-Active
-                  databases this feature is currently in preview. For this feature to
-                  take effect for Active-Active databases, set a boolean environment
-                  variable with the name "ENABLE_ALPHA_FEATURES" to True. This variable
-                  can be set via the redis-enterprise-operator pod spec, or through
-                  the operator-environment-config Config Map. Note - if you do not want
-                  to upgrade to the latest version you must set upgradeSpec -> upgradeModulesToLatest
-                  to false. if you specify a version and do not set the upgradeModulesToLatest
-                  it can result errors in the operator. in addition, the option to specify
-                  specific version is Deprecated and will be deleted in next releases.
+                description: List of modules associated with database.
+                  Note - For Active-Active databases this feature is currently in preview. For
+                  this feature to take effect for Active-Active databases, set a boolean environment variable
+                  with the name "ENABLE_ALPHA_FEATURES" to True. This variable can
+                  be set via the redis-enterprise-operator pod spec, or through the
+                  operator-environment-config Config Map.
                 items:
                   description: 'Redis Enterprise Module: https://redislabs.com/redis-enterprise/modules/'
                   properties:
@@ -422,8 +418,7 @@ spec:
                       description: The module's name e.g "ft" for redissearch
                       type: string
                     version:
-                      description: DEPRECATED - Module's semantic version e.g "1.6.12"
-                        - optional only in REDB, must be set in REAADB
+                      description: Module's semantic version e.g "1.6.12" - optional only in REDB, must be set in REAADB
                       type: string
                   required:
                   - name
@@ -587,12 +582,9 @@ spec:
                 description: Specifications for DB upgrade.
                 properties:
                   upgradeModulesToLatest:
-                    description: DEPRECATED Upgrades the modules to the latest version
-                      that supports the DB version during a DB upgrade action, to upgrade
-                      the DB version view the 'redisVersion' field. Notes - All modules
-                      must be without specifying the version. in addition, This field
-                      is currently not supported for Active-Active databases. The default
-                      is true
+                    description: Upgrades the modules to the latest version that supportes the DB version during a DB upgrade action, to upgrade the DB version view the 'redisVersion' field.
+                      Notes - All modules must be without specifing the version.
+                      in addition, This field is currently not supported for Active-Active databases.
                     type: boolean
                 required:
                 - upgradeModulesToLatest
@@ -621,8 +613,8 @@ spec:
                   - participatingClusterName
                 type: object
               memcachedSaslSecretName:
-                description: 'Credentials used for binary authentication in memcached databases.
-                  The credentials should be saved as an opaque secret and the name of that secret should be configured using this field.
+                description: 'Credentials used for binary authentication in memcached databases. 
+                  The credentials should be saved as an opaque secret and the name of that secret should be configured using this field. 
                   For username, use ''username'' as the key and the actual username as the value.
                   For password, use ''password'' as the key and the actual password as the value.
                   Note that connections are not encrypted.'
