@@ -96,7 +96,7 @@ Threshold for database alert
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| upgradeModulesToLatest | Upgrades the modules to the latest version that supportes the DB version during a DB upgrade action, to upgrade the DB version view the 'redisVersion' field. Notes - All modules must be without specifing the version. in addition, This field is currently not supported for Active-Active databases. | *bool |  | true |
+| upgradeModulesToLatest | DEPRECATED Upgrades the modules to the latest version that supports the DB version during a DB upgrade action, to upgrade the DB version view the 'redisVersion' field. Notes - All modules must be without specifying the version. in addition, This field is currently not supported for Active-Active databases. The default is true | *bool |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### DbAlertsSettings
@@ -126,7 +126,7 @@ Redis Enterprise Module: https://redislabs.com/redis-enterprise/modules/
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | name | The module's name e.g "ft" for redissearch | string |  | true |
-| version | Module's semantic version e.g "1.6.12" - optional only in REDB, must be set in REAADB | string |  | false |
+| version | DEPRECATED - Module's semantic version e.g "1.6.12" - optional only in REDB, must be set in REAADB | string |  | false |
 | config | Module command line arguments e.g. VKEY_MAX_ENTITY_COUNT 30 | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
@@ -208,9 +208,9 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | tlsMode | Require SSL authenticated and encrypted connections to the database. enabled - all incoming connections to the Database must use SSL. disabled - no incoming connection to the Database should use SSL. replica_ssl - databases that replicate from this one need to use SSL. | string | disabled | false |
 | clientAuthenticationCertificates | The Secrets containing TLS Client Certificate to use for Authentication | []string |  | false |
 | replicaSources | What databases to replicate from | [][ReplicaSource](#replicasource) |  | false |
-| alertSettings | Settings for database alerts | *[DbAlertsSettings](#dbalertssettings) |  | false |
+| alertSettings | Settings for database alerts. Note - Alert settings are not supported for Active-Active database. | *[DbAlertsSettings](#dbalertssettings) |  | false |
 | backup | Target for automatic database backups. | *[BackupSpec](#backupspec) |  | false |
-| modulesList | List of modules associated with database. Note - For Active-Active databases this feature is currently in preview. For this feature to take effect for Active-Active databases, set a boolean environment variable with the name "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. | *[][DbModule](#dbmodule) |  | false |
+| modulesList | List of modules associated with database. Note - For Active-Active databases this feature is currently in preview. For this feature to take effect for Active-Active databases, set a boolean environment variable with the name "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. Note - if you do not want to upgrade to the latest version you must set upgradeSpec -> upgradeModulesToLatest to false. if you specify a version and do not set the upgradeModulesToLatest it can result errors in the operator. in addition, the option to specify specific version is Deprecated and will be deleted in next releases. | *[][DbModule](#dbmodule) |  | false |
 | rolesPermissions | List of Redis Enteprise ACL and Role bindings to apply | [][RolePermission](#rolepermission) |  | false |
 | defaultUser | Is connecting with a default user allowed?  If disabled, the DatabaseSecret will not be created or updated | *bool | true | false |
 | ossCluster | OSS Cluster mode option. Note that not all client libraries support OSS cluster mode. | *bool | false | false |
@@ -222,7 +222,7 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | isRof | Whether it is an RoF database or not. Applicable only for databases of type "REDIS". Assumed to be false if left blank. | *bool |  | false |
 | rofRamSize | The size of the RAM portion of an RoF database. Similarly to "memorySize" use formats like 100MB, 0.1GB It must be at least 10% of combined memory size (RAM+Flash), as specified by "memorySize". | string |  | false |
 | memcachedSaslSecretName | Credentials used for binary authentication in memcached databases. The credentials should be saved as an opaque secret and the name of that secret should be configured using this field. For username, use 'username' as the key and the actual username as the value. For password, use 'password' as the key and the actual password as the value. Note that connections are not encrypted. | string |  | false |
-| redisVersion | Redis OSS version. Version can be specified via <major.minor> prefix, or via channels - for existing databases - Upgrade Redis OSS version. For new databases - the version which the database will be created with. If set to 'major' - will always upgrade to the most recent major Redis version. If set to 'latest' - will always upgrade to the most recent Redis version. Depends on 'redisUpgradePolicy' - if you want to set the value to 'latest' for some databases, you must set redisUpgradePolicy on the cluster before. Possible values are 'major' or 'latest' When using upgrade - make sure to backup the database before. This value is used only for database type 'redis' | string |  | false |
+| redisVersion | Redis OSS version. Version can be specified via <major.minor> prefix, or via channels - for existing databases - Upgrade Redis OSS version. For new databases - the version which the database will be created with. If set to 'major' - will always upgrade to the most recent major Redis version. If set to 'latest' - will always upgrade to the most recent Redis version. Depends on 'redisUpgradePolicy' - if you want to set the value to 'latest' for some databases, you must set redisUpgradePolicy on the cluster before. Possible values are 'major' or 'latest' When using upgrade - make sure to backup the database before. This value is used only for database type 'redis'. Note - Specifying Redis version is currently not supported for Active-Active database. | string |  | false |
 | upgradeSpec | Specifications for DB upgrade. | *[DBUpgradeSpec](#dbupgradespec) |  | false |
 | activeActive | Connection/ association to the Active-Active database. | *[ActiveActiveInfo](#activeactiveinfo) |  | false |
 | resp3 | Whether this database supports RESP3 protocol. Note - Deleting this property after explicitly setting its value shall have no effect. Please view the corresponding field in RS doc for more info. | *bool |  | false |

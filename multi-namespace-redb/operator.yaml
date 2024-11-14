@@ -1,4 +1,3 @@
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -41,7 +40,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: redislabs/operator:7.4.6-2
+          image: redislabs/operator:7.8.2-2
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -89,7 +88,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: redislabs/operator:7.4.6-2
+          image: redislabs/operator:7.8.2-2
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
