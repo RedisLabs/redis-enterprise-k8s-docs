@@ -729,11 +729,11 @@ upgrading modules with Active-Active databases is currently not supported via th
 ## Upgrade REC with Active-Active database
 
 Upgrading REC with REAADBs  is supported.
-Please follow [upgrade Redis Enterprise Cluster documentation](https://docs.redis.com/latest/kubernetes/re-clusters/upgrade-redis-cluster/).
+Please follow [upgrade Redis Enterprise Cluster documentation](https://redis.io/docs/latest/operate/kubernetes/re-clusters/upgrade-redis-cluster/).
 
 Notes:
 - It is recommended to upgrade all of the participating clusters to the same operator version.
-- [Optional] - Please view following documentation regarding upgrade the Active-Active database  [here](https://docs.redis.com/latest/rs/installing-upgrading/upgrading/upgrade-active-active/)
+- [Optional] - Please view following documentation regarding upgrade the Active-Active database  [here](https://redis.io/docs/latest/operate/rs/installing-upgrading/upgrading/upgrade-active-active/)
 - In case you are upgrading from version with the Active-Active database controller as public preview you may remove the following flags from the environment variables: `ACTIVE_ACTIVE_DATABASE_CONTROLLER_ENABLED` and `REMOTE_CLUSTER_CONTROLLER_ENABLED`, and in case the alpha features flag is enabled only for the REC 'ingressOrRoutesSpec' field you may remove the: `ENABLE_ALPHA_FEATURES` as well.`
 
 ## Test your Active-Active database
@@ -761,7 +761,7 @@ From the output fetch the redis 'targetPort':
  
  3. Set a test key with SET foo bar in the first database. If your Active-Active deployment is working properly, when connected to your second database, GET foo should output bar.
  
- to test externally you may use the instructions under 'Test your external access' [here](https://docs.redis.com/latest/kubernetes/re-databases/set-up-ingress-controller/)
+ to test externally you may use the instructions under 'Test your external access' [here](https://redis.io/docs/latest/operate/kubernetes/re-databases/set-up-ingress-controller/)
 
 ## Limitations
 

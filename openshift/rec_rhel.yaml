@@ -9,7 +9,7 @@ spec:
   nodes: 3
   redisEnterpriseImageSpec:
     repository: registry.connect.redhat.com/redislabs/redis-enterprise
-    versionTag: 7.4.6-22.rhel8-openshift
+    versionTag: 7.8.2-34.rhel8-openshift
   redisEnterpriseServicesRiggerImageSpec:
     repository: registry.connect.redhat.com/redislabs/services-manager
   bootstrapperImageSpec:

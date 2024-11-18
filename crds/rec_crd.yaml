@@ -147,6 +147,26 @@ spec:
                       field in the RedisEnterpriseCluster resource.
                     type: boolean
                 type: object
+              certificatesStatus:
+                description: Stores information about cluster certificates and their
+                  update process. In Active-Active databases, this is used to detect
+                  updates to the certificates, and trigger synchronization across the
+                  participating clusters.
+                properties:
+                  generation:
+                    description: Generation stores the version of the cluster's Proxy
+                      and Syncer certificate secrets. In Active-Active databases, when
+                      a user updates the proxy or syncer certificate, a crdb-update
+                      command needs to be triggered to avoid potential sync issues.
+                      This helps the REAADB controller detect a change in a certificate
+                      and trigger a crdb-update. The version of the cluster's Proxy
+                      certificate secret.
+                    format: int64
+                    type: integer
+                  updateStatus:
+                    description: The status of the cluster's certificates update
+                    type: string
+                type: object
               ingressOrRouteMethodStatus:
                 description: The ingressOrRouteSpec/ActiveActive spec method that exist
                 type: string
@@ -595,6 +615,10 @@ spec:
                   cacheTTLSeconds:
                     description: The maximum TTL of cached entries.
                     type: integer
+                  directoryTimeoutSeconds:
+                    description: The connection timeout to the LDAP server when authenticating
+                      a user, in seconds
+                    type: integer
                   enabledForControlPlane:
                     description: Whether to enable LDAP for control plane access.
                       Disabled by default.
@@ -865,7 +889,7 @@ spec:
                   on Kubernetes v1.25+. Future versions of the RedisEnterpriseCluster
                   API will remove support for this field altogether. For migration
                   instructions, see https://kubernetes.io/docs/tasks/configure-pod-container/migrate-from-psp/
-                  \n Name of pod security policy to use on pods"                
+                  \n Name of pod security policy to use on pods"
                 type: string
               podStartingPolicy:
                 description: Mitigation setting for STS pods stuck in "ContainerCreating"
@@ -6678,7 +6702,7 @@ spec:
                               type: string
                           required:
                           - port
-                          type: object 
+                          type: object
                         httpGet:
                           properties:
                             host:
@@ -7722,6 +7746,14 @@ spec:
                   - version
                   type: object
                 type: array
+              certificatesStatus:
+                properties:
+                  generation:
+                    format: int64
+                    type: integer
+                  updateStatus:
+                    type: string
+                type: object
               ingressOrRouteMethodStatus:
                 type: string
               managedAPIs:
@@ -8018,6 +8050,8 @@ spec:
                   caCertificateSecretName:
                     type: string
                   cacheTTLSeconds:
+                    type: integer
+                  directoryTimeoutSeconds:
                     type: integer
                   enabledForControlPlane:
                     type: boolean
@@ -13913,7 +13947,7 @@ spec:
                               type: string
                           required:
                           - port
-                          type: object 
+                          type: object
                         httpGet:
                           properties:
                             host:

@@ -82,6 +82,7 @@ Hashicorp Vault and the Redis Enterprise Operator can be deployed in multiple sc
       VAULT_ROLE: "redis-enterprise-operator-<K8S_NAMESPACE>"
       VAULT_AUTH_PATH: <AUTH_PATH>
       VAULT_NAMESPACE: <VAULT_NAMESPACE>
+      VAULT_CACHE_SECRET_EXPIRATION_SECONDS: <the_secret_expiration_in_seconds>
    ```
    * `VAULT_SERVER_FQDN`: Hashicorp Vault server Fully Qualified Domain Name (FQDN). If the Vault server is running with k8s,<br>
   it would typically be `<YOUR_VAULT_SERVICE_NAME>.<YOUR_VAULT_SERVICE_NAMESPACE>)`:
@@ -92,6 +93,9 @@ Hashicorp Vault and the Redis Enterprise Operator can be deployed in multiple sc
    * `VAULT_AUTH_PATH`: the path kubernetes auth is enabled in Hashicorp Vault,  defaults to `kubernetes` - use no leading/trailing slashes.<br>
    * `VAULT_NAMESPACE`: supported in Hashicorp Vault enterprise.<br>
    >  The full secret path would be: <VAULT_SECRET_ROOT>/<VAULT_SECRET_PREFIX>/<secret-name>
+   * `VAULT_CACHE_SECRET_EXPIRATION_SECONDS`: Defines the expiration duration of secrets that are fetched from Vault.
+   Secrets are cached in the operator for a period of X seconds (2 min by default).
+   Note - the REC credentials will be re-fetched directly from Vault in case of 'unauthorized' error via the RS API.
     
 4. Deploy the operator by applying the Redis Labs Kubernetes Operator Bundle as explained [here](../README.md) - steps 1,2 (steps 1-4 on OpenShift).<br>
     The Operator pod would not be ready before you save the admission controller secret to Vault:
