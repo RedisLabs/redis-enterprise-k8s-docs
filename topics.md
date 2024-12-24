@@ -15,15 +15,15 @@
 
 ## Guaranteed Quality of Service
 
-This content has moved to [redis.io/docs](https://redis.io/docs/latest); see [Manage pod stability](https://redis.io/docs/latest/operate/kubernetes/recommendations/pod-stability/).
+This content has moved to [docs.redis.com](https://docs.redis.com/latest); see [Manage pod stability](https://docs.redis.com/latest/kubernetes/recommendations/pod-stability/).
 
 ## Priority Class
 
-This content has moved to [redis.io/docs](https://redis.io/docs/latest); see [Manage pod stability](https://redis.io/docs/latest/operate/kubernetes/recommendations/pod-stability/).
+This content has moved to [docs.redis.com](https://docs.redis.com/latest); see [Manage pod stability](https://docs.redis.com/latest/kubernetes/recommendations/pod-stability/).
 
 ## Node Pool
 
-This content has moved to [redis.io/docs](https://redis.io/docs); see [Control node selection](https://redis.io/docs/latest/operate/kubernetes/recommendations/node-selection/).
+This content has moved to [docs.redis.com](https://docs.redis.com); see [Control node selection](https://docs.redis.com/latest/kubernetes/recommendations/node-selection/).
 
 ## K8s Out of Resource Handling recommendations
 
@@ -31,11 +31,11 @@ We highly recommend reading [k8s documentation of out of resource administration
 
 ### Monitoring
 
-This content has moved to [redis.io/docs](https://redis.io/docs); see [Manage node resources](https://redis.io/docs/latest/operate/kubernetes/recommendations/node-resources/).
+This content has moved to [docs.redis.com](https://docs.redis.com); see [Manage node resources](https://docs.redis.com/latest/kubernetes/recommendations/node-resources/).
 
 ### Eviction Thresholds
 
-This content has moved to [redis.io/docs](https://redis.io/docs); see [Manage node resources](https://redis.io/docs/latest/operate/kubernetes/recommendations/node-resources/).
+This content has moved to [docs.redis.com](https://docs.redis.com); see [Manage node resources](https://docs.redis.com/latest/kubernetes/recommendations/node-resources/).
  
 ## Pod Security Policy (PSP)
 
@@ -69,11 +69,11 @@ SideCar containers- images that will run along side the redis enterprise contain
 
 ## Resource Limits and Quotas
 
-This content has moved to [redis.io/docs](https://redis.io/docs); see [Manage node resources](https://redis.io/docs/latest/operate/kubernetes/recommendations/node-resources/).
+This content has moved to [docs.redis.com](https://docs.redis.com); see [Manage node resources](https://docs.redis.com/latest/kubernetes/recommendations/node-resources/).
 
 ## Custom Resource Deletion
 
-This content [has moved](https://redis.io/docs/latest/operate/kubernetes/delete_custom_resources/) to the Redis Enterprise doc site, [redis.io/docs](https://redis.io/docs/latest/operate/kubernetes/).
+This content [has moved](https://docs.redis.com/latest/kubernetes/re-clusters/delete_custom_resources/) to the Redis Enterprise doc site, [docs.redis.com](https://docs.redis.com/latest/kubernetes/).
 
 ### REDB `redisVersion` field
 The ‘redisVersion’ field is used for specifying Redis OSS version on REDB.
