@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 LOGGER_FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 logging.basicConfig(format=LOGGER_FORMAT)
-VERSION_LOG_COLLECTOR = "7.4.6-2"
+VERSION_LOG_COLLECTOR = "7.4.6-6"
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
 
@@ -1420,40 +1420,44 @@ def check_not_negative(value):
 if __name__ == "__main__":
 
     # pylint: disable=locally-disabled, invalid-name
-    parser = argparse.ArgumentParser(description='Redis Enterprise'
-                                                 ' K8s log collector')
+    parser = argparse.ArgumentParser(description='Redis Enterprise Log Collector for Kubernetes\n\n'
+                                                 'For additional details and usage instructions, see '
+                                                 'https://redis.io/docs/latest/operate/kubernetes/logs/collect-logs/',
+                                     formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('-n', '--namespace', action="store", type=str,
-                        help="pass namespace name or comma separated list or 'all' "
-                             "when left empty will use namespace from kube config")
-    parser.add_argument('-o', '--output_dir', action="store", type=str)
+                        help="Sets the namespace(s) to collect from.\n"
+                             "Can be set to a single namespace, multiple namespaces (comma-separated), or 'all'.\n"
+                             "When left empty, will use the current context's namespace from kubeconfig.")
+    parser.add_argument('-o', '--output_dir', action="store", type=str,
+                        help="Sets the output directory.\n"
+                             "Defaults to current working directory.")
     parser.add_argument('-a', '--logs_from_all_pods', action="store_true",
-                        help="collect logs from all pods, not only the operator and pods run by the operator")
+                        help="Collect logs from all pods in the selected namespace(s),\n"
+                             "and otherwise collect only from the operator and pods run by the operator.")
     parser.add_argument('-t', '--timeout', action="store",
                         type=check_not_negative, default=TIMEOUT,
-                        help="time to wait for external commands to "
-                             "finish execution "
-                             "(default: 180s, specify 0 to not timeout) "
-                             "(Linux only)")
+                        help="Time to wait for external commands to finish execution (Linux only).\n"
+                             "Default to 180s. Specify 0 to disable timeout.")
     parser.add_argument('--k8s_cli', action="store", type=str,
-                        help="Which K8s cli client to use (kubectl/oc/auto-detect). "
-                             "Defaults to auto-detect (chooses between \"kubectl\" and \"oc\"). "
+                        help="The K8s cli client to use (kubectl/oc/auto-detect).\n"
+                             "Defaults to auto-detect (chooses between 'kubectl' and 'oc').\n"
                              "Full paths can also be used.")
     parser.add_argument('-m', '--mode', action="store", type=str,
                         choices=[MODE_RESTRICTED, MODE_ALL],
-                        help="Which mode to run the log collector. The options are:"
-                             "1. restricted (default for clusters of version 6.2.18 and newer) - "
-                             "collect only resources that are related to the operator,"
-                             " and has the label \"app=redis-enterprise\". "
-                             "2. all - collect all resources")
+                        help="Controls which resources are collected:\n"
+                             "In 'restricted' mode, only resources associated with the operator "
+                             "and have the label 'app=redis-enterprise' are collected.\n"
+                             "In 'all' mode, all resources are collected.\n"
+                             "Defaults to 'restricted' mode.")
     parser.add_argument('--collect_istio', action="store_true",
-                        help="collect data from istio-system namespace to debug potential "
-                        "problems related to istio ingress method")
+                        help="Collect data from istio-system namespace to debug potential\n"
+                             "problems related to istio ingress method.")
     parser.add_argument('--skip_support_package', action="store_true",
-                        help="not collect RS support package")
+                        help="Disable collection of RS support package from Redis Enterprise nodes.")
     parser.add_argument('--collect_empty_files', action="store_true",
-                        help='collect empty log files for missing resources')
+                        help='Collect empty log files for missing resources.')
     parser.add_argument('--helm_release_name', action="store", type=str,
-                        help='collect resources related to helm release name')
+                        help='Collect resources related to the given Helm release name.')
     parser.set_defaults(collect_istio=False)
     run(parser.parse_args())
