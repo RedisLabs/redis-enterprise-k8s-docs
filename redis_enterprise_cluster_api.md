@@ -32,6 +32,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [PersistentConfigurationSpec](#persistentconfigurationspec)
   * [PropagateHost](#propagatehost)
   * [RSClusterCertificates](#rsclustercertificates)
+  * [ReadOnlyRootFilesystemPolicy](#readonlyrootfilesystempolicy)
   * [RedisEnterpriseCluster](#redisenterprisecluster)
   * [RedisEnterpriseClusterList](#redisenterpriseclusterlist)
   * [RedisEnterpriseClusterSpec](#redisenterpriseclusterspec)
@@ -40,6 +41,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [RedisOnFlashSpec](#redisonflashspec)
   * [S3Backup](#s3backup)
   * [Saslauthd](#saslauthd)
+  * [SecurityContextSpec](#securitycontextspec)
   * [Services](#services)
   * [ServicesRiggerConfigurationSpec](#servicesriggerconfigurationspec)
   * [SlaveHA](#slaveha)
@@ -343,6 +345,14 @@ Used to specify that the timezone is configured to match the host machine timezo
 | ldapClientCertificateSecretName | Secret name to use for cluster's LDAP client certificate. If left blank, LDAP client certificate authentication will be disabled. | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
+### ReadOnlyRootFilesystemPolicy
+ReadOnlyRootFilesystemPolicy holds the policy of the readOnlyRootFilesystem of RS pods
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| enabled | Whether to enable read-only root filesystem for the Redis Enterprise software containers.\tDefault is false. | bool |  | true |
+[Back to Table of Contents](#table-of-contents)
+
 ### RedisEnterpriseCluster
 RedisEnterpriseCluster is the Schema for the redisenterpriseclusters API
 
@@ -425,6 +435,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | extraEnvVars | ADVANCED USAGE: use carefully. Add environment variables to RS StatefulSet's containers. | []v1.EnvVar |  | false |
 | resp3Default | Whether databases will turn on RESP3 compatibility upon database upgrade. Note - Deleting this property after explicitly setting its value shall have no effect. Please view the corresponding field in RS doc for more info. | *bool |  | false |
 | backup | Cluster-wide backup configurations | *[Backup](#backup) |  | false |
+| securityContext | The security configuration that will be applied to RS pods. | *[SecurityContextSpec](#securitycontextspec) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseClusterStatus
@@ -486,6 +497,14 @@ RedisOnFlashSpec contains all the parameters needed to configure in order to ena
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | operatingMode | Whether to enable/disable the saslauthd service | [OperatingMode](#operatingmode) |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### SecurityContextSpec
+SecurityContextSpec - the security configuration that will be applied to RS pods.
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| readOnlyRootFilesystemPolicy | Policy controlling whether to enable read-only root filesystem for the Redis Enterprise software containers. Note that certain filesystem paths remain writable through mounted volumes to ensure proper functionality. | *[ReadOnlyRootFilesystemPolicy](#readonlyrootfilesystempolicy) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### Services

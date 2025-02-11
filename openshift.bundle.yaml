@@ -3979,6 +3979,22 @@ spec:
                   setting its value shall have no effect. Please view the corresponding
                   field in RS doc for more info.
                 type: boolean
+              securityContext:
+                description: the security configuration that will be applied to RS pods.
+                properties:
+                  readOnlyRootFilesystemPolicy:
+                    description: Whether RS containers has a read-only root filesystem
+                      and what is the policy. some mandatory paths are still writable
+                      so RS can work properly.
+                    properties:
+                      enabled:
+                        description: Whether RS containers has a read-only root filesystem.
+                          Default is false.
+                        type: boolean
+                    required:
+                      - enabled
+                    type: object
+                type: object
               backup:
                 description: Cluster-wide backup configurations
                 properties:
@@ -11270,6 +11286,16 @@ spec:
                 type: string
               resp3Default:
                 type: boolean
+              securityContext:
+                properties:
+                  readOnlyRootFilesystemPolicy:
+                    properties:
+                      enabled:
+                        type: boolean
+                    required:
+                      - enabled
+                    type: object
+                type: object
               backup:
                 properties:
                   s3:
@@ -16829,7 +16855,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.8.2-6
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.8.4-8
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -16877,7 +16903,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.8.2-6
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.8.4-8
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
