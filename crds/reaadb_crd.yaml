@@ -75,8 +75,8 @@ spec:
                       replicationStatus:
                         description: The replication status of the participating cluster
                         enum:
-                        - up
-                        - down
+                          - up
+                          - down
                         type: string
                     required:
                       - name
@@ -95,8 +95,8 @@ spec:
                 replicationStatus:
                   description: The overall replication status
                   enum:
-                  - up
-                  - down
+                    - up
+                    - down
                   type: string
                 clusterCertificatesGeneration:
                   description: Versions of the cluster's Proxy and Syncer certificates.
@@ -116,11 +116,11 @@ spec:
                       status:
                         description: The status of the secret.
                         enum:
-                        - Valid
-                        - Invalid
+                          - Valid
+                          - Invalid
                         type: string
                     required:
-                    - name
+                      - name
                     type: object
                   type: array
               type: object
@@ -145,6 +145,11 @@ spec:
                       name:
                         description: The name of the remote cluster CR to link.
                         type: string
+                      externalReplicationPort:
+                        description: The desired replication endpoint's port number for users
+                          who utilize LoadBalancers for sync between AA replicas and need to
+                          provide the specific port number that the LoadBalancer listens to.
+                        type: integer
                     required:
                       - name
                     type: object
@@ -192,8 +197,8 @@ spec:
                               description: Threshold for alert going on/off
                               type: string
                           required:
-                          - enabled
-                          - threshold
+                            - enabled
+                            - threshold
                           type: object
                         bdb_crdt_src_high_syncer_lag:
                           description: Active-active source - sync lag is higher than
@@ -206,8 +211,8 @@ spec:
                               description: Threshold for alert going on/off
                               type: string
                           required:
-                          - enabled
-                          - threshold
+                            - enabled
+                            - threshold
                           type: object
                         bdb_crdt_src_syncer_connection_error:
                           description: Active-active source - sync has connection error
@@ -220,8 +225,8 @@ spec:
                               description: Threshold for alert going on/off
                               type: string
                           required:
-                          - enabled
-                          - threshold
+                            - enabled
+                            - threshold
                           type: object
                         bdb_crdt_src_syncer_general_error:
                           description: Active-active source - sync encountered in general
@@ -234,8 +239,8 @@ spec:
                               description: Threshold for alert going on/off
                               type: string
                           required:
-                          - enabled
-                          - threshold
+                            - enabled
+                            - threshold
                           type: object
                         bdb_high_latency:
                           description: Latency is higher than specified threshold value
@@ -248,8 +253,8 @@ spec:
                               description: Threshold for alert going on/off
                               type: string
                           required:
-                          - enabled
-                          - threshold
+                            - enabled
+                            - threshold
                           type: object
                         bdb_high_throughput:
                           description: Throughput is higher than specified threshold
@@ -262,8 +267,8 @@ spec:
                               description: Threshold for alert going on/off
                               type: string
                           required:
-                          - enabled
-                          - threshold
+                            - enabled
+                            - threshold
                           type: object
                         bdb_long_running_action:
                           description: An alert for state-machines that are running
@@ -276,8 +281,8 @@ spec:
                               description: Threshold for alert going on/off
                               type: string
                           required:
-                          - enabled
-                          - threshold
+                            - enabled
+                            - threshold
                           type: object
                         bdb_low_throughput:
                           description: Throughput is lower than specified threshold
@@ -290,8 +295,8 @@ spec:
                               description: Threshold for alert going on/off
                               type: string
                           required:
-                          - enabled
-                          - threshold
+                            - enabled
+                            - threshold
                           type: object
                         bdb_ram_dataset_overhead:
                           description: Dataset RAM overhead of a shard has reached the
@@ -304,8 +309,8 @@ spec:
                               description: Threshold for alert going on/off
                               type: string
                           required:
-                          - enabled
-                          - threshold
+                            - enabled
+                            - threshold
                           type: object
                         bdb_ram_values:
                           description: Percent of values kept in a shard's RAM is lower
@@ -318,8 +323,8 @@ spec:
                               description: Threshold for alert going on/off
                               type: string
                           required:
-                          - enabled
-                          - threshold
+                            - enabled
+                            - threshold
                           type: object
                         bdb_replica_src_high_syncer_lag:
                           description: Replica-of source - sync lag is higher than specified
@@ -332,8 +337,8 @@ spec:
                               description: Threshold for alert going on/off
                               type: string
                           required:
-                          - enabled
-                          - threshold
+                            - enabled
+                            - threshold
                           type: object
                         bdb_replica_src_syncer_connection_error:
                           description: Replica-of source - sync has connection error
@@ -346,8 +351,8 @@ spec:
                               description: Threshold for alert going on/off
                               type: string
                           required:
-                          - enabled
-                          - threshold
+                            - enabled
+                            - threshold
                           type: object
                         bdb_shard_num_ram_values:
                           description: Number of values kept in a shard's RAM is lower
@@ -360,8 +365,8 @@ spec:
                               description: Threshold for alert going on/off
                               type: string
                           required:
-                          - enabled
-                          - threshold
+                            - enabled
+                            - threshold
                           type: object
                         bdb_size:
                           description: Dataset size has reached the threshold value
@@ -374,8 +379,8 @@ spec:
                               description: Threshold for alert going on/off
                               type: string
                           required:
-                          - enabled
-                          - threshold
+                            - enabled
+                            - threshold
                           type: object
                       type: object
                     backup:
@@ -396,8 +401,8 @@ spec:
                                 container.
                               type: string
                           required:
-                          - absSecretName
-                          - container
+                            - absSecretName
+                            - container
                           type: object
                         ftp:
                           properties:
@@ -406,7 +411,7 @@ spec:
                                 format
                               type: string
                           required:
-                          - url
+                            - url
                           type: object
                         gcs:
                           description: GoogleStorage
@@ -425,8 +430,8 @@ spec:
                               description: Optional. Google Storage subdir under bucket.
                               type: string
                           required:
-                          - bucketName
-                          - gcsSecretName
+                            - bucketName
+                            - gcsSecretName
                           type: object
                         interval:
                           description: Backup Interval in seconds
@@ -441,7 +446,7 @@ spec:
                                 mount point.
                               type: string
                           required:
-                          - path
+                            - path
                           type: object
                         s3:
                           properties:
@@ -458,8 +463,8 @@ spec:
                               description: Optional. Amazon S3 subdir under bucket.
                               type: string
                           required:
-                          - awsSecretName
-                          - bucketName
+                            - awsSecretName
+                            - bucketName
                           type: object
                         sftp:
                           properties:
@@ -472,8 +477,8 @@ spec:
                                 SSH private key for connecting to the sftp server.
                               type: string
                           required:
-                          - sftpSecretName
-                          - sftp_url
+                            - sftpSecretName
+                            - sftp_url
                           type: object
                         swift:
                           properties:
@@ -496,9 +501,9 @@ spec:
                                 the latter does not allow special characters &,<,>,")'
                               type: string
                           required:
-                          - auth_url
-                          - container
-                          - swiftSecretName
+                            - auth_url
+                            - container
+                            - swiftSecretName
                           type: object
                       type: object
                     clientAuthenticationCertificates:
@@ -564,31 +569,31 @@ spec:
                         not be below 1GB.
                       type: string
                     modulesList:
-                      description: List of modules associated with database.
-                        Note - For Active-Active databases this feature is currently in preview. For
-                        this feature to take effect for Active-Active databases, set a boolean environment variable
-                        with the name "ENABLE_ALPHA_FEATURES" to True. This variable can
-                        be set via the redis-enterprise-operator pod spec, or through the
-                        operator-environment-config Config Map.
+                      description: List of modules associated with the database.
+                        The list of valid modules for the specific cluster can be retrieved from the status of
+                        the REC object. Use the "name" and "versions" fields for the specific module configuration.
+                        If specifying an explicit version for a module, automatic modules versions upgrade must be disabled by
+                        setting the '.upgradeSpec.upgradeModulesToLatest' field in the REC to 'false'.
+                        Note that the option to specify module versions is deprecated, and will be removed in future releases.
                       items:
-                        description: 'Redis Enterprise Module: https://redislabs.com/redis-enterprise/modules/'
+                        description: Redis Enterprise module (see https://redis.io/docs/latest/develop/reference/modules/)
                         properties:
                           config:
-                            description: Module command line arguments e.g. VKEY_MAX_ENTITY_COUNT
+                            description: Module command line arguments e.g. VKEY_MAX_ENTITY_COUNT 30
                               30
                             type: string
                           name:
-                            description: The module's name e.g "ft" for redissearch
-                            type: string
-                          uid:
-                            description: Module's uid - do not set, for system use only
-                              nolint:staticcheck // custom json tag unknown to the linter
+                            description: The name of the module, e.g. "search" or "ReJSON".
+                              The complete list of modules available in the cluster can
+                              be retrieved from the '.status.modules' field in the REC.
                             type: string
                           version:
-                            description: Module's semantic version e.g "1.6.12" - optional only in REDB, must be set in REAADB
+                            description: The semantic version of the module, e.g. '1.6.12'.
+                              Optional for REDB, must be set for REAADB.
+                              Note that this field is deprecated, and will be removed in future releases.
                             type: string
                         required:
-                        - name
+                          - name
                         type: object
                       type: array
                     ossCluster:
@@ -598,12 +603,12 @@ spec:
                     persistence:
                       description: Database on-disk persistence policy
                       enum:
-                      - disabled
-                      - aofEverySecond
-                      - aofAlways
-                      - snapshotEvery1Hour
-                      - snapshotEvery6Hour
-                      - snapshotEvery12Hour
+                        - disabled
+                        - aofEverySecond
+                        - aofAlways
+                        - snapshotEvery1Hour
+                        - snapshotEvery6Hour
+                        - snapshotEvery12Hour
                       type: string
                     proxyPolicy:
                       description: 'The policy used for proxy binding to the endpoint.
@@ -624,7 +629,7 @@ spec:
                             the database should be stored.
                           type: string
                       required:
-                      - name
+                        - name
                       type: object
                     redisVersion:
                       description: Redis OSS version.
@@ -646,11 +651,12 @@ spec:
                       description: Specifications for DB upgrade.
                       properties:
                         upgradeModulesToLatest:
-                          description: Upgrades the modules to the latest version that supportes the DB version during a DB upgrade action, to upgrade the DB version view the 'redisVersion' field.
+                          description: Upgrades the modules to the latest version that supports the DB version during a DB upgrade action,
+                            to upgrade the DB version view the 'redisVersion' field.
                             Note - This field is currently not supported for Active-Active databases.
                           type: boolean
                       required:
-                      - upgradeModulesToLatest
+                        - upgradeModulesToLatest
                       type: object
                     replicaSources:
                       description: What databases to replicate from
@@ -693,8 +699,8 @@ spec:
                             description: TLS SNI name to use for the replication link.
                             type: string
                         required:
-                        - replicaSourceName
-                        - replicaSourceType
+                          - replicaSourceName
+                          - replicaSourceType
                         type: object
                       type: array
                     replication:
@@ -733,9 +739,9 @@ spec:
                             description: Type of Redis Enterprise Database Role Permission
                             type: string
                         required:
-                        - acl
-                        - role
-                        - type
+                          - acl
+                          - role
+                          - type
                         type: object
                       type: array
                     shardingEnabled:
@@ -759,18 +765,18 @@ spec:
                         should use SSL. replica_ssl - databases that replicate from
                         this one need to use SSL.
                       enum:
-                      - disabled
-                      - enabled
-                      - replica_ssl
+                        - disabled
+                        - enabled
+                        - replica_ssl
                       type: string
                     type:
                       description: The type of the database.
                       enum:
-                      - redis
-                      - memcached
+                        - redis
+                        - memcached
                       type: string
                   type: object
               required:
-              - participatingClusters
+                - participatingClusters
               type: object
           type: object

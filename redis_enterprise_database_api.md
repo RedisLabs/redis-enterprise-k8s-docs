@@ -121,12 +121,12 @@ DbAlertsSettings An API object that represents the database alerts configuration
 [Back to Table of Contents](#table-of-contents)
 
 ### DbModule
-Redis Enterprise Module: https://redislabs.com/redis-enterprise/modules/
+Redis Enterprise module (see https://redis.io/docs/latest/develop/reference/modules/)
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| name | The module's name e.g "ft" for redissearch | string |  | true |
-| version | DEPRECATED - Module's semantic version e.g "1.6.12" - optional only in REDB, must be set in REAADB | string |  | false |
+| name | The name of the module, e.g. "search" or "ReJSON". The complete list of modules available in the cluster can be retrieved from the '.status.modules' field in the REC. | string |  | true |
+| version | The semantic version of the module, e.g. '1.6.12'. Optional for REDB, but must be set for REAADB. Note that this field is deprecated, and will be removed in future releases. | string |  | false |
 | config | Module command line arguments e.g. VKEY_MAX_ENTITY_COUNT 30 | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
@@ -210,7 +210,7 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | replicaSources | What databases to replicate from | [][ReplicaSource](#replicasource) |  | false |
 | alertSettings | Settings for database alerts. Note - Alert settings are not supported for Active-Active database. | *[DbAlertsSettings](#dbalertssettings) |  | false |
 | backup | Target for automatic database backups. | *[BackupSpec](#backupspec) |  | false |
-| modulesList | List of modules associated with database. Note - For Active-Active databases this feature is currently in preview. For this feature to take effect for Active-Active databases, set a boolean environment variable with the name "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map. Note - if you do not want to upgrade to the latest version you must set upgradeSpec -> upgradeModulesToLatest to false. if you specify a version and do not set the upgradeModulesToLatest it can result errors in the operator. in addition, the option to specify specific version is Deprecated and will be deleted in next releases. | *[][DbModule](#dbmodule) |  | false |
+| modulesList | List of modules associated with the database. The list of valid modules for the specific cluster can be retrieved from the status of the REC object. Use the "name" and "versions" fields for the specific module configuration. If specifying an explicit version for a module, automatic modules versions upgrade must be disabled by setting the '.upgradeSpec.upgradeModulesToLatest' field in the REC to 'false'. Note that the option to specify module versions is deprecated, and will be removed in future releases. | *[][DbModule](#dbmodule) |  | false |
 | rolesPermissions | List of Redis Enteprise ACL and Role bindings to apply | [][RolePermission](#rolepermission) |  | false |
 | defaultUser | Is connecting with a default user allowed?  If disabled, the DatabaseSecret will not be created or updated | *bool | true | false |
 | ossCluster | OSS Cluster mode option. Note that not all client libraries support OSS cluster mode. | *bool | false | false |

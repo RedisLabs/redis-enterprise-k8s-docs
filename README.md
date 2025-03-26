@@ -1,24 +1,7 @@
 <!-- omit in toc -->
-# Deploying Redis Enterprise on Kubernetes
+# Redis Enterprise for Kubernetes documentation
 
-* [Quick start Guide](#quickstart-guide)
-  * [Installation on OpenShift](#installation-on-openshift)
-* [Configuration](#configuration)
-  * [RedisEnterpriseCluster custom resource](#redisenterprisecluster-custom-resource)
-  * [Private Repositories](#private-repositories)
-  * [Pull Secrets](#pull-secrets)
-  * [Advanced Configuration](#advanced-configuration)
-* [Connect to Redis Enterprise Software web console](#How-to-connect-to-Redis-Enterprise-Software-web-console?)
-* [Upgrade](#upgrade)
-* [Supported K8S Distributions](#supported-k8s-distributions)
-
-This page describes how to deploy Redis Enterprise on Kubernetes using the Redis Enterprise Operator. The Redis Enterprise Operator supports two Custom Resource Definitions (CRDs):
-
-* Redis Enterprise Cluster (REC): an API to create Redis Enterprise clusters. Note that only one cluster is supported per operator deployment.
-
-* Redis Enterprise Database (REDB): an API to create Redis databases running on the Redis Enterprise cluster.
-Note that the Redis Enterprise operator is namespaced.
-High level architecture and overview of the solution can be found [HERE](https://redis.io/docs/latest/operate/kubernetes/architecture/).
+The documentation for Redis Enterprise for Kubernetes has moved to [redis.io/docs/latest/kubernetes](https://redis.io/docs/latest/operate/kubernetes/).
 
 ## Quick start guide
 
@@ -30,67 +13,15 @@ This content [has moved](https://redis.io/docs/latest/operate/kubernetes/deploym
 
 ### Installation on VMWare Tanzu
 
- This content [has moved](https://redis.io/docs/latest/operate/kubernetes/deployment/tanzu/) to the [Redis Enterprise docs site](https://redis.io/docs/latest/operate/kubernetes/).
+This content [has moved](https://redis.io/docs/latest/operate/kubernetes/deployment/tanzu/) to the [Redis Enterprise docs site](https://redis.io/docs/latest/operate/kubernetes/).
  
 ## Configuration
 
 ### RedisEnterpriseCluster custom resource
-The operator deploys a `RedisEnterpriseCluster` with default configurations values, but those can be customized in the `RedisEnterpriseCluster` spec as follow:
 
-Some examples [have moved](https://redis.io/docs/latest/operate/kubernetes/reference/cluster-options/) to the Redis Enterprise doc site, [redis.io/docs](https://redis.io/docs/latest/operate/kubernetes/).
+The operator deploys a `RedisEnterpriseCluster` with default configurations values, but those can be customized in the `RedisEnterpriseCluster` spec.
 
-
-* Cluster username (Default is demo@redis.com)
-  ```yaml
-  username: "admin@acme.com"
-  ```
-
-* Extra Labels: Additional labels to tag the k8s resources created during deployment
-  ```yaml
-    extraLabels:
-      example1: "some-value"
-      example2: "some-value"
-  ```
-
-* UI service type: Load Balancer or cluster IP (default)
-  ```yaml
-  uiServiceType: LoadBalancer
-  ```
-
-* Database service type (optional): Service types for access to databases. Should be a comma separated list. The possible values are cluster_ip, headless, and load_balancer. Default value is `cluster_ip,headless`. For example, to create a load_balancer type database service, explicitly add the following declaration to the Redis Enterprise Cluster spec:
-  ```yaml
-  servicesRiggerSpec:
-    databaseServiceType: load_balancer
-  ```
-
-* UI annotations: Add custom annotation to the UI service
-  ```yaml
-    uiAnnotations:
-      uiAnnotation1: 'UI-annotation1'
-      uiAnnotation2: 'UI-Annotation2'
-  ```
-
-* SideCar containers: images that will run along side the redis enterprise containers
-  ```yaml
-    sideContainersSpec:
-      - name: sidecar
-        image: dockerhub_repo/repo:tag
-        imagePullPolicy: IfNotPresent
-  ```
-
-* IPV4 enforcement
-
-  You might not have IPV6 support in your K8S cluster.
-  In this case, you could enforce the use of IPV4, by adding the following attribute to the REC spec:
-  ```yaml
-    enforceIPv4: true
-  ```
-  Note: Setting 'enforceIPv4' to 'true' is a requirement for running REC on PKS.
-
-  [requirements]: https://redislabs.com/redis-enterprise-documentation/administering/designing-production/hardware-requirements/
-  [service-catalog]: https://kubernetes.io/docs/concepts/extend-kubernetes/service-catalog/
-
-* Full detail can be found in [Redis Enterprise Cluster Custom Resource Specification](redis_enterprise_cluster_api.md).
+* Full detail can be found in [RedisEnterpriseCluster (REC) API Reference](https://redis.io/docs/latest/operate/kubernetes/reference/redis_enterprise_cluster_api/).
 
 ### Private Repositories
 
@@ -102,15 +33,13 @@ This content [has moved](https://redis.io/docs/latest/operate/kubernetes/deploym
 
 ### Advanced Configuration
 
-- To configure priority class, node pool, eviction thresholds and other advanced configuration see [topics.md](topics.md) file.
-- Full [Redis Enterprise cluster custom resource specification](redis_enterprise_cluster_api.md)
-- Full [Redis Enterprise database custom resource specification](redis_enterprise_database_api.md)
-
+- To configure priority class, node pool, eviction thresholds and other advanced configuration see [Recommendations](https://redis.io/docs/latest/operate/kubernetes/recommendations/).
+- Full [RedisEnterpriseCluster API Reference](https://redis.io/docs/latest/operate/kubernetes/reference/redis_enterprise_cluster_api/)
+- Full [RedisEnterprsieDatabase API Reference](https://redis.io/docs/latest/operate/kubernetes/reference/redis_enterprise_database_api/)
 
 ## Connect to Redis Enterprise Software web console
 
 This content [has moved](https://redis.io/docs/latest/operate/kubernetes/re-clusters/connect-to-admin-console/) to the Redis Enterprise doc site, [redis.io/docs](https://redis.io/docs/latest/operate/kubernetes/).
-
 
 ## Upgrade
 

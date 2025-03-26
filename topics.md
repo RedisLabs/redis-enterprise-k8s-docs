@@ -7,7 +7,6 @@
 - [K8s Out of Resource Handling recommendations](#k8s-out-of-resource-handling-recommendations)
   - [Monitoring](#monitoring)
   - [Eviction Thresholds](#eviction-thresholds)
-- [Pod Security Policy (PSP)](#pod-security-policy-psp)
 - [Side Cars](#side-cars)
 - [Resource Limits and Quotas](#resource-limits-and-quotas)
 - [Custom Resource Deletion](#custom-resource-deletion)
@@ -36,25 +35,6 @@ This content has moved to [redis.io/docs](https://redis.io/docs); see [Manage no
 ### Eviction Thresholds
 
 This content has moved to [redis.io/docs](https://redis.io/docs); see [Manage node resources](https://redis.io/docs/latest/operate/kubernetes/recommendations/node-resources/).
- 
-## Pod Security Policy (PSP)
-
-### `WARNING`:
-> PodSecurityPolicy is [deprecated](https://kubernetes.io/blog/2021/04/06/podsecuritypolicy-deprecation-past-present-and-future/) for Kubernetes v1.21+ and invalid for v1.25+.  
-Users are advised to [migrate](https://kubernetes.io/docs/tasks/configure-pod-container/migrate-from-psp/) to [Pod Security Admission](https://kubernetes.io/docs/concepts/security/pod-security-admission/) / [Pod Security Standards](https://kubernetes.io/docs/concepts/security/pod-security-standards/) mechanism.
-
-You can optionally use pod security policy.
-
-```bash
-kubectl apply -f advanced/psp.yaml
-```
-
-If you use this option, you should add the policy name to REC configuration, in redis-enterprise-cluster.yaml.
-
-```yaml
-podSecurityPolicyName: "redis-enterprise-psp"
-```
-
 
 ## Side Cars
 

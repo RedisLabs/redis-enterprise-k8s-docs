@@ -22,6 +22,7 @@ Instance/cluster specifications and configurations.
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | name | The name of the remote cluster CR to link. | string |  | true |
+| externalReplicationPort | The desired replication endpoint's port number for users who utilize LoadBalancers for sync between AA replicas and need to provide the specific port number that the LoadBalancer listens to. | *int |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ParticipatingClusterStatus
