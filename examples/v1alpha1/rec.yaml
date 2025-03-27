@@ -1,9 +1,25 @@
 apiVersion: app.redislabs.com/v1alpha1
 kind: RedisEnterpriseCluster
 metadata:
-  name: "redis-enterprise"
+  name: rec
   labels:
     app: redis-enterprise
 spec:
-  # Add fields here
+  # The number of Redis Enterprise nodes in the clusters.
   nodes: 3
+
+  persistentSpec:
+    # Whether to enable persistent storage for the Redis Enterprise nodes.
+    enabled: true
+
+    # The size of the persistent volume for each Redis Enterprise node.
+    volumeSize: 20Gi
+
+  # The resources allocated to each Redis Enterprise node.
+  redisEnterpriseNodeResources:
+    requests:
+      cpu: 2
+      memory: 4Gi
+    limits:
+      cpu: 2
+      memory: 4Gi

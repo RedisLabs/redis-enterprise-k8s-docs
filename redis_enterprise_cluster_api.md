@@ -57,6 +57,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [OperatingMode](#operatingmode)
   * [PvcStatus](#pvcstatus)
   * [RedisOnFlashsStorageEngine](#redisonflashsstorageengine)
+  * [ServicePortPolicy](#serviceportpolicy)
   * [ServiceType](#servicetype)
   * [SpecStatusName](#specstatusname)
 ## Objects
@@ -243,7 +244,14 @@ Address of an LDAP server.
 | licenseState | Is the license expired | string |  | true |
 | activationDate | When the license was activated | string |  | true |
 | expirationDate | When the license will\has expired | string |  | true |
-| shardsLimit | Number of redis shards allowed under this license | int32 |  | true |
+| shardsLimit | Total number of shards (both RAM and flash) allowed under this license. | int32 |  | true |
+| shardsUsage | Total number of shards (both RAM and flash) currently in use under this license. | string |  | true |
+| features | Additional features enabled by this license | []string |  | true |
+| owner | The license owner's name | string |  | true |
+| flashShards | Number of flash shards currently in use under this license | int32 |  | true |
+| flashShardsLimit | Number of flash shards allowed under this license | *int32 |  | true |
+| ramShards | Number of RAM shards currently in use under this license | int32 |  | true |
+| ramShardsLimit | Number of RAM shards allowed under this license | *int32 |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### ManagedAPIs
@@ -402,7 +410,6 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | antiAffinityAdditionalTopologyKeys | Additional antiAffinity terms in order to support installation on different zones/vcenters | []string |  | false |
 | activeActive | Specification for ActiveActive setup. At most one of ingressOrRouteSpec or activeActive fields can be set at the same time. | *[ActiveActive](#activeactive) |  | false |
 | upgradeSpec | Specification for upgrades of Redis Enterprise | *[UpgradeSpec](#upgradespec) |  | false |
-| podSecurityPolicyName | DEPRECATED PodSecurityPolicy support is removed in Kubernetes v1.25 and the use of this field is invalid for use when running on Kubernetes v1.25+. Future versions of the RedisEnterpriseCluster API will remove support for this field altogether. For migration instructions, see https://kubernetes.io/docs/tasks/configure-pod-container/migrate-from-psp/\n\nName of pod security policy to use on pods | string | empty | false |
 | enforceIPv4 | Sets ENFORCE_IPV4 environment variable | *bool | False | false |
 | clusterRecovery | ClusterRecovery initiates cluster recovery when set to true. Note that this field is cleared automatically after the cluster is recovered | *bool |  | false |
 | rackAwarenessNodeLabel | Node label that specifies rack ID - if specified, will create rack aware cluster. Rack awareness requires node label must exist on all nodes. Additionally, operator needs a special cluster role with permission to list nodes. | string |  | false |
@@ -526,6 +533,7 @@ Specification for service rigger
 | extraEnvVars |  | []v1.EnvVar |  | false |
 | servicesRiggerAdditionalPodSpecAttributes | ADVANCED USAGE USE AT YOUR OWN RISK - specify pod attributes that are required for the rigger deployment pod. Pod attributes managed by the operator might override these settings (Containers, serviceAccountName, podTolerations, ImagePullSecrets, nodeSelector, PriorityClassName, PodSecurityContext). Also make sure the attributes are supported by the K8s version running on the cluster - the operator does not validate that. | *[v1.PodSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podspec-v1-core) |  | false |
 | podAnnotations | annotations for the service rigger pod | map[string]string |  | false |
+| databaseServicePortPolicy | DatabaseServicePortPolicy instructs how to determine the service ports for REDB services. Defaults to DatabasePortForward, if not specified otherwise. Options:\n\tDatabasePortForward - The service port will be the same as the database port.\n\tRedisDefaultPort - The service port will be the default Redis port (6379). | [ServicePortPolicy](#serviceportpolicy) | DatabasePortForward | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### SlaveHA
@@ -645,6 +653,14 @@ The search scope for an LDAP query.
 | ----- | ----------- |
 | "rocksdb" |  |
 | "speedb" |  |
+[Back to Table of Contents](#table-of-contents)
+
+### ServicePortPolicy
+
+| Value | Description |
+| ----- | ----------- |
+| "DatabasePortForward" |  |
+| "RedisDefaultPort" |  |
 [Back to Table of Contents](#table-of-contents)
 
 ### ServiceType

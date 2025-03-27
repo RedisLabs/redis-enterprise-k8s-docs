@@ -718,13 +718,11 @@ Note:
 
 ## Active-Active database with Redis modules
 
-Note - Modules are currently in preview for Active-Active databases.
+Modules can be used for Active-Active database by enabling them via the global configurations.
 
-To use modules with Active-Active databases enable the alpha feature flag on all participating clusters:  
-To enable modules for Active-Active databases, set a boolean environment variable with the name "ENABLE_ALPHA_FEATURES" to True. This variable can be set via the redis-enterprise-operator pod spec, or through the operator-environment-config Config Map.
-
-Important note:
-upgrading modules with Active-Active databases is currently not supported via the operator, to upgrade please use the RS APIs directly and after the module has successfully upgraded update the module version on the REAADB custom resource.
+Note: upgrading modules with Active-Active databases is currently not supported via the REAADB.  
+To upgrade a module, use the RS APIs directly, and after the module has successfully upgraded,
+update the module version in the REAADB custom resource.
 
 ## Upgrade REC with Active-Active database
 

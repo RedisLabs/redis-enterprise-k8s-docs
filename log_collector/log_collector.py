@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 LOGGER_FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 logging.basicConfig(format=LOGGER_FORMAT)
-VERSION_LOG_COLLECTOR = "7.8.4-9"
+VERSION_LOG_COLLECTOR = "7.8.6-1"
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
 
@@ -118,6 +118,15 @@ ALL_ONLY_API_RESOURCES = [
     "VolumeAttachment",
     "gateways.networking.istio.io",
     "VirtualService",
+]
+
+RBAC_RESOURCES = [
+    "RedisEnterpriseACL",
+    "RedisEnterpriseUser",
+    "RedisEnterpriseClusterRole",
+    "RedisEnterpriseClusterRoleBinding",
+    "RedisEnterpriseDatabaseRole",
+    "RedisEnterpriseDatabaseRoleBinding",
 ]
 
 SHA_DIGESTS_BEFORE_RESTRICTED_MODE_SUPPORT = [
@@ -503,6 +512,10 @@ def run(results):
     api_resources = RESTRICTED_MODE_API_RESOURCES
     if mode == MODE_ALL:
         api_resources = api_resources + ALL_ONLY_API_RESOURCES
+
+    collect_rbac = results.collect_rbac_resources
+    if collect_rbac:
+        api_resources = api_resources + RBAC_RESOURCES
 
     processes = []
     for namespace in namespaces:
@@ -1490,5 +1503,10 @@ if __name__ == "__main__":
                         help='Collect empty log files for missing resources.')
     parser.add_argument('--helm_release_name', action="store", type=str,
                         help='Collect resources related to the given Helm release name.')
-    parser.set_defaults(collect_istio=False)
+    # Notice! This configuration is temporary once RBAC API is fully implemented and released,
+    # the log collector will collect RBAC API resources by default.
+    parser.add_argument('--collect_rbac_resources', action="store_true",
+                        help='Temporary development flag. '
+                             'Collect all role based access control related custom resources.')
+    parser.set_defaults(collect_istio=False, collect_rbac_resources=False)
     run(parser.parse_args())
