@@ -1,35 +1,4 @@
 ---
-apiVersion: security.openshift.io/v1
-kind: SecurityContextConstraints
-metadata:
-  name: redis-enterprise-scc-v2
-  annotations:
-    kubernetes.io/description: redis-enterprise-scc-v2 is the minimal SCC needed to run Redis Enterprise nodes on Kubernetes. It provides the same features as restricted-v2 SCC, but allows pods to enable the SYS_RESOURCE capability, which is required by Redis Enterprise nodes to manage file descriptor limits and OOM scores for database shards. Additionally, it requires pods to run as UID/GID 1001, which are the UID/GID used within the Redis Enterprise node containers.
-allowedCapabilities:
-  - SYS_RESOURCE
-allowHostDirVolumePlugin: false
-allowHostIPC: false
-allowHostNetwork: false
-allowHostPID: false
-allowHostPorts: false
-allowPrivilegeEscalation: false
-allowPrivilegedContainer: false
-readOnlyRootFilesystem: false
-runAsUser:
-  type: MustRunAs
-  uid: 1001
-fsGroup:
-  type: MustRunAs
-  ranges:
-    - min: 1001
-      max: 1001
-seLinuxContext:
-  type: MustRunAs
-seccompProfiles:
-  - runtime/default
-supplementalGroups:
-  type: RunAsAny
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -95,6 +64,18 @@ rules:
       - deployments
       - statefulsets
       - replicasets
+    verbs:
+      - create
+      - delete
+      - get
+      - patch
+      - update
+      - list
+      - watch
+  - apiGroups:
+      - batch
+    resources:
+      - cronjobs
     verbs:
       - create
       - delete
@@ -200,7 +181,7 @@ rules:
   - apiGroups:
       - security.openshift.io
     resourceNames:
-      - nonroot
+      - nonroot-v2
     resources:
       - securitycontextconstraints
     verbs:
@@ -3843,7 +3824,8 @@ spec:
                     pdnsServer:
                       properties:
                         operatingMode:
-                          description: Whether to enable/disable the pdns server
+                          description: 'Deprecated: The PDNS Server is now disabled
+                            by the operator. This field will be ignored.'
                           enum:
                             - enabled
                             - disabled
@@ -3976,19 +3958,34 @@ spec:
                     field in RS doc for more info.
                   type: boolean
                 securityContext:
-                  description: the security configuration that will be applied to RS pods.
+                  description: The security configuration that will be applied to RS
+                    pods.
                   properties:
                     readOnlyRootFilesystemPolicy:
-                      description: Whether RS containers has a read-only root filesystem
-                        and what is the policy. some mandatory paths are still writable
-                        so RS can work properly.
+                      description: Policy controlling whether to enable read-only root
+                        filesystem for the Redis Enterprise software containers. Note
+                        that certain filesystem paths remain writable through mounted
+                        volumes to ensure proper functionality.
                       properties:
                         enabled:
-                          description: Whether RS containers has a read-only root filesystem.
-                            Default is false.
+                          description: Whether to enable read-only root filesystem
+                            for the Redis Enterprise software containers. Default is
+                            false.
                           type: boolean
                       required:
-                        - enabled
+                      - enabled
+                      type: object
+                    resourceLimits:
+                      description: Settings pertaining to resource limits management by
+                        the Redis Enterprise Node container.
+                      properties:
+                        allowAutoAdjustment:
+                          description: Allow Redis Enterprise to adjust resource limits,
+                            like max open file descriptors, of its data plane processes.
+                            When this option is enabled, the SYS_RESOURCE capability is
+                            added to the Redis Enterprise pods, and their allowPrivilegeEscalation
+                            field is set. Turned off by default.
+                          type: boolean
                       type: object
                   type: object
                 backup:
@@ -7324,6 +7321,90 @@ spec:
                       type: boolean
                   required:
                     - autoUpgradeRedisEnterprise
+                  type: object
+                usageMeter:
+                  description: The configuration of the usage meter.
+                  properties:
+                    callHomeClient:
+                      properties:
+                        resources:
+                          description: Compute resource requirements for Call Home Client
+                            pod
+                          properties:
+                            claims:
+                              description: "Claims lists the names of resources, defined
+                                in spec.resourceClaims, that are used by this container.
+                                \n This is an alpha field and requires enabling the DynamicResourceAllocation
+                                feature gate. \n This field is immutable. It can only
+                                be set for containers."
+                              items:
+                                description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                                properties:
+                                  name:
+                                    description: Name must match the name of one entry
+                                      in pod.spec.resourceClaims of the Pod where this
+                                      field is used. It makes that resource available
+                                      inside a container.
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
+                              x-kubernetes-list-map-keys:
+                                - name
+                              x-kubernetes-list-type: map
+                            limits:
+                              additionalProperties:
+                                anyOf:
+                                  - type: integer
+                                  - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                              description: 'Limits describes the maximum amount of compute
+                                resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                              type: object
+                            requests:
+                              additionalProperties:
+                                anyOf:
+                                  - type: integer
+                                  - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                              description: 'Requests describes the minimum amount of compute
+                                resources required. If Requests is omitted for a container,
+                                it defaults to Limits if that is explicitly specified,
+                                otherwise to an implementation-defined value. Requests
+                                cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
+                              type: object
+                          type: object
+                        disabled:
+                          description: Whether to disable the call home client. Enabled
+                            by default.
+                          type: boolean
+                        imageSpec:
+                          description: Image specification
+                          properties:
+                            digestHash:
+                              description: 'The digest hash of the container image to
+                                pull. When specified, the container image is pulled
+                                according to the digest hash instead of the image tag.
+                                The versionTag field must also be specified with the
+                                image tag matching this digest hash. Note: This field
+                                is only supported for OLM deployments.'
+                              type: string
+                            imagePullPolicy:
+                              description: The image pull policy to be applied to the
+                                container image. One of Always, Never, IfNotPresent.
+                              type: string
+                            repository:
+                              description: The repository (name) of the container image
+                                to be deployed.
+                              type: string
+                            versionTag:
+                              description: The tag of the container image to be deployed.
+                              type: string
+                          type: object
+                      type: object
                   type: object
                 username:
                   description: Username for the admin user of Redis Enterprise
@@ -11314,13 +11395,34 @@ spec:
                 resp3Default:
                   type: boolean
                 securityContext:
+                  description: The security configuration that will be applied to RS
+                    pods.
                   properties:
                     readOnlyRootFilesystemPolicy:
+                      description: Policy controlling whether to enable read-only root
+                        filesystem for the Redis Enterprise software containers. Note
+                        that certain filesystem paths remain writable through mounted
+                        volumes to ensure proper functionality.
                       properties:
                         enabled:
+                          description: Whether to enable read-only root filesystem
+                            for the Redis Enterprise software containers. Default is
+                            false.
                           type: boolean
                       required:
-                        - enabled
+                      - enabled
+                      type: object
+                    resourceLimits:
+                      description: Settings pertaining to resource limits management by
+                        the Redis Enterprise Node container.
+                      properties:
+                        allowAutoAdjustment:
+                          description: Allow Redis Enterprise to adjust resource limits,
+                            like max open file descriptors, of its data plane processes.
+                            When this option is enabled, the SYS_RESOURCE capability is
+                            added to the Redis Enterprise pods, and their allowPrivilegeEscalation
+                            field is set. Turned off by default.
+                          type: boolean
                       type: object
                   type: object
                 backup:
@@ -14596,6 +14698,56 @@ spec:
                   required:
                     - autoUpgradeRedisEnterprise
                   type: object
+                usageMeter:
+                  properties:
+                    callHomeClient:
+                      properties:
+                        resources:
+                          properties:
+                            claims:
+                              items:
+                                properties:
+                                  name:
+                                    type: string
+                                required:
+                                  - name
+                                type: object
+                              type: array
+                              x-kubernetes-list-map-keys:
+                                - name
+                              x-kubernetes-list-type: map
+                            limits:
+                              additionalProperties:
+                                anyOf:
+                                  - type: integer
+                                  - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                              type: object
+                            requests:
+                              additionalProperties:
+                                anyOf:
+                                  - type: integer
+                                  - type: string
+                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                x-kubernetes-int-or-string: true
+                              type: object
+                          type: object
+                        disabled:
+                          type: boolean
+                        imageSpec:
+                          properties:
+                            digestHash:
+                              type: string
+                            imagePullPolicy:
+                              type: string
+                            repository:
+                              type: string
+                            versionTag:
+                              type: string
+                          type: object
+                      type: object
+                  type: object
                 username:
                   type: string
                 vaultCASecret:
@@ -16222,6 +16374,15 @@ spec:
                           who utilize LoadBalancers for sync between AA replicas and need to
                           provide the specific port number that the LoadBalancer listens to.
                         type: integer
+                      namespace:
+                        description: Namespace in which the REAADB object will be deployed to
+                          within the corresponding participating cluster. The user must ensure
+                          that the Redis Enterprise operator is configured to watch this namespace
+                          in the corresponding cluster, and the required RBAC configuration is
+                          properly set up. See https://redis.io/docs/latest/operate/kubernetes/re-clusters/multi-namespace/
+                          for more information how to set up multiple namespaces. If no namespace
+                          is specified, then the REAADB is deployed to the REC's namespace in the corresponding cluster.
+                        type: string
                     required:
                       - name
                     type: object
@@ -16897,7 +17058,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.8.6-1
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.22.0-6
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -16945,7 +17106,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.8.6-1
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.22.0-6
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3

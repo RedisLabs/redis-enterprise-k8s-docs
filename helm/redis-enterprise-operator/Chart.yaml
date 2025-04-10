@@ -1,0 +1,25 @@
+annotations:
+  artifacthub.io/changes: |
+    - kind: changed
+      description: The full release notes are available here. Note that the chart versions match the software versions.
+      links:
+        - name: CHANGELOG
+          url: https://redis.io/docs/latest/operate/kubernetes/release-notes/
+
+apiVersion: v2
+type: application
+
+name: redis-enterprise-operator
+description: A Helm chart for Redis Enterprise Operator for Kubernetes
+
+version: 7.22.0-6
+appVersion: 7.22.0-6
+
+home: https://redis.com
+icon: https://redis.io/wp-content/uploads/2024/04/Logotype.svg
+keywords:
+  - redis
+  - database
+maintainers:
+  - name: Redis
+    url: https://redis.com/company/contact/
