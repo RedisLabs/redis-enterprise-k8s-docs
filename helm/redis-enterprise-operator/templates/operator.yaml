@@ -1,0 +1,161 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    annotations:
+        {{- include "redis-enterprise-operator.annotations" . | nindent 8}}
+    labels:
+        app: redis-enterprise
+    name: redis-enterprise-operator
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            name: redis-enterprise-operator
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                app: redis-enterprise
+                name: redis-enterprise-operator
+        spec:
+            containers:
+                - command:
+                    - operator-root
+                    - operator
+                  env:
+                    - name: POD_NAMESPACE
+                      valueFrom:
+                        fieldRef:
+                            fieldPath: metadata.namespace
+                    - name: WATCH_NAMESPACE
+                      valueFrom:
+                        fieldRef:
+                            fieldPath: metadata.namespace
+                    - name: POD_NAME
+                      valueFrom:
+                        fieldRef:
+                            fieldPath: metadata.name
+                    - name: OPERATOR_NAME
+                      value: redis-enterprise-operator
+                    {{- if .Values.openshift.mode }}
+                    - name: IS_OPENSHIFT
+                      value: "true"
+                    {{- end }}
+                    {{- if (.Values.global).azure }}
+                    {{- with .Values.global.azure.images }}
+                    - name: DEFAULT_RIGGER_IMAGE_REPOSITORY
+                      value: {{ .rigger.registry }}/{{ .rigger.image }}
+                    - name: DEFAULT_BOOTSTRAPPER_IMAGE_REPOSITORY
+                      value: {{ .operator.registry }}/{{ .operator.image }}
+                    - name: DEFAULT_CALL_HOME_IMAGE_REPOSITORY
+                      value: {{ .callhome.registry }}/{{ .callhome.image }}
+                    - name: DEFAULT_RIGGER_IMAGE_DIGEST
+                      value: {{ .rigger.digest }}
+                    - name: DEFAULT_BOOTSTRAPPER_IMAGE_DIGEST
+                      value: {{ .operator.digest }}
+                    - name: DEFAULT_CALL_HOME_IMAGE_DIGEST
+                      value: {{ .callhome.digest }}
+                    {{- end }}
+                    {{- end }}
+                  envFrom:
+                    - configMapRef:
+                        name: {{ "operator-environment-config" | quote }}
+                        optional: true
+                  image: {{ include "redis-enterprise-operator.operator.image" . | printf "%s" | trim }}
+                  imagePullPolicy: Always
+                  livenessProbe:
+                    failureThreshold: 3
+                    httpGet:
+                        path: /healthz
+                        port: 8080
+                        scheme: HTTP
+                    periodSeconds: 10
+                    successThreshold: 1
+                    timeoutSeconds: 5
+                  name: redis-enterprise-operator
+                  ports:
+                    - containerPort: 8080
+                  resources:
+                    limits:
+                        cpu: 4000m
+                        memory: 512Mi
+                    requests:
+                        cpu: 500m
+                        memory: 256Mi
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                        drop:
+                            - ALL
+                    privileged: false
+                    readOnlyRootFilesystem: true
+                - command:
+                    - operator-root
+                    - admission
+                  env:
+                    - name: POD_NAMESPACE
+                      valueFrom:
+                        fieldRef:
+                            fieldPath: metadata.namespace
+                    - name: WATCH_NAMESPACE
+                      valueFrom:
+                        fieldRef:
+                            fieldPath: metadata.namespace
+                    - name: POD_NAME
+                      valueFrom:
+                        fieldRef:
+                            fieldPath: metadata.name
+                  envFrom:
+                    - configMapRef:
+                        name: {{ "operator-environment-config" | quote }}
+                        optional: true
+                  image: {{ include "redis-enterprise-operator.operator.image" . | printf "%s" | trim }}
+                  imagePullPolicy: Always
+                  livenessProbe:
+                    failureThreshold: 3
+                    httpGet:
+                        path: /liveness
+                        port: 8443
+                        scheme: HTTPS
+                    initialDelaySeconds: 15
+                    periodSeconds: 10
+                    successThreshold: 1
+                    timeoutSeconds: 5
+                  name: admission
+                  ports:
+                    - containerPort: 8443
+                  readinessProbe:
+                    failureThreshold: 3
+                    httpGet:
+                        path: /healthz
+                        port: 8443
+                        scheme: HTTPS
+                    periodSeconds: 10
+                    successThreshold: 1
+                    timeoutSeconds: 5
+                  resources:
+                    limits:
+                        cpu: 1000m
+                        memory: 512Mi
+                    requests:
+                        cpu: 250m
+                        memory: 256Mi
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                        drop:
+                            - ALL
+                    privileged: false
+                    readOnlyRootFilesystem: true
+            securityContext: 
+                {{- if not .Values.openshift.mode}}
+              seccompProfile:
+                type: RuntimeDefault
+                {{- end }}
+              runAsNonRoot: true
+            serviceAccountName: redis-enterprise-operator
+            imagePullSecrets:
+            {{- range .Values.imagePullSecrets }}
+              - name: {{ . }}
+            {{- end }}
