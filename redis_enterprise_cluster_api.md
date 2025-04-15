@@ -8,6 +8,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [Backup](#backup)
   * [BundledDatabaseRedisVersions](#bundleddatabaseredisversions)
   * [BundledDatabaseVersions](#bundleddatabaseversions)
+  * [CallHomeClient](#callhomeclient)
   * [ClusterCertificate](#clustercertificate)
   * [ClusterCertificatesStatus](#clustercertificatesstatus)
   * [CmServer](#cmserver)
@@ -39,6 +40,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [RedisEnterpriseClusterStatus](#redisenterpriseclusterstatus)
   * [RedisEnterpriseServicesConfiguration](#redisenterpriseservicesconfiguration)
   * [RedisOnFlashSpec](#redisonflashspec)
+  * [ResourceLimitsSettings](#resourcelimitssettings)
   * [S3Backup](#s3backup)
   * [Saslauthd](#saslauthd)
   * [SecurityContextSpec](#securitycontextspec)
@@ -48,6 +50,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [StartingPolicy](#startingpolicy)
   * [StatsArchiver](#statsarchiver)
   * [UpgradeSpec](#upgradespec)
+  * [UsageMeterSpec](#usagemeterspec)
 * [Enums](#enums)
   * [CertificatesUpdateStatus](#certificatesupdatestatus)
   * [ClusterState](#clusterstate)
@@ -106,6 +109,16 @@ Customization options for the REC API service.
 | dbType |  | string |  | true |
 | version |  | string |  | true |
 | major |  | bool |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### CallHomeClient
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| disabled | Whether to disable the call home client. Enabled by default. | *bool |  | false |
+| imageSpec |  | *[ImageSpec](#imagespec) |  | false |
+| resources | Compute resource requirements for Call Home Client pod | *[v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#resourcerequirements-v1-core) | 0.25 CPU and 256Mi memory | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ClusterCertificate
@@ -310,7 +323,7 @@ An API object that represents the cluster's OCSP status
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| operatingMode | Whether to enable/disable the pdns server | [OperatingMode](#operatingmode) |  | true |
+| operatingMode | Deprecated: The PDNS Server is now disabled by the operator. This field will be ignored. | [OperatingMode](#operatingmode) |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### PersistenceStatus
@@ -443,6 +456,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | resp3Default | Whether databases will turn on RESP3 compatibility upon database upgrade. Note - Deleting this property after explicitly setting its value shall have no effect. Please view the corresponding field in RS doc for more info. | *bool |  | false |
 | backup | Cluster-wide backup configurations | *[Backup](#backup) |  | false |
 | securityContext | The security configuration that will be applied to RS pods. | *[SecurityContextSpec](#securitycontextspec) |  | false |
+| usageMeter | The configuration of the usage meter. | *[UsageMeterSpec](#usagemeterspec) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseClusterStatus
@@ -489,6 +503,14 @@ RedisOnFlashSpec contains all the parameters needed to configure in order to ena
 | bigStoreDriver | Used to change the bigstore_driver when REC is up and running. | [RedisOnFlashsStorageEngine](#redisonflashsstorageengine) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
+### ResourceLimitsSettings
+Settings pertaining to resource limits management by the Redis Enterprise Node container.
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| allowAutoAdjustment | Allow Redis Enterprise to adjust resource limits, like max open file descriptors, of its data plane processes. When this option is enabled, the SYS_RESOURCE capability is added to the Redis Enterprise pods, and their allowPrivilegeEscalation field is set. Turned off by default. | *bool |  | false |
+[Back to Table of Contents](#table-of-contents)
+
 ### S3Backup
 
 
@@ -512,6 +534,7 @@ SecurityContextSpec - the security configuration that will be applied to RS pods
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | readOnlyRootFilesystemPolicy | Policy controlling whether to enable read-only root filesystem for the Redis Enterprise software containers. Note that certain filesystem paths remain writable through mounted volumes to ensure proper functionality. | *[ReadOnlyRootFilesystemPolicy](#readonlyrootfilesystempolicy) |  | false |
+| resourceLimits | Settings pertaining to resource limits management by the Redis Enterprise Node container. | *[ResourceLimitsSettings](#resourcelimitssettings) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### Services
@@ -567,6 +590,14 @@ Specification for upgrades of Redis Enterprise
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | autoUpgradeRedisEnterprise | Whether to upgrade Redis Enterprise automatically when operator is upgraded | bool |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### UsageMeterSpec
+UsageMeterSpec - the configuration of the usage meter.
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| callHomeClient |  | *[CallHomeClient](#callhomeclient) |  | false |
 [Back to Table of Contents](#table-of-contents)
 ## Enums
 
