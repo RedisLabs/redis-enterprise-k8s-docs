@@ -369,36 +369,39 @@ spec:
                     Deleting this property after explicitly setting its value shall have no effect.
                   type: boolean
                 databasePort:
-                  description: Database port number. TCP port on which the database is
-                    available. Will be generated automatically if omitted. can not be
+                  description: TCP port assigned to the database within the Redis Enterprise cluster.
+                    Must be unique across all databases in the Redis Enterprise cluster.
+                    Will be generated automatically if omitted. can not be
                     changed after creation
                   type: integer
+                databaseServicePort:
+                  description:  A custom port to be exposed by the database Services. Can be modified/added/removed
+                    after REDB creation. If set, it'll replace the default service port (namely, databasePort or defaultRedisPort).
+                  type: integer
                 databaseSecretName:
-                  description: The name of the secret that holds the password
-                    to the database (redis databases only).
-                    If secret does not exist, it will be created.
-                    To define the password, create an opaque secret and set the name in the spec.
-                    The password will be taken from the value of the 'password' key.
-                    Use an empty string as value within the secret to disable authentication for the database.
-                    Notes - For Active-Active databases this secret will not be automatically created,
-                    and also, memcached databases must not be set with a value,
-                    and a secret/password will not be automatically created for them.
-                    Use the memcachedSaslSecretName field to set authentication parameters for memcached databases.
+                  description: 'Name of the secret containing the database password (Redis databases only).
+                    The secret is created automatically if it does not exist.
+                    The password is stored under the "password" key in the secret.
+                    If creating the secret manually, create an opaque secret with the password under the "password" key.
+                    To disable authentication, set the value of the "password" key in the secret to an empty string.
+                    Note: For Active-Active databases, this secret is not created automatically.
+                    For memcached databases, use memcachedSaslSecretName instead.'
                   type: string
                 defaultUser:
-                  description: Is connecting with a default user allowed?
+                  description: 'Allows connections with the default user.
+                    When disabled, the DatabaseSecret is not created or updated.'
                   type: boolean
                 evictionPolicy:
-                  description: Database eviction policy. see more https://docs.redislabs.com/latest/rs/administering/database-operations/eviction-policy/
+                  description: 'Database eviction policy.
+                    See https://redis.io/docs/latest/operate/rs/databases/memory-performance/eviction-policy/'
                   type: string
                 isRof:
-                  description: Whether it is an RoF database or not. Applicable only for
-                    databases of type "REDIS". Assumed to be false if left blank.
+                  description: 'Enables Auto Tiering (formerly Redis on Flash) for Redis databases only.
+                    Defaults to false.'
                   type: boolean
                 memorySize:
-                  description: memory size of database. use formats like 100MB, 0.1GB.
-                    minimum value in 100MB. When redis on flash (RoF) is enabled, this value refers to RAM+Flash memory,
-                    and it must not be below 1GB.
+                  description: Memory size for the database using formats like 100MB or 0.1GB. Minimum value is 100MB.
+                    For Auto Tiering (formerly Redis on Flash), this value represents RAM+Flash memory and must be at least 1GB.
                   type: string
                 modulesList:
                   description: List of modules associated with the database.
@@ -429,11 +432,11 @@ spec:
                     type: object
                   type: array
                 ossCluster:
-                  description: OSS Cluster mode option. Note that not all client libraries
-                    support OSS cluster mode.
+                  description: 'Enables OSS Cluster mode.
+                    Note: Not all client libraries support OSS cluster mode.'
                   type: boolean
                 persistence:
-                  description: Database on-disk persistence policy
+                  description: Database persistence policy for on-disk storage.
                   enum:
                     - disabled
                     - aofEverySecond
@@ -443,17 +446,17 @@ spec:
                     - snapshotEvery12Hour
                   type: string
                 proxyPolicy:
-                  description: 'The policy used for proxy binding to the endpoint. Supported
+                  description: 'Proxy policy for the database. Supported
                     proxy policies are: single/all-master-shards/all-nodes When left blank,
                     the default value will be chosen according to the value of ossCluster
                     - single if disabled, all-master-shards when enabled'
                   type: string
                 rackAware:
-                  description: 'Whether database should be rack aware. This improves availability
-                    - more information: https://docs.redislabs.com/latest/rs/concepts/high-availability/rack-zone-awareness/'
+                  description: 'Enables rack awareness for improved availability.
+                    See https://redis.io/docs/latest/operate/rs/clusters/configure/rack-zone-awareness/'
                   type: boolean
                 redisEnterpriseCluster:
-                  description: Connection to Redis Enterprise Cluster
+                  description: Connection to the Redis Enterprise Cluster.
                   properties:
                     name:
                       description: The name of the Redis Enterprise Cluster where the
@@ -507,8 +510,9 @@ spec:
                     type: object
                   type: array
                 replication:
-                  description: In-memory database replication. When enabled, database
-                    will have replica shard for every master - leading to higher availability. Defaults to false.
+                  description: Enables in-memory database replication for higher availability.
+                    Creates a replica shard for every master shard.
+                    Defaults to false.
                   type: boolean
                 rolesPermissions:
                   description: List of Redis Enteprise ACL and Role bindings to apply
@@ -537,34 +541,35 @@ spec:
                     field - when shardCount is 1 this is disabled otherwise enabled.
                   type: boolean
                 shardCount:
-                  description: Number of database server-side shards
+                  description: Number of database server-side shards.
                   type: integer
                 shardsPlacement:
-                  description: Control the density of shards - should they reside on as few or as many nodes as possible.
-                    Available options are "dense" or "sparse". If left unset, defaults to "dense".
+                  description: 'Shard placement strategy: "dense" or "sparse".
+                    dense: Shards reside on as few nodes as possible.
+                    sparse: Shards are distributed across as many nodes as possible.'
                   enum:
                     - dense
                     - sparse
                   type: string
                 tlsMode:
-                  description: Require SSL authenticated and encrypted connections to
-                    the database. enabled - all incoming connections to the Database must
-                    use SSL. disabled - no incoming connection to the Database should
-                    use SSL. replica_ssl - databases that replicate from this one need
-                    to use SSL.
+                  description: Require TLS authenticated and encrypted connections to
+                    the database. enabled - all client and replication connections to the Database must
+                    use TLS. disabled - no incoming connection to the Database should
+                    use TLS. replica_ssl - databases that replicate from this one need
+                    to use TLS.
                   enum:
                     - disabled
                     - enabled
                     - replica_ssl
                   type: string
                 type:
-                  description: The type of the database (redis or memcached). Defaults to "redis".
+                  description: "Database type: redis or memcached."
                   enum:
                     - redis
                     - memcached
                   type: string
                 rofRamSize:
-                  description: The size of the RAM portion of an RoF database.
+                  description: The size of the RAM portion of an Auto Tiering (formerly Redis on Flash) database.
                     Similarly to "memorySize" use formats like 100MB, 0.1GB.
                     It must be at least 10% of combined memory
                     size (RAM and Flash), as specified by "memorySize".
@@ -620,11 +625,9 @@ spec:
                     - participatingClusterName
                   type: object
                 memcachedSaslSecretName:
-                  description: 'Credentials used for binary authentication in memcached databases.
-                    The credentials should be saved as an opaque secret and the name of that secret should be configured using this field.
-                    For username, use ''username'' as the key and the actual username as the value.
-                    For password, use ''password'' as the key and the actual password as the value.
-                    Note that connections are not encrypted.'
+                  description: 'Name of the secret containing credentials for memcached database authentication.
+                    Store credentials in an opaque secret with "username" and "password" keys.
+                    Note: Connections are not encrypted.'
                   type: string
                 resp3:
                   description: Whether this database supports RESP3 protocol.
