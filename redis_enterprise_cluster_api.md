@@ -119,6 +119,7 @@ Customization options for the REC API service.
 | disabled | Whether to disable the call home client. Enabled by default. | *bool |  | false |
 | imageSpec |  | *[ImageSpec](#imagespec) |  | false |
 | resources | Compute resource requirements for Call Home Client pod | *[v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#resourcerequirements-v1-core) | 0.25 CPU and 256Mi memory | false |
+| proxySecretName | if needed, add proxy details in secret. the name of the proxy secret in the secret, can send the following keys: proxy-url, proxy-username, proxy-password (the url includes the proxy port). | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ClusterCertificate
@@ -556,7 +557,7 @@ Specification for service rigger
 | extraEnvVars |  | []v1.EnvVar |  | false |
 | servicesRiggerAdditionalPodSpecAttributes | ADVANCED USAGE USE AT YOUR OWN RISK - specify pod attributes that are required for the rigger deployment pod. Pod attributes managed by the operator might override these settings (Containers, serviceAccountName, podTolerations, ImagePullSecrets, nodeSelector, PriorityClassName, PodSecurityContext). Also make sure the attributes are supported by the K8s version running on the cluster - the operator does not validate that. | *[v1.PodSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podspec-v1-core) |  | false |
 | podAnnotations | annotations for the service rigger pod | map[string]string |  | false |
-| databaseServicePortPolicy | DatabaseServicePortPolicy instructs how to determine the service ports for REDB services. Defaults to DatabasePortForward, if not specified otherwise. Options:\n\tDatabasePortForward - The service port will be the same as the database port.\n\tRedisDefaultPort - The service port will be the default Redis port (6379). | [ServicePortPolicy](#serviceportpolicy) | DatabasePortForward | false |
+| databaseServicePortPolicy | DatabaseServicePortPolicy instructs how to determine the service ports for REDB services. Defaults to DatabasePortForward, if not specified otherwise. Note - Regardless whether this flag is set or not, if an REDB/REAADB is configured with databaseServicePort that would be the port exposed by the Service. Options:\n\tDatabasePortForward - The service port will be the same as the database port.\n\tRedisDefaultPort - The service port will be the default Redis port (6379). | [ServicePortPolicy](#serviceportpolicy) | DatabasePortForward | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### SlaveHA

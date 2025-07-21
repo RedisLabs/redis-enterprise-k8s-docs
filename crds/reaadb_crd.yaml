@@ -538,6 +538,10 @@ spec:
                         is available. Will be generated automatically if omitted. can
                         not be changed after creation
                       type: integer
+                    databaseServicePort:
+                      description: A custom port to be exposed by the database services. Can be be modified/added/removed
+                        after REDB creation. If set, it'll replace the default service port (namely, databasePort or defaultRedisPort).
+                      type: integer
                     databaseSecretName:
                       description: The name of the secret that holds the password
                         to the database (redis databases only).
