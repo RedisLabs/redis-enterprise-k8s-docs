@@ -150,15 +150,6 @@ spec:
                           who utilize LoadBalancers for sync between AA replicas and need to
                           provide the specific port number that the LoadBalancer listens to.
                         type: integer
-                      namespace:
-                        description: Namespace in which the REAADB object will be deployed to
-                          within the corresponding participating cluster. The user must ensure
-                          that the Redis Enterprise operator is configured to watch this namespace
-                          in the corresponding cluster, and the required RBAC configuration is
-                          properly set up. See https://redis.io/docs/latest/operate/kubernetes/re-clusters/multi-namespace/
-                          for more information how to set up multiple namespaces. If no namespace
-                          is specified, then the REAADB is deployed to the REC's namespace in the corresponding cluster.
-                        type: string
                     required:
                       - name
                     type: object
@@ -537,10 +528,6 @@ spec:
                       description: Database port number. TCP port on which the database
                         is available. Will be generated automatically if omitted. can
                         not be changed after creation
-                      type: integer
-                    databaseServicePort:
-                      description: A custom port to be exposed by the database services. Can be be modified/added/removed
-                        after REDB creation. If set, it'll replace the default service port (namely, databasePort or defaultRedisPort).
                       type: integer
                     databaseSecretName:
                       description: The name of the secret that holds the password

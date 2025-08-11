@@ -1,4 +1,35 @@
 ---
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: redis-enterprise-scc-v2
+  annotations:
+    kubernetes.io/description: redis-enterprise-scc-v2 is the minimal SCC needed to run Redis Enterprise nodes on Kubernetes. It provides the same features as restricted-v2 SCC, but allows pods to enable the SYS_RESOURCE capability, which is required by Redis Enterprise nodes to manage file descriptor limits and OOM scores for database shards. Additionally, it requires pods to run as UID/GID 1001, which are the UID/GID used within the Redis Enterprise node containers.
+allowedCapabilities:
+  - SYS_RESOURCE
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: false
+allowPrivilegedContainer: false
+readOnlyRootFilesystem: false
+runAsUser:
+  type: MustRunAs
+  uid: 1001
+fsGroup:
+  type: MustRunAs
+  ranges:
+    - min: 1001
+      max: 1001
+seLinuxContext:
+  type: MustRunAs
+seccompProfiles:
+  - runtime/default
+supplementalGroups:
+  type: RunAsAny
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -64,18 +95,6 @@ rules:
       - deployments
       - statefulsets
       - replicasets
-    verbs:
-      - create
-      - delete
-      - get
-      - patch
-      - update
-      - list
-      - watch
-  - apiGroups:
-      - batch
-    resources:
-      - cronjobs
     verbs:
       - create
       - delete
@@ -181,7 +200,7 @@ rules:
   - apiGroups:
       - security.openshift.io
     resourceNames:
-      - nonroot-v2
+      - nonroot
     resources:
       - securitycontextconstraints
     verbs:
@@ -3824,8 +3843,7 @@ spec:
                     pdnsServer:
                       properties:
                         operatingMode:
-                          description: 'Deprecated: The PDNS Server is now disabled
-                            by the operator. This field will be ignored.'
+                          description: Whether to enable/disable the pdns server
                           enum:
                             - enabled
                             - disabled
@@ -3958,34 +3976,19 @@ spec:
                     field in RS doc for more info.
                   type: boolean
                 securityContext:
-                  description: The security configuration that will be applied to RS
-                    pods.
+                  description: the security configuration that will be applied to RS pods.
                   properties:
                     readOnlyRootFilesystemPolicy:
-                      description: Policy controlling whether to enable read-only root
-                        filesystem for the Redis Enterprise software containers. Note
-                        that certain filesystem paths remain writable through mounted
-                        volumes to ensure proper functionality.
+                      description: Whether RS containers has a read-only root filesystem
+                        and what is the policy. some mandatory paths are still writable
+                        so RS can work properly.
                       properties:
                         enabled:
-                          description: Whether to enable read-only root filesystem
-                            for the Redis Enterprise software containers. Default is
-                            false.
+                          description: Whether RS containers has a read-only root filesystem.
+                            Default is false.
                           type: boolean
                       required:
-                      - enabled
-                      type: object
-                    resourceLimits:
-                      description: Settings pertaining to resource limits management by
-                        the Redis Enterprise Node container.
-                      properties:
-                        allowAutoAdjustment:
-                          description: Allow Redis Enterprise to adjust resource limits,
-                            like max open file descriptors, of its data plane processes.
-                            When this option is enabled, the SYS_RESOURCE capability is
-                            added to the Redis Enterprise pods, and their allowPrivilegeEscalation
-                            field is set. Turned off by default.
-                          type: boolean
+                        - enabled
                       type: object
                   type: object
                 backup:
@@ -6651,8 +6654,6 @@ spec:
                       description: databaseServicePortPolicy instructs how to determine the service
                         ports for REDB services. Defaults to DatabasePortForward, if not specified
                         otherwise.
-                        Note - Regardless whether this flag is set or not, if an REDB/REAADB 
-                        configured with databaseServicePort that would be the port exposed by the Service.
                         DatabasePortForward - The service port will be the same as the database port.
                         RedisDefaultPort - The service port will be the default Redis port (6379).
                       enum:
@@ -7323,96 +7324,6 @@ spec:
                       type: boolean
                   required:
                     - autoUpgradeRedisEnterprise
-                  type: object
-                usageMeter:
-                  description: The configuration of the usage meter.
-                  properties:
-                    callHomeClient:
-                      properties:
-                        resources:
-                          description: Compute resource requirements for Call Home Client
-                            pod
-                          properties:
-                            claims:
-                              description: "Claims lists the names of resources, defined
-                                in spec.resourceClaims, that are used by this container.
-                                \n This is an alpha field and requires enabling the DynamicResourceAllocation
-                                feature gate. \n This field is immutable. It can only
-                                be set for containers."
-                              items:
-                                description: ResourceClaim references one entry in PodSpec.ResourceClaims.
-                                properties:
-                                  name:
-                                    description: Name must match the name of one entry
-                                      in pod.spec.resourceClaims of the Pod where this
-                                      field is used. It makes that resource available
-                                      inside a container.
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                              x-kubernetes-list-map-keys:
-                                - name
-                              x-kubernetes-list-type: map
-                            limits:
-                              additionalProperties:
-                                anyOf:
-                                  - type: integer
-                                  - type: string
-                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                x-kubernetes-int-or-string: true
-                              description: 'Limits describes the maximum amount of compute
-                                resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
-                              type: object
-                            requests:
-                              additionalProperties:
-                                anyOf:
-                                  - type: integer
-                                  - type: string
-                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                x-kubernetes-int-or-string: true
-                              description: 'Requests describes the minimum amount of compute
-                                resources required. If Requests is omitted for a container,
-                                it defaults to Limits if that is explicitly specified,
-                                otherwise to an implementation-defined value. Requests
-                                cannot exceed Limits. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
-                              type: object
-                          type: object
-                        disabled:
-                          description: Whether to disable the call home client. Enabled
-                            by default.
-                          type: boolean
-                        imageSpec:
-                          description: Image specification
-                          properties:
-                            digestHash:
-                              description: 'The digest hash of the container image to
-                                pull. When specified, the container image is pulled
-                                according to the digest hash instead of the image tag.
-                                The versionTag field must also be specified with the
-                                image tag matching this digest hash. Note: This field
-                                is only supported for OLM deployments.'
-                              type: string
-                            imagePullPolicy:
-                              description: The image pull policy to be applied to the
-                                container image. One of Always, Never, IfNotPresent.
-                              type: string
-                            repository:
-                              description: The repository (name) of the container image
-                                to be deployed.
-                              type: string
-                            versionTag:
-                              description: The tag of the container image to be deployed.
-                              type: string
-                          type: object
-                        proxySecretName:
-                          description: 'if needed, add proxy details in secret. the name
-                            of the proxy secret in the secret, can send the following
-                            keys: proxy-url, proxy-username, proxy-password (the url includes
-                            the proxy port).'
-                          type: string
-                      type: object
                   type: object
                 username:
                   description: Username for the admin user of Redis Enterprise
@@ -11403,34 +11314,13 @@ spec:
                 resp3Default:
                   type: boolean
                 securityContext:
-                  description: The security configuration that will be applied to RS
-                    pods.
                   properties:
                     readOnlyRootFilesystemPolicy:
-                      description: Policy controlling whether to enable read-only root
-                        filesystem for the Redis Enterprise software containers. Note
-                        that certain filesystem paths remain writable through mounted
-                        volumes to ensure proper functionality.
                       properties:
                         enabled:
-                          description: Whether to enable read-only root filesystem
-                            for the Redis Enterprise software containers. Default is
-                            false.
                           type: boolean
                       required:
-                      - enabled
-                      type: object
-                    resourceLimits:
-                      description: Settings pertaining to resource limits management by
-                        the Redis Enterprise Node container.
-                      properties:
-                        allowAutoAdjustment:
-                          description: Allow Redis Enterprise to adjust resource limits,
-                            like max open file descriptors, of its data plane processes.
-                            When this option is enabled, the SYS_RESOURCE capability is
-                            added to the Redis Enterprise pods, and their allowPrivilegeEscalation
-                            field is set. Turned off by default.
-                          type: boolean
+                        - enabled
                       type: object
                   type: object
                 backup:
@@ -14050,8 +13940,6 @@ spec:
                       description: databaseServicePortPolicy instructs how to determine the service
                         ports for REDB services. Defaults to DatabasePortForward, if not specified
                         otherwise.
-                        Note - Regardless whether this flag is set or not, if an REDB/REAADB
-                        configured with databaseServicePort that would be the port exposed by the Service.
                         DatabasePortForward - The service port will be the same as the database port.
                         RedisDefaultPort - The service port will be the default Redis port (6379).
                       enum:
@@ -14707,58 +14595,6 @@ spec:
                       type: boolean
                   required:
                     - autoUpgradeRedisEnterprise
-                  type: object
-                usageMeter:
-                  properties:
-                    callHomeClient:
-                      properties:
-                        resources:
-                          properties:
-                            claims:
-                              items:
-                                properties:
-                                  name:
-                                    type: string
-                                required:
-                                  - name
-                                type: object
-                              type: array
-                              x-kubernetes-list-map-keys:
-                                - name
-                              x-kubernetes-list-type: map
-                            limits:
-                              additionalProperties:
-                                anyOf:
-                                  - type: integer
-                                  - type: string
-                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                x-kubernetes-int-or-string: true
-                              type: object
-                            requests:
-                              additionalProperties:
-                                anyOf:
-                                  - type: integer
-                                  - type: string
-                                pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
-                                x-kubernetes-int-or-string: true
-                              type: object
-                          type: object
-                        disabled:
-                          type: boolean
-                        imageSpec:
-                          properties:
-                            digestHash:
-                              type: string
-                            imagePullPolicy:
-                              type: string
-                            repository:
-                              type: string
-                            versionTag:
-                              type: string
-                          type: object
-                        proxySecretName:
-                          type: string
-                      type: object
                   type: object
                 username:
                   type: string
@@ -15731,39 +15567,36 @@ spec:
                     Deleting this property after explicitly setting its value shall have no effect.
                   type: boolean
                 databasePort:
-                  description: TCP port assigned to the database within the Redis Enterprise cluster.
-                    Must be unique across all databases in the Redis Enterprise cluster.
-                    Will be generated automatically if omitted. can not be
+                  description: Database port number. TCP port on which the database is
+                    available. Will be generated automatically if omitted. can not be
                     changed after creation
                   type: integer
-                databaseServicePort:
-                  description:  A custom port to be exposed by the database Services. Can be modified/added/removed
-                    after REDB creation. If set, it'll replace the default service port (namely, databasePort or defaultRedisPort).
-                  type: integer
                 databaseSecretName:
-                  description: 'Name of the secret containing the database password (Redis databases only).
-                    The secret is created automatically if it does not exist.
-                    The password is stored under the "password" key in the secret.
-                    If creating the secret manually, create an opaque secret with the password under the "password" key.
-                    To disable authentication, set the value of the "password" key in the secret to an empty string.
-                    Note: For Active-Active databases, this secret is not created automatically.
-                    For memcached databases, use memcachedSaslSecretName instead.'
+                  description: The name of the secret that holds the password
+                    to the database (redis databases only).
+                    If secret does not exist, it will be created.
+                    To define the password, create an opaque secret and set the name in the spec.
+                    The password will be taken from the value of the 'password' key.
+                    Use an empty string as value within the secret to disable authentication for the database.
+                    Notes - For Active-Active databases this secret will not be automatically created,
+                    and also, memcached databases must not be set with a value,
+                    and a secret/password will not be automatically created for them.
+                    Use the memcachedSaslSecretName field to set authentication parameters for memcached databases.
                   type: string
                 defaultUser:
-                  description: 'Allows connections with the default user.
-                    When disabled, the DatabaseSecret is not created or updated.'
+                  description: Is connecting with a default user allowed?
                   type: boolean
                 evictionPolicy:
-                  description: 'Database eviction policy.
-                    See https://redis.io/docs/latest/operate/rs/databases/memory-performance/eviction-policy/'
+                  description: Database eviction policy. see more https://docs.redislabs.com/latest/rs/administering/database-operations/eviction-policy/
                   type: string
                 isRof:
-                  description: 'Enables Auto Tiering (formerly Redis on Flash) for Redis databases only.
-                    Defaults to false.'
+                  description: Whether it is an RoF database or not. Applicable only for
+                    databases of type "REDIS". Assumed to be false if left blank.
                   type: boolean
                 memorySize:
-                  description: Memory size for the database using formats like 100MB or 0.1GB. Minimum value is 100MB.
-                    For Auto Tiering (formerly Redis on Flash), this value represents RAM+Flash memory and must be at least 1GB.
+                  description: memory size of database. use formats like 100MB, 0.1GB.
+                    minimum value in 100MB. When redis on flash (RoF) is enabled, this value refers to RAM+Flash memory,
+                    and it must not be below 1GB.
                   type: string
                 modulesList:
                   description: List of modules associated with the database.
@@ -15794,11 +15627,11 @@ spec:
                     type: object
                   type: array
                 ossCluster:
-                  description: 'Enables OSS Cluster mode.
-                    Note: Not all client libraries support OSS cluster mode.'
+                  description: OSS Cluster mode option. Note that not all client libraries
+                    support OSS cluster mode.
                   type: boolean
                 persistence:
-                  description: Database persistence policy for on-disk storage.
+                  description: Database on-disk persistence policy
                   enum:
                     - disabled
                     - aofEverySecond
@@ -15808,17 +15641,17 @@ spec:
                     - snapshotEvery12Hour
                   type: string
                 proxyPolicy:
-                  description: 'Proxy policy for the database. Supported
+                  description: 'The policy used for proxy binding to the endpoint. Supported
                     proxy policies are: single/all-master-shards/all-nodes When left blank,
                     the default value will be chosen according to the value of ossCluster
                     - single if disabled, all-master-shards when enabled'
                   type: string
                 rackAware:
-                  description: 'Enables rack awareness for improved availability.
-                    See https://redis.io/docs/latest/operate/rs/clusters/configure/rack-zone-awareness/'
+                  description: 'Whether database should be rack aware. This improves availability
+                    - more information: https://docs.redislabs.com/latest/rs/concepts/high-availability/rack-zone-awareness/'
                   type: boolean
                 redisEnterpriseCluster:
-                  description: Connection to the Redis Enterprise Cluster.
+                  description: Connection to Redis Enterprise Cluster
                   properties:
                     name:
                       description: The name of the Redis Enterprise Cluster where the
@@ -15872,9 +15705,8 @@ spec:
                     type: object
                   type: array
                 replication:
-                  description: Enables in-memory database replication for higher availability.
-                    Creates a replica shard for every master shard.
-                    Defaults to false.
+                  description: In-memory database replication. When enabled, database
+                    will have replica shard for every master - leading to higher availability. Defaults to false.
                   type: boolean
                 rolesPermissions:
                   description: List of Redis Enteprise ACL and Role bindings to apply
@@ -15903,35 +15735,34 @@ spec:
                     field - when shardCount is 1 this is disabled otherwise enabled.
                   type: boolean
                 shardCount:
-                  description: Number of database server-side shards.
+                  description: Number of database server-side shards
                   type: integer
                 shardsPlacement:
-                  description: 'Shard placement strategy: "dense" or "sparse".
-                    dense: Shards reside on as few nodes as possible.
-                    sparse: Shards are distributed across as many nodes as possible.'
+                  description: Control the density of shards - should they reside on as few or as many nodes as possible.
+                    Available options are "dense" or "sparse". If left unset, defaults to "dense".
                   enum:
                     - dense
                     - sparse
                   type: string
                 tlsMode:
-                  description: Require TLS authenticated and encrypted connections to
-                    the database. enabled - all client and replication connections to the Database must
-                    use TLS. disabled - no incoming connection to the Database should
-                    use TLS. replica_ssl - databases that replicate from this one need
-                    to use TLS.
+                  description: Require SSL authenticated and encrypted connections to
+                    the database. enabled - all incoming connections to the Database must
+                    use SSL. disabled - no incoming connection to the Database should
+                    use SSL. replica_ssl - databases that replicate from this one need
+                    to use SSL.
                   enum:
                     - disabled
                     - enabled
                     - replica_ssl
                   type: string
                 type:
-                  description: "Database type: redis or memcached."
+                  description: The type of the database (redis or memcached). Defaults to "redis".
                   enum:
                     - redis
                     - memcached
                   type: string
                 rofRamSize:
-                  description: The size of the RAM portion of an Auto Tiering (formerly Redis on Flash) database.
+                  description: The size of the RAM portion of an RoF database.
                     Similarly to "memorySize" use formats like 100MB, 0.1GB.
                     It must be at least 10% of combined memory
                     size (RAM and Flash), as specified by "memorySize".
@@ -15987,9 +15818,11 @@ spec:
                     - participatingClusterName
                   type: object
                 memcachedSaslSecretName:
-                  description: 'Name of the secret containing credentials for memcached database authentication.
-                    Store credentials in an opaque secret with "username" and "password" keys.
-                    Note: Connections are not encrypted.'
+                  description: 'Credentials used for binary authentication in memcached databases.
+                    The credentials should be saved as an opaque secret and the name of that secret should be configured using this field.
+                    For username, use ''username'' as the key and the actual username as the value.
+                    For password, use ''password'' as the key and the actual password as the value.
+                    Note that connections are not encrypted.'
                   type: string
                 resp3:
                   description: Whether this database supports RESP3 protocol.
@@ -16389,15 +16222,6 @@ spec:
                           who utilize LoadBalancers for sync between AA replicas and need to
                           provide the specific port number that the LoadBalancer listens to.
                         type: integer
-                      namespace:
-                        description: Namespace in which the REAADB object will be deployed to
-                          within the corresponding participating cluster. The user must ensure
-                          that the Redis Enterprise operator is configured to watch this namespace
-                          in the corresponding cluster, and the required RBAC configuration is
-                          properly set up. See https://redis.io/docs/latest/operate/kubernetes/re-clusters/multi-namespace/
-                          for more information how to set up multiple namespaces. If no namespace
-                          is specified, then the REAADB is deployed to the REC's namespace in the corresponding cluster.
-                        type: string
                     required:
                       - name
                     type: object
@@ -16777,10 +16601,6 @@ spec:
                         is available. Will be generated automatically if omitted. can
                         not be changed after creation
                       type: integer
-                    databaseServicePort:
-                      description: A custom port to be exposed by the database services. Can be be modified/added/removed
-                        after REDB creation. If set, it'll replace the default service port (namely, databasePort or defaultRedisPort).
-                      type: integer
                     databaseSecretName:
                       description: The name of the secret that holds the password
                         to the database (redis databases only).
@@ -17077,7 +16897,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.22.0-16
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.8.6-5
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -17125,7 +16945,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.22.0-16
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.8.6-5
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3

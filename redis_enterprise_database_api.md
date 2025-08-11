@@ -197,37 +197,36 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| redisEnterpriseCluster | Connection to the Redis Enterprise Cluster. | *[RedisEnterpriseConnection](#redisenterpriseconnection) |  | false |
-| memorySize | Memory size for the database using formats like 100MB or 0.1GB. Minimum value is 100MB. For Auto Tiering (formerly Redis on Flash), this value represents RAM+Flash memory and must be at least 1GB. | string | 100MB | false |
-| rackAware | Enables rack awareness for improved availability. See https://redis.io/docs/latest/operate/rs/clusters/configure/rack-zone-awareness/ | *bool |  | false |
-| shardCount | Number of database server-side shards. | uint16 | 1 | false |
-| replication | Enables in-memory database replication for higher availability. Creates a replica shard for every master shard. Defaults to false. | *bool | false | false |
-| persistence | Database persistence policy for on-disk storage. | *[DatabasePersistence](#databasepersistence) | disabled | false |
-| databaseSecretName | Name of the secret containing the database password (Redis databases only). The secret is created automatically if it doesn't exist. The password is stored under the 'password' key in the secret. If creating the secret manually, create an opaque secret with the password under the 'password' key. To disable authentication, set the value of the 'password' key in the secret to an empty string. Note: For Active-Active databases, this secret is not created automatically. For memcached databases, use memcachedSaslSecretName instead. | string |  | false |
-| evictionPolicy | Database eviction policy. See https://redis.io/docs/latest/operate/rs/databases/memory-performance/eviction-policy/ | string | volatile-lru | false |
-| tlsMode | TLS mode for database connections. enabled: All client and replication connections must use TLS. disabled: No connections use TLS. replica_ssl: Only replication connections use TLS. | string | disabled | false |
-| clientAuthenticationCertificates | Names of secrets containing TLS client certificates for authentication. | []string |  | false |
-| replicaSources | Source databases to replicate from. | [][ReplicaSource](#replicasource) |  | false |
-| alertSettings | Database alert configuration. Note: Alert settings are not supported for Active-Active databases. | *[DbAlertsSettings](#dbalertssettings) |  | false |
+| redisEnterpriseCluster | Connection to Redis Enterprise Cluster | *[RedisEnterpriseConnection](#redisenterpriseconnection) |  | false |
+| memorySize | memory size of database. use formats like 100MB, 0.1GB. minimum value in 100MB. When redis on flash (RoF) is enabled, this value refers to RAM+Flash memory, and it must not be below 1GB. | string | 100MB | false |
+| rackAware | Whether database should be rack aware. This improves availability - more information: https://docs.redislabs.com/latest/rs/concepts/high-availability/rack-zone-awareness/ | *bool |  | false |
+| shardCount | Number of database server-side shards | uint16 | 1 | false |
+| replication | In-memory database replication. When enabled, database will have replica shard for every master - leading to higher availability. Defaults to false. | *bool | false | false |
+| persistence | Database on-disk persistence policy | *[DatabasePersistence](#databasepersistence) | disabled | false |
+| databaseSecretName | The name of the secret that holds the password to the database (redis databases only). If secret does not exist, it will be created. To define the password, create an opaque secret and set the name in the spec. The password will be taken from the value of the 'password' key. Use an empty string as value within the secret to disable authentication for the database. Notes - For Active-Active databases this secret will not be automatically created, and also, memcached databases must not be set with a value, and a secret/password will not be automatically created for them. Use the memcachedSaslSecretName field to set authentication parameters for memcached databases. | string |  | false |
+| evictionPolicy | Database eviction policy. see more https://docs.redislabs.com/latest/rs/administering/database-operations/eviction-policy/ | string | volatile-lru | false |
+| tlsMode | Require SSL authenticated and encrypted connections to the database. enabled - all incoming connections to the Database must use SSL. disabled - no incoming connection to the Database should use SSL. replica_ssl - databases that replicate from this one need to use SSL. | string | disabled | false |
+| clientAuthenticationCertificates | The Secrets containing TLS Client Certificate to use for Authentication | []string |  | false |
+| replicaSources | What databases to replicate from | [][ReplicaSource](#replicasource) |  | false |
+| alertSettings | Settings for database alerts. Note - Alert settings are not supported for Active-Active database. | *[DbAlertsSettings](#dbalertssettings) |  | false |
 | backup | Target for automatic database backups. | *[BackupSpec](#backupspec) |  | false |
-| modulesList | List of modules associated with the database. Retrieve valid modules from the REC object status. Use the "name" and "versions" fields for module configuration. To specify explicit module versions, disable automatic module upgrades by setting '.upgradeSpec.upgradeModulesToLatest' to 'false' in the REC. Note: Specifying module versions is deprecated and will be removed in future releases. | *[][DbModule](#dbmodule) |  | false |
-| rolesPermissions | Redis Enterprise ACL and role bindings to apply to the database. | [][RolePermission](#rolepermission) |  | false |
-| defaultUser | Allows connections with the default user. When disabled, the DatabaseSecret is not created or updated. | *bool | true | false |
-| ossCluster | Enables OSS Cluster mode. Note: Not all client libraries support OSS cluster mode. | *bool | false | false |
-| proxyPolicy | Proxy policy for the database. Supported policies: single, all-master-shards, all-nodes. Defaults to single when ossCluster is disabled, all-master-shards when enabled. | string |  | false |
-| dataInternodeEncryption | Internode encryption (INE) setting that overrides the cluster-wide policy. false: INE is disabled for this database regardless of cluster policy. true: INE is enabled if supported by the database, otherwise creation fails. unspecified: INE is disabled if not supported by the database. Deleting this property after setting it has no effect. | *bool |  | false |
-| databasePort | TCP port assigned to the database within the Redis Enterprise cluster. Must be unique across all databases in the Redis Enterprise cluster. Generated automatically if omitted. Cannot be changed after creation. | *int |  | false |
-| databaseServicePort | A custom port to be exposed by the database services. Can be modified/added/removed after REDB creation. If set, it'll replace the default service port (namely, databasePort or defaultRedisPort). | *int |  | false |
-| shardsPlacement | Shard placement strategy: "dense" or "sparse". dense: Shards reside on as few nodes as possible. sparse: Shards are distributed across as many nodes as possible. | string | dense | false |
-| type | Database type: redis or memcached. | *[DatabaseType](#databasetype) | redis | false |
-| isRof | Enables Auto Tiering (formerly Redis on Flash) for Redis databases only. Defaults to false. | *bool | false | false |
-| rofRamSize | RAM portion size for Auto Tiering (formerly Redis on Flash) databases using formats like 100MB or 0.1GB. Must be at least 10% of the combined memory size (RAM+Flash) specified in "memorySize". | string |  | false |
-| memcachedSaslSecretName | Name of the secret containing credentials for memcached database authentication. Store credentials in an opaque secret with 'username' and 'password' keys. Note: Connections are not encrypted. | string |  | false |
-| redisVersion | Redis OSS version for the database. Specify version as <major.minor> prefix or use channels: 'major': Upgrades to the most recent major Redis version. 'latest': Upgrades to the most recent Redis version. To use 'latest', set redisUpgradePolicy on the cluster first. Back up the database before upgrading. Only applies to Redis databases. Note: Version specification is not supported for Active-Active databases. | string |  | false |
-| upgradeSpec | Database upgrade configuration. | *[DBUpgradeSpec](#dbupgradespec) |  | false |
-| activeActive | Connection and association information for Active-Active databases. | *[ActiveActiveInfo](#activeactiveinfo) |  | false |
-| resp3 | Enables RESP3 protocol support for the database. Deleting this property after setting it has no effect. See the Redis Enterprise documentation for more information. | *bool |  | false |
-| shardingEnabled | Enables database sharding for Active-Active databases. Enabled by default for REAADBs. For regular REDBs, use the shardCount field instead: shardCount = 1 disables sharding, shardCount > 1 enables sharding. | *bool |  | false |
+| modulesList | List of modules associated with the database. The list of valid modules for the specific cluster can be retrieved from the status of the REC object. Use the "name" and "versions" fields for the specific module configuration. If specifying an explicit version for a module, automatic modules versions upgrade must be disabled by setting the '.upgradeSpec.upgradeModulesToLatest' field in the REC to 'false'. Note that the option to specify module versions is deprecated, and will be removed in future releases. | *[][DbModule](#dbmodule) |  | false |
+| rolesPermissions | List of Redis Enteprise ACL and Role bindings to apply | [][RolePermission](#rolepermission) |  | false |
+| defaultUser | Is connecting with a default user allowed?  If disabled, the DatabaseSecret will not be created or updated | *bool | true | false |
+| ossCluster | OSS Cluster mode option. Note that not all client libraries support OSS cluster mode. | *bool | false | false |
+| proxyPolicy | The policy used for proxy binding to the endpoint. Supported proxy policies are: single/all-master-shards/all-nodes When left blank, the default value will be chosen according to the value of ossCluster - single if disabled, all-master-shards when enabled | string |  | false |
+| dataInternodeEncryption | Internode encryption (INE) setting. An optional boolean setting, overriding a similar cluster-wide policy. If set to False, INE is guaranteed to be turned off for this DB (regardless of cluster-wide policy). If set to True, INE will be turned on, unless the capability is not supported by the DB ( in such a case we will get an error and database creation will fail). If left unspecified, will be disabled if internode encryption is not supported by the DB (regardless of cluster default). Deleting this property after explicitly setting its value shall have no effect. | *bool |  | false |
+| databasePort | Database port number. TCP port on which the database is available. Will be generated automatically if omitted. can not be changed after creation | *int |  | false |
+| shardsPlacement | Control the density of shards - should they reside on as few or as many nodes as possible. Available options are "dense" or "sparse". If left unset, defaults to "dense". | string |  | false |
+| type | The type of the database. | *[DatabaseType](#databasetype) | redis | false |
+| isRof | Whether it is an RoF database or not. Applicable only for databases of type "REDIS". Assumed to be false if left blank. | *bool |  | false |
+| rofRamSize | The size of the RAM portion of an RoF database. Similarly to "memorySize" use formats like 100MB, 0.1GB It must be at least 10% of combined memory size (RAM+Flash), as specified by "memorySize". | string |  | false |
+| memcachedSaslSecretName | Credentials used for binary authentication in memcached databases. The credentials should be saved as an opaque secret and the name of that secret should be configured using this field. For username, use 'username' as the key and the actual username as the value. For password, use 'password' as the key and the actual password as the value. Note that connections are not encrypted. | string |  | false |
+| redisVersion | Redis OSS version. Version can be specified via <major.minor> prefix, or via channels - for existing databases - Upgrade Redis OSS version. For new databases - the version which the database will be created with. If set to 'major' - will always upgrade to the most recent major Redis version. If set to 'latest' - will always upgrade to the most recent Redis version. Depends on 'redisUpgradePolicy' - if you want to set the value to 'latest' for some databases, you must set redisUpgradePolicy on the cluster before. Possible values are 'major' or 'latest' When using upgrade - make sure to backup the database before. This value is used only for database type 'redis'. Note - Specifying Redis version is currently not supported for Active-Active database. | string |  | false |
+| upgradeSpec | Specifications for DB upgrade. | *[DBUpgradeSpec](#dbupgradespec) |  | false |
+| activeActive | Connection/ association to the Active-Active database. | *[ActiveActiveInfo](#activeactiveinfo) |  | false |
+| resp3 | Whether this database supports RESP3 protocol. Note - Deleting this property after explicitly setting its value shall have no effect. Please view the corresponding field in RS doc for more info. | *bool |  | false |
+| shardingEnabled | Toggles database sharding for REAADBs (Active Active databases) and enabled by default. This field is blocked for REDB (non-Active Active databases) and sharding is toggled via the shardCount field - when shardCount is 1 this is disabled otherwise enabled. | *bool |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseDatabaseStatus
@@ -321,7 +320,7 @@ Redis Enterprise Role and ACL Binding
 ## Enums
 
 ### DatabasePersistence
-Database persistence policy. see https://redis.io/docs/latest/operate/rs/databases/configure/database-persistence/
+Database persistence policy. see https://docs.redislabs.com/latest/rs/concepts/data-access/persistence/
 
 | Value | Description |
 | ----- | ----------- |
