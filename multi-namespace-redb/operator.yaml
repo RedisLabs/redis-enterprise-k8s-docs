@@ -40,7 +40,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: redislabs/operator:7.22.0-16
+          image: redislabs/operator:7.22.0-17
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -88,7 +88,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: redislabs/operator:7.22.0-16
+          image: redislabs/operator:7.22.0-17
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
