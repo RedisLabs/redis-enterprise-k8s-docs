@@ -26,7 +26,7 @@ How to use Hashicorp Vault as a source for secrets:
 > Note: when using Openshift it might be recommended to use oc instead of kubectl 
 <a name="prerequisites"></a>
 ## Prerequisites
-* Deploy a Hashicorp Vault instance and make sure there is network access to it from the Kubernetes cluster. The solution has been tested with Hashicorp Vault v1.15.2. The Hashicorp Vault instance must be using TLS.
+* Deploy a Hashicorp Vault instance and make sure there is network access to it from the Kubernetes cluster. The solution has been tested with Hashicorp Vault v1.6.2. The Hashicorp Vault instance must be using TLS.
 * Configure the Hashicorp Vault Kubernetes authentication for the Kubernetes cluster the operator is being deployed. Refer to the Hashicorp Vault documentation for details.
 * Deploy the Hashicorp Vault agent sidecar controller on the Kubernetes cluster (https://learn.hashicorp.com/tutorials/vault/kubernetes-sidecar)
 * Note that Hashicorp offers a Vault Enterprise product. The Vault Enterprise product supports namespaces. Those namespaces should not be confused with Kubernetes namespaces. This document assumes that the Hashicorp Vault instance used is the Enterprise product, and a Vault namespace is used. The namespace is referred to as the <VAULT_NAMESPACE> below.
@@ -82,7 +82,6 @@ Hashicorp Vault and the Redis Enterprise Operator can be deployed in multiple sc
       VAULT_ROLE: "redis-enterprise-operator-<K8S_NAMESPACE>"
       VAULT_AUTH_PATH: <AUTH_PATH>
       VAULT_NAMESPACE: <VAULT_NAMESPACE>
-      VAULT_CACHE_SECRET_EXPIRATION_SECONDS: <the_secret_expiration_in_seconds>
    ```
    * `VAULT_SERVER_FQDN`: Hashicorp Vault server Fully Qualified Domain Name (FQDN). If the Vault server is running with k8s,<br>
   it would typically be `<YOUR_VAULT_SERVICE_NAME>.<YOUR_VAULT_SERVICE_NAMESPACE>)`:
@@ -93,9 +92,6 @@ Hashicorp Vault and the Redis Enterprise Operator can be deployed in multiple sc
    * `VAULT_AUTH_PATH`: the path kubernetes auth is enabled in Hashicorp Vault,  defaults to `kubernetes` - use no leading/trailing slashes.<br>
    * `VAULT_NAMESPACE`: supported in Hashicorp Vault enterprise.<br>
    >  The full secret path would be: <VAULT_SECRET_ROOT>/<VAULT_SECRET_PREFIX>/<secret-name>
-   * `VAULT_CACHE_SECRET_EXPIRATION_SECONDS`: Defines the expiration duration of secrets that are fetched from Vault.
-   Secrets are cached in the operator for a period of X seconds (2 min by default).
-   Note - the REC credentials will be re-fetched directly from Vault in case of 'unauthorized' error via the RS API.
     
 4. Deploy the operator by applying the Redis Labs Kubernetes Operator Bundle as explained [here](../README.md) - steps 1,2 (steps 1-4 on OpenShift).<br>
     The Operator pod would not be ready before you save the admission controller secret to Vault:

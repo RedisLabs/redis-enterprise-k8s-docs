@@ -1,0 +1,147 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    annotations:
+        redis/helm-chart-ver: {{ .Chart.Version }}
+        redis/operator-ver: {{ .Values.operator.image.tag }}
+    labels:
+        app: redis-enterprise
+    name: redis-enterprise-operator
+    namespace: {{ .Release.Namespace }}
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            name: redis-enterprise-operator
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                app: redis-enterprise
+                name: redis-enterprise-operator
+        spec:
+            containers:
+                - command:
+                    - operator-root
+                    - operator
+                  env:
+                    - name: POD_NAMESPACE
+                      valueFrom:
+                        fieldRef:
+                            fieldPath: metadata.namespace
+                    - name: WATCH_NAMESPACE
+                      valueFrom:
+                        fieldRef:
+                            fieldPath: metadata.namespace
+                    - name: POD_NAME
+                      valueFrom:
+                        fieldRef:
+                            fieldPath: metadata.name
+                    - name: OPERATOR_NAME
+                      value: redis-enterprise-operator
+                    {{- if .Values.isOpenshift }}
+                    - name: DEPLOY_RHEL
+                      value: "true"
+                    {{- end }}
+                  envFrom:
+                    - configMapRef:
+                        name: {{ "operator-environment-config" | quote }}
+                        optional: true
+                  image: {{ include "redis-enterprise-operator.operator.image" . | printf "%s" | trim }}
+                  imagePullPolicy: Always
+                  livenessProbe:
+                    failureThreshold: 3
+                    httpGet:
+                        path: /healthz
+                        port: 8080
+                        scheme: HTTP
+                    periodSeconds: 10
+                    successThreshold: 1
+                    timeoutSeconds: 5
+                  name: redis-enterprise-operator
+                  ports:
+                    - containerPort: 8080
+                  resources:
+                    limits:
+                        cpu: 4000m
+                        memory: 512Mi
+                    requests:
+                        cpu: 500m
+                        memory: 256Mi
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                        drop:
+                            - ALL
+                    privileged: false
+                    readOnlyRootFilesystem: true
+                - command:
+                    - operator-root
+                    - admission
+                  env:
+                    - name: POD_NAMESPACE
+                      valueFrom:
+                        fieldRef:
+                            fieldPath: metadata.namespace
+                    - name: WATCH_NAMESPACE
+                      valueFrom:
+                        fieldRef:
+                            fieldPath: metadata.namespace
+                    - name: POD_NAME
+                      valueFrom:
+                        fieldRef:
+                            fieldPath: metadata.name
+                  envFrom:
+                    - configMapRef:
+                        name: {{ "operator-environment-config" | quote }}
+                        optional: true
+                  image: {{ include "redis-enterprise-operator.operator.image" . | printf "%s" | trim }}
+                  imagePullPolicy: Always
+                  livenessProbe:
+                    failureThreshold: 3
+                    httpGet:
+                        path: /liveness
+                        port: 8443
+                        scheme: HTTPS
+                    initialDelaySeconds: 15
+                    periodSeconds: 10
+                    successThreshold: 1
+                    timeoutSeconds: 5
+                  name: admission
+                  ports:
+                    - containerPort: 8443
+                  readinessProbe:
+                    failureThreshold: 3
+                    httpGet:
+                        path: /healthz
+                        port: 8443
+                        scheme: HTTPS
+                    periodSeconds: 10
+                    successThreshold: 1
+                    timeoutSeconds: 5
+                  resources:
+                    limits:
+                        cpu: 1000m
+                        memory: 512Mi
+                    requests:
+                        cpu: 250m
+                        memory: 256Mi
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                        drop:
+                            - ALL
+                    privileged: false
+                    readOnlyRootFilesystem: true
+            securityContext: 
+                {{- if not .Values.isOpenshift}}
+              seccompProfile:
+                type: RuntimeDefault
+                {{- end }}
+              runAsNonRoot: true
+            serviceAccountName: redis-enterprise-operator
+              {{- if .Values.imagePullSecret }}
+            imagePullSecrets:
+              - name: .Values.imagePullSecret
+              {{- end }}

@@ -7,22 +7,23 @@ metadata:
 rules:
   - apiGroups:
       - app.redislabs.com
-    resources: ["redisenterprisedatabases",
-                "redisenterprisedatabases/status",
-                "redisenterprisedatabases/finalizers",
-                "redisenterpriseactiveactivedatabases",
-                "redisenterpriseactiveactivedatabases/status",
+    resources: ["redisenterpriseclusters", "redisenterpriseclusters/status", "redisenterpriseclusters/finalizers",
+                "redisenterprisedatabases", "redisenterprisedatabases/status", "redisenterprisedatabases/finalizers",
+                "redisenterpriseremoteclusters", "redisenterpriseremoteclusters/status",
+                "redisenterpriseremoteclusters/finalizers",
+                "redisenterpriseactiveactivedatabases", "redisenterpriseactiveactivedatabases/status",
                 "redisenterpriseactiveactivedatabases/finalizers"]
-    verbs: ["delete", "get", "list", "patch", "create", "update", "watch"]
+    verbs: ["delete", "deletecollection", "get", "list", "patch", "create", "update", "watch"]
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["update", "get", "watch", "create", "patch", "list"]
+    verbs: ["update", "get", "read", "list", "listallnamespaces", "watch", "watchlist",
+            "watchlistallnamespaces", "create","patch","replace","delete","deletecollection"]
   - apiGroups: [""]
     resources: ["endpoints"]
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["events"]
-    verbs: ["create", "patch"]
+    verbs: ["create"]
   - apiGroups: [""]
     resources: ["services"]
-    verbs: ["get", "list", "update", "patch", "create", "delete", "watch"]
+    verbs: ["get", "watch", "list", "update", "patch", "create", "delete"]

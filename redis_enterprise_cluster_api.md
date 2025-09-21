@@ -5,12 +5,9 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
 * [Objects](#objects)
   * [APIServiceSpec](#apiservicespec)
   * [ActiveActive](#activeactive)
-  * [Backup](#backup)
   * [BundledDatabaseRedisVersions](#bundleddatabaseredisversions)
   * [BundledDatabaseVersions](#bundleddatabaseversions)
-  * [CallHomeClient](#callhomeclient)
   * [ClusterCertificate](#clustercertificate)
-  * [ClusterCertificatesStatus](#clustercertificatesstatus)
   * [CmServer](#cmserver)
   * [ContainerTimezoneSpec](#containertimezonespec)
   * [CrdbCoordinator](#crdbcoordinator)
@@ -29,38 +26,29 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [OcspConfiguration](#ocspconfiguration)
   * [OcspStatus](#ocspstatus)
   * [PdnsServer](#pdnsserver)
-  * [PersistenceStatus](#persistencestatus)
   * [PersistentConfigurationSpec](#persistentconfigurationspec)
   * [PropagateHost](#propagatehost)
   * [RSClusterCertificates](#rsclustercertificates)
-  * [ReadOnlyRootFilesystemPolicy](#readonlyrootfilesystempolicy)
   * [RedisEnterpriseCluster](#redisenterprisecluster)
   * [RedisEnterpriseClusterList](#redisenterpriseclusterlist)
   * [RedisEnterpriseClusterSpec](#redisenterpriseclusterspec)
   * [RedisEnterpriseClusterStatus](#redisenterpriseclusterstatus)
   * [RedisEnterpriseServicesConfiguration](#redisenterpriseservicesconfiguration)
   * [RedisOnFlashSpec](#redisonflashspec)
-  * [ResourceLimitsSettings](#resourcelimitssettings)
-  * [S3Backup](#s3backup)
   * [Saslauthd](#saslauthd)
-  * [SecurityContextSpec](#securitycontextspec)
   * [Services](#services)
   * [ServicesRiggerConfigurationSpec](#servicesriggerconfigurationspec)
   * [SlaveHA](#slaveha)
   * [StartingPolicy](#startingpolicy)
   * [StatsArchiver](#statsarchiver)
   * [UpgradeSpec](#upgradespec)
-  * [UsageMeterSpec](#usagemeterspec)
 * [Enums](#enums)
-  * [CertificatesUpdateStatus](#certificatesupdatestatus)
   * [ClusterState](#clusterstate)
   * [IngressMethod](#ingressmethod)
   * [LDAPProtocol](#ldapprotocol)
   * [LDAPSearchScope](#ldapsearchscope)
   * [OperatingMode](#operatingmode)
-  * [PvcStatus](#pvcstatus)
   * [RedisOnFlashsStorageEngine](#redisonflashsstorageengine)
-  * [ServicePortPolicy](#serviceportpolicy)
   * [ServiceType](#servicetype)
   * [SpecStatusName](#specstatusname)
 ## Objects
@@ -84,14 +72,6 @@ Customization options for the REC API service.
 | ingressAnnotations | Used for ingress controllers such as ha-proxy or nginx in GKE | map[string]string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
-### Backup
-
-
-| Field | Description | Scheme | Default Value | Required |
-| ----- | ----------- | ------ | -------- | -------- |
-| s3 | Configurations for backups to s3 and s3-compatible storage | *[S3Backup](#s3backup) |  | false |
-[Back to Table of Contents](#table-of-contents)
-
 ### BundledDatabaseRedisVersions
 
 
@@ -111,17 +91,6 @@ Customization options for the REC API service.
 | major |  | bool |  | false |
 [Back to Table of Contents](#table-of-contents)
 
-### CallHomeClient
-
-
-| Field | Description | Scheme | Default Value | Required |
-| ----- | ----------- | ------ | -------- | -------- |
-| disabled | Whether to disable the call home client. Enabled by default. | *bool |  | false |
-| imageSpec |  | *[ImageSpec](#imagespec) |  | false |
-| resources | Compute resource requirements for Call Home Client pod | *[v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#resourcerequirements-v1-core) | 0.25 CPU and 256Mi memory | false |
-| proxySecretName | if needed, add proxy details in secret. the name of the proxy secret in the secret, can send the following keys: proxy-url, proxy-username, proxy-password (the url includes the proxy port). | string |  | false |
-[Back to Table of Contents](#table-of-contents)
-
 ### ClusterCertificate
 
 
@@ -130,15 +99,6 @@ Customization options for the REC API service.
 | name |  | string |  | true |
 | certificate |  | string |  | true |
 | key |  | string |  | true |
-[Back to Table of Contents](#table-of-contents)
-
-### ClusterCertificatesStatus
-ClusterCertificatesStatus Stores information about cluster certificates and their update process. In Active-Active databases, this is used to detect updates to the certificates, and trigger synchronization across the participating clusters.
-
-| Field | Description | Scheme | Default Value | Required |
-| ----- | ----------- | ------ | -------- | -------- |
-| generation | Generation stores the version of the cluster's Proxy and Syncer certificate secrets. In Active-Active databases, when a user updates the proxy or syncer certificate, a crdb-update command needs to be triggered to avoid potential sync issues. This helps the REAADB controller detect a change in a certificate and trigger a crdb-update. The version of the cluster's Proxy certificate secret. | *int64 |  | false |
-| updateStatus | The status of the cluster's certificates update | [CertificatesUpdateStatus](#certificatesupdatestatus) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### CmServer
@@ -247,7 +207,6 @@ Address of an LDAP server.
 | cacheTTLSeconds | The maximum TTL of cached entries. | *int |  | false |
 | authenticationQuery | Configuration of authentication queries, mapping between the username, provided to the cluster for authentication, and the LDAP Distinguished Name. | [LDAPAuthenticationQuery](#ldapauthenticationquery) |  | true |
 | authorizationQuery | Configuration of authorization queries, mapping between a user's Distinguished Name and its group memberships. | [LDAPAuthorizationQuery](#ldapauthorizationquery) |  | true |
-| directoryTimeoutSeconds | The connection timeout to the LDAP server when authenticating a user, in seconds | *int |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### LicenseStatus
@@ -258,14 +217,7 @@ Address of an LDAP server.
 | licenseState | Is the license expired | string |  | true |
 | activationDate | When the license was activated | string |  | true |
 | expirationDate | When the license will\has expired | string |  | true |
-| shardsLimit | Total number of shards (both RAM and flash) allowed under this license. | int32 |  | true |
-| shardsUsage | Total number of shards (both RAM and flash) currently in use under this license. | string |  | true |
-| features | Additional features enabled by this license | []string |  | true |
-| owner | The license owner's name | string |  | true |
-| flashShards | Number of flash shards currently in use under this license | int32 |  | true |
-| flashShardsLimit | Number of flash shards allowed under this license | *int32 |  | true |
-| ramShards | Number of RAM shards currently in use under this license | int32 |  | true |
-| ramShardsLimit | Number of RAM shards allowed under this license | *int32 |  | true |
+| shardsLimit | Number of redis shards allowed under this license | int32 |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### ManagedAPIs
@@ -324,16 +276,7 @@ An API object that represents the cluster's OCSP status
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| operatingMode | Deprecated: The PDNS Server is now disabled by the operator. This field will be ignored. | [OperatingMode](#operatingmode) |  | true |
-[Back to Table of Contents](#table-of-contents)
-
-### PersistenceStatus
-
-
-| Field | Description | Scheme | Default Value | Required |
-| ----- | ----------- | ------ | -------- | -------- |
-| status | The current status of the PVCs | [PvcStatus](#pvcstatus) |  | false |
-| succeeded | The number of PVCs that are provisioned with the expected size | string |  | false |
+| operatingMode | Whether to enable/disable the pdns server | [OperatingMode](#operatingmode) |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### PersistentConfigurationSpec
@@ -343,8 +286,7 @@ Specification for Redis Enterprise Cluster persistence
 | ----- | ----------- | ------ | -------- | -------- |
 | enabled | Whether to add persistent volume to Redis Enterprise pods | *bool | True | true |
 | storageClassName | Storage class for persistent volume in Redis Enterprise pods. Leave empty to use the default. If using the default this way, make sure the Kubernetes Cluster has a default Storage Class configured. This can be done by running a `kubectl get storageclass` and see if one of the Storage Classes' names contains a `(default)` mark. | string |  | true |
-| volumeSize | To enable resizing after creating the cluster - please follow the instructions in the pvc_expansion readme | resource.Quantity |  | true |
-| enablePersistentVolumeResize | Whether to enable PersistentVolumes resize. Disabled by default. Read the instruction in pvc_expansion readme carefully before using this feature. | *bool |  | false |
+| volumeSize |  | resource.Quantity |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### PropagateHost
@@ -365,14 +307,6 @@ Used to specify that the timezone is configured to match the host machine timezo
 | proxyCertificateSecretName | Secret name to use for cluster's Proxy certificate. If left blank, a cluster-provided certificate will be used. | string |  | false |
 | syncerCertificateSecretName | Secret name to use for cluster's Syncer certificate. If left blank, a cluster-provided certificate will be used. | string |  | false |
 | ldapClientCertificateSecretName | Secret name to use for cluster's LDAP client certificate. If left blank, LDAP client certificate authentication will be disabled. | string |  | false |
-[Back to Table of Contents](#table-of-contents)
-
-### ReadOnlyRootFilesystemPolicy
-ReadOnlyRootFilesystemPolicy holds the policy of the readOnlyRootFilesystem of RS pods
-
-| Field | Description | Scheme | Default Value | Required |
-| ----- | ----------- | ------ | -------- | -------- |
-| enabled | Whether to enable read-only root filesystem for the Redis Enterprise software containers.\tDefault is false. | bool |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseCluster
@@ -424,6 +358,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | antiAffinityAdditionalTopologyKeys | Additional antiAffinity terms in order to support installation on different zones/vcenters | []string |  | false |
 | activeActive | Specification for ActiveActive setup. At most one of ingressOrRouteSpec or activeActive fields can be set at the same time. | *[ActiveActive](#activeactive) |  | false |
 | upgradeSpec | Specification for upgrades of Redis Enterprise | *[UpgradeSpec](#upgradespec) |  | false |
+| podSecurityPolicyName | DEPRECATED PodSecurityPolicy support is removed in Kubernetes v1.25 and the use of this field is invalid for use when running on Kubernetes v1.25+. Future versions of the RedisEnterpriseCluster API will remove support for this field altogether. For migration instructions, see https://kubernetes.io/docs/tasks/configure-pod-container/migrate-from-psp/\n\nName of pod security policy to use on pods | string | empty | false |
 | enforceIPv4 | Sets ENFORCE_IPV4 environment variable | *bool | False | false |
 | clusterRecovery | ClusterRecovery initiates cluster recovery when set to true. Note that this field is cleared automatically after the cluster is recovered | *bool |  | false |
 | rackAwarenessNodeLabel | Node label that specifies rack ID - if specified, will create rack aware cluster. Rack awareness requires node label must exist on all nodes. Additionally, operator needs a special cluster role with permission to list nodes. | string |  | false |
@@ -448,16 +383,12 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | redisOnFlashSpec | Stores configurations specific to redis on flash. If provided, the cluster will be capable of creating redis on flash databases. | *[RedisOnFlashSpec](#redisonflashspec) |  | false |
 | ocspConfiguration | An API object that represents the cluster's OCSP configuration. To enable OCSP, the cluster's proxy certificate should contain the OCSP responder URL. | *[OcspConfiguration](#ocspconfiguration) |  | false |
 | encryptPkeys | Private key encryption Possible values: true/false | *bool |  | false |
-| redisEnterpriseIPFamily | When the operator is running in a dual-stack environment (both IPv4 and IPv6 network interfaces are available), specifies the IP family of the network interface that will be used by the Redis Enterprise Cluster, as well as services created by the operator (API, UI, Prometheus services). | v1.IPFamily |  | false |
+| redisEnterpriseIPFamily | Reserved, future use, only for use if instructed by Redis. IPFamily dictates what IP family to choose for pods' internal and external communication. | v1.IPFamily |  | false |
 | containerTimezone | Container timezone configuration. While the default timezone on all containers is UTC, this setting can be used to set the timezone on services rigger/bootstrapper/RS containers. Currently the only supported value is to propagate the host timezone to all containers. | *[ContainerTimezoneSpec](#containertimezonespec) |  | false |
 | ingressOrRouteSpec | Access configurations for the Redis Enterprise Cluster and Databases. At most one of ingressOrRouteSpec or activeActive fields can be set at the same time. | *[IngressOrRouteSpec](#ingressorroutespec) |  | false |
 | services | Customization options for operator-managed service resources created for Redis Enterprise clusters and databases | *[Services](#services) |  | false |
 | ldap | Cluster-level LDAP configuration, such as server addresses, protocol, authentication and query settings. | *[LDAPSpec](#ldapspec) |  | false |
 | extraEnvVars | ADVANCED USAGE: use carefully. Add environment variables to RS StatefulSet's containers. | []v1.EnvVar |  | false |
-| resp3Default | Whether databases will turn on RESP3 compatibility upon database upgrade. Note - Deleting this property after explicitly setting its value shall have no effect. Please view the corresponding field in RS doc for more info. | *bool |  | false |
-| backup | Cluster-wide backup configurations | *[Backup](#backup) |  | false |
-| securityContext | The security configuration that will be applied to RS pods. | *[SecurityContextSpec](#securitycontextspec) |  | false |
-| usageMeter | The configuration of the usage meter. | *[UsageMeterSpec](#usagemeterspec) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseClusterStatus
@@ -474,8 +405,6 @@ RedisEnterpriseClusterStatus defines the observed state of RedisEnterpriseCluste
 | managedAPIs | Indicates cluster APIs that are being managed by the operator. This only applies to cluster APIs which are optionally-managed by the operator, such as cluster LDAP configuration. Most other APIs are automatically managed by the operator, and are not listed here. | *[ManagedAPIs](#managedapis) |  | false |
 | ingressOrRouteMethodStatus | The ingressOrRouteSpec/ActiveActive spec method that exist | [IngressMethod](#ingressmethod) |  | false |
 | redisEnterpriseIPFamily | The chosen IP family of the cluster if was specified in REC spec. | v1.IPFamily |  | false |
-| persistenceStatus | The status of the Persistent Volume Claims that are used for Redis Enterprise Cluster persistence. The status will correspond to the status of one or more of the PVCs (failed/resizing if one of them is in resize or failed to resize) | [PersistenceStatus](#persistencestatus) |  | false |
-| certificatesStatus | Stores information about cluster certificates and their update process. In Active-Active databases, this is used to detect updates to the certificates, and trigger synchronization across the participating clusters. | *[ClusterCertificatesStatus](#clustercertificatesstatus) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseServicesConfiguration
@@ -504,38 +433,12 @@ RedisOnFlashSpec contains all the parameters needed to configure in order to ena
 | bigStoreDriver | Used to change the bigstore_driver when REC is up and running. | [RedisOnFlashsStorageEngine](#redisonflashsstorageengine) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
-### ResourceLimitsSettings
-Settings pertaining to resource limits management by the Redis Enterprise Node container.
-
-| Field | Description | Scheme | Default Value | Required |
-| ----- | ----------- | ------ | -------- | -------- |
-| allowAutoAdjustment | Allow Redis Enterprise to adjust resource limits, like max open file descriptors, of its data plane processes. When this option is enabled, the SYS_RESOURCE capability is added to the Redis Enterprise pods, and their allowPrivilegeEscalation field is set. Turned off by default. | *bool |  | false |
-[Back to Table of Contents](#table-of-contents)
-
-### S3Backup
-
-
-| Field | Description | Scheme | Default Value | Required |
-| ----- | ----------- | ------ | -------- | -------- |
-| url | Specifies the URL for S3 export and import | string |  | false |
-| caCertificateSecretName | Secret name that holds the S3 CA certificate, which contains the TLS certificate mapped to the key in the secret 'cert' | string |  | false |
-[Back to Table of Contents](#table-of-contents)
-
 ### Saslauthd
 
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | operatingMode | Whether to enable/disable the saslauthd service | [OperatingMode](#operatingmode) |  | true |
-[Back to Table of Contents](#table-of-contents)
-
-### SecurityContextSpec
-SecurityContextSpec - the security configuration that will be applied to RS pods.
-
-| Field | Description | Scheme | Default Value | Required |
-| ----- | ----------- | ------ | -------- | -------- |
-| readOnlyRootFilesystemPolicy | Policy controlling whether to enable read-only root filesystem for the Redis Enterprise software containers. Note that certain filesystem paths remain writable through mounted volumes to ensure proper functionality. | *[ReadOnlyRootFilesystemPolicy](#readonlyrootfilesystempolicy) |  | false |
-| resourceLimits | Settings pertaining to resource limits management by the Redis Enterprise Node container. | *[ResourceLimitsSettings](#resourcelimitssettings) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### Services
@@ -557,7 +460,6 @@ Specification for service rigger
 | extraEnvVars |  | []v1.EnvVar |  | false |
 | servicesRiggerAdditionalPodSpecAttributes | ADVANCED USAGE USE AT YOUR OWN RISK - specify pod attributes that are required for the rigger deployment pod. Pod attributes managed by the operator might override these settings (Containers, serviceAccountName, podTolerations, ImagePullSecrets, nodeSelector, PriorityClassName, PodSecurityContext). Also make sure the attributes are supported by the K8s version running on the cluster - the operator does not validate that. | *[v1.PodSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podspec-v1-core) |  | false |
 | podAnnotations | annotations for the service rigger pod | map[string]string |  | false |
-| databaseServicePortPolicy | DatabaseServicePortPolicy instructs how to determine the service ports for REDB services. Defaults to DatabasePortForward, if not specified otherwise. Note - Regardless whether this flag is set or not, if an REDB/REAADB is configured with databaseServicePort that would be the port exposed by the Service. Options:\n\tDatabasePortForward - The service port will be the same as the database port.\n\tRedisDefaultPort - The service port will be the default Redis port (6379). | [ServicePortPolicy](#serviceportpolicy) | DatabasePortForward | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### SlaveHA
@@ -592,43 +494,25 @@ Specification for upgrades of Redis Enterprise
 | ----- | ----------- | ------ | -------- | -------- |
 | autoUpgradeRedisEnterprise | Whether to upgrade Redis Enterprise automatically when operator is upgraded | bool |  | true |
 [Back to Table of Contents](#table-of-contents)
-
-### UsageMeterSpec
-UsageMeterSpec - the configuration of the usage meter.
-
-| Field | Description | Scheme | Default Value | Required |
-| ----- | ----------- | ------ | -------- | -------- |
-| callHomeClient |  | *[CallHomeClient](#callhomeclient) |  | false |
-[Back to Table of Contents](#table-of-contents)
 ## Enums
-
-### CertificatesUpdateStatus
-CertificatesUpdateStatus stores the status of the cluster's certificates update
-
-| Value | Description |
-| ----- | ----------- |
-| "InProgress" | CertificatesUpdateStatusInProgress indicates that the certificates update is in progress |
-| "Completed" | CertificatesUpdateStatusCompleted indicates that the certificates update has been completed |
-[Back to Table of Contents](#table-of-contents)
 
 ### ClusterState
 State of the Redis Enterprise Cluster
 
 | Value | Description |
 | ----- | ----------- |
-| "PendingCreation" | PendingCreation means cluster is not created yet |
+| "PendingCreation" | ClusterPendingCreate means cluster is not created yet |
 | "BootstrappingFirstPod" | Bootstrapping first pod |
-| "Initializing" | Initializing means the cluster was created and nodes are in the process of joining the cluster |
-| "RecoveryReset" | RecoveryReset resets the cluster by deleting all pods |
-| "RecoveringFirstPod" | RecoveringFirstPod means the cluster entered cluster recovery |
-| "Running" | Running means the cluster's sub-resources have been created and are in running state |
-| "Error" | Error means the there was an error when starting creating/updating the one or more of the cluster's resources |
-| "Invalid" | Invalid means an invalid spec was applied |
-| "InvalidUpgrade" | InvalidUpgrade means an upgrade is not possible at this time |
-| "Upgrade" | Upgrade |
-| "Deleting" | Deleting |
-| "ClusterRecreating" | ClusterRecreating - similar to RecoveryReset - delete all pods before recreation of the cluster. |
-| "RunningRollingUpdate" | RunningRollingUpdate similar to Running state and the STS is during rolling-update |
+| "Initializing" | ClusterInitializing means the cluster was created and nodes are in the process of joining the cluster |
+| "RecoveryReset" | ClusterRecoveryReset resets the cluster by deleting all pods |
+| "RecoveringFirstPod" | ClusterRecoveringFirstPod means the cluster entered cluster recovery |
+| "Running" | ClusterRunning means the cluster's sub-resources have been created and are in running state |
+| "Error" | ClusterError means the there was an error when starting creating/updating the one or more of the cluster's resources |
+| "Invalid" | ClusterConfigurationInvalid means an invalid spec was applied |
+| "InvalidUpgrade" | ClusterInvalidUpgrade means an upgrade is not possible at this time |
+| "Upgrade" | ClusterUpgrade |
+| "Deleting" | ClusterDeleting |
+| "ClusterRecreating" | ClusterRecreating - similar to ClusterRecoveryReset - delete all pods before recreation of the cluster. |
 [Back to Table of Contents](#table-of-contents)
 
 ### IngressMethod
@@ -669,30 +553,12 @@ The search scope for an LDAP query.
 | "disabled" |  |
 [Back to Table of Contents](#table-of-contents)
 
-### PvcStatus
-
-| Value | Description |
-| ----- | ----------- |
-| "Provisioned" |  |
-| "Provisioning" |  |
-| "Resizing" |  |
-| "ResizeFailed" |  |
-[Back to Table of Contents](#table-of-contents)
-
 ### RedisOnFlashsStorageEngine
 
 | Value | Description |
 | ----- | ----------- |
 | "rocksdb" |  |
 | "speedb" |  |
-[Back to Table of Contents](#table-of-contents)
-
-### ServicePortPolicy
-
-| Value | Description |
-| ----- | ----------- |
-| "DatabasePortForward" |  |
-| "RedisDefaultPort" |  |
 [Back to Table of Contents](#table-of-contents)
 
 ### ServiceType
