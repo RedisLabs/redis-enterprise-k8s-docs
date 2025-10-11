@@ -42,7 +42,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.8.6-5
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.8.6-8
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -90,7 +90,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.8.6-5
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.8.6-8
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
