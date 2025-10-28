@@ -251,7 +251,7 @@ Steps to create an REDB:
    Follow the step 6 [here](../README.md).
    The REC spec indicted you are running with Vault and no further configuration is required.
 3. The other REDB secrets (2 to 4) should be created in this path `redisenterprise-<K8S_NAMESPACE>/`. The secrets should comply with the
-   REDB [secrets schema](https://github.com/RedisLabsDev/redis-enterprise-operator/blob/master/deploy/redis_enterprise_database_api.md).
+   REDB [secrets schema](https://github.com/RedisLabs/redis-enterprise-operator/blob/master/deploy/redis_enterprise_database_api.md).
 > Note - when using the Redis Enterprise Vault plugin it recommended to set defaultUser: false and associate users through ACL bindings to the REDB
 
 <a name="redb_secrets"></a>
