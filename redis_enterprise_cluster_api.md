@@ -343,7 +343,7 @@ Specification for Redis Enterprise Cluster persistence
 | ----- | ----------- | ------ | -------- | -------- |
 | enabled | Whether to add persistent volume to Redis Enterprise pods | *bool | True | true |
 | storageClassName | Storage class for persistent volume in Redis Enterprise pods. Leave empty to use the default. If using the default this way, make sure the Kubernetes Cluster has a default Storage Class configured. This can be done by running a `kubectl get storageclass` and see if one of the Storage Classes' names contains a `(default)` mark. | string |  | true |
-| volumeSize | To enable resizing after creating the cluster - please follow the instructions in the pvc_expansion readme | resource.Quantity |  | true |
+| volumeSize | The size of the persistent volume for each Redis Enterprise node. By default, if you omit spec.persistentSpec.volumeSize, the operator allocates a persistent volume that is five times (5x) the Redis Enterprise node memory request defined in spec.redisEnterpriseNodeResources.requests.memory (per node). This 5x ratio is the recommended minimum capacity. To enable resizing after creating the cluster, see the Expand PVC docs: https://redis.io/docs/latest/operate/kubernetes/re-clusters/expand-pvc/ | resource.Quantity |  | true |
 | enablePersistentVolumeResize | Whether to enable PersistentVolumes resize. Disabled by default. Read the instruction in pvc_expansion readme carefully before using this feature. | *bool |  | false |
 [Back to Table of Contents](#table-of-contents)
 

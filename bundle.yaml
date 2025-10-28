@@ -44,9 +44,9 @@ rules:
       - list
       - watch
   - apiGroups:
-      - ""
+      - discovery.k8s.io
     resources:
-      - endpoints
+      - endpointslices
     verbs:
       - get
       - list
@@ -221,7 +221,7 @@ spec:
   versions:
     - name: v1
       served: true
-      storage: false
+      storage: true
       subresources:
         status: {}
       additionalPrinterColumns:
@@ -960,8 +960,12 @@ spec:
                       anyOf:
                         - type: integer
                         - type: string
-                      description: To enable resizing after creating the cluster - please
-                        follow the instructions in the pvc_expansion readme
+                      description: >-
+                        By default, if you omit spec.persistentSpec.volumeSize, the operator allocates a
+                        persistent volume that is five times (5x) the Redis Enterprise node memory request
+                        defined in spec.redisEnterpriseNodeResources.requests.memory (per node). This 5x ratio
+                        is the recommended minimum capacity. To enable resizing after creating the cluster,
+                        see the Expand PVC docs: https://redis.io/docs/latest/operate/kubernetes/re-clusters/expand-pvc/
                       pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                       x-kubernetes-int-or-string: true
                   type: object
@@ -3952,7 +3956,7 @@ spec:
                             false.
                           type: boolean
                       required:
-                      - enabled
+                        - enabled
                       type: object
                     resourceLimits:
                       description: Settings pertaining to resource limits management by
@@ -6630,7 +6634,7 @@ spec:
                       description: databaseServicePortPolicy instructs how to determine the service
                         ports for REDB services. Defaults to DatabasePortForward, if not specified
                         otherwise.
-                        Note - Regardless whether this flag is set or not, if an REDB/REAADB 
+                        Note - Regardless whether this flag is set or not, if an REDB/REAADB
                         configured with databaseServicePort that would be the port exposed by the Service.
                         DatabasePortForward - The service port will be the same as the database port.
                         RedisDefaultPort - The service port will be the default Redis port (6379).
@@ -8026,7 +8030,7 @@ spec:
           type: date
           jsonPath: .metadata.creationTimestamp
       served: true
-      storage: true
+      storage: false
       subresources:
         status: {}
       schema:
@@ -11397,7 +11401,7 @@ spec:
                             false.
                           type: boolean
                       required:
-                      - enabled
+                        - enabled
                       type: object
                     resourceLimits:
                       description: Settings pertaining to resource limits management by
@@ -15497,6 +15501,18 @@ spec:
     #                     type: string
                       x-kubernetes-preserve-unknown-fields: true
                       type: object
+                    bdb_proxy_cert_expiring_soon:
+                      description: "Proxy certificate will expire in less than specified
+                        threshold value [days]"
+                      properties:
+                        enabled:
+                          description: Alert enabled or disabled
+                          type: boolean
+#                        threshold:
+#                          description: Threshold for alert going on/off
+#                          type: string
+                      x-kubernetes-preserve-unknown-fields: true
+                      type: object
                     bdb_ram_dataset_overhead:
                       description: "Dataset RAM overhead of a shard has reached the threshold value [% of its RAM limit]
                         -Note threshold is commented (allow string/int/float and support backwards compatibility) but is required"
@@ -15716,7 +15732,7 @@ spec:
                     changed after creation
                   type: integer
                 databaseServicePort:
-                  description:  A custom port to be exposed by the database Services. Can be modified/added/removed
+                  description: A custom port to be exposed by the database Services. Can be modified/added/removed
                     after REDB creation. If set, it'll replace the default service port (namely, databasePort or defaultRedisPort).
                   type: integer
                 databaseSecretName:
@@ -15751,6 +15767,7 @@ spec:
                     If specifying an explicit version for a module, automatic modules versions upgrade must be disabled by
                     setting the '.upgradeSpec.upgradeModulesToLatest' field in the REC to 'false'.
                     Note that the option to specify module versions is deprecated, and will be removed in future releases.
+                    for Redis version 8 and above, bundled modules are enabled automatically, so there is no need to specify them
                   items:
                     description: Redis Enterprise module (see https://redis.io/docs/latest/develop/reference/modules/)
                     properties:
@@ -15867,8 +15884,12 @@ spec:
                         description: Role Name of RolePermissionType
                         type: string
                       type:
-                        description: Type of Redis Enterprise Database Role Permission
+                        description: Type of Redis Enterprise Database Role Permission.
+                          Currently, only "redis-enterprise" is supported, which uses roles and ACLs defined within Redis Enterprise directly.
                         type: string
+                        enum:
+                          - redis-enterprise
+                        default: redis-enterprise
                     required:
                       - acl
                       - role
@@ -16609,6 +16630,20 @@ spec:
                             - enabled
                             - threshold
                           type: object
+                        bdb_proxy_cert_expiring_soon:
+                          description: Proxy certificate will expire in less than specified
+                            threshold value [days]
+                          properties:
+                            enabled:
+                              description: Alert enabled or disabled
+                              type: boolean
+                            threshold:
+                              description: Threshold for alert going on/off
+                              type: string
+                          required:
+                            - enabled
+                            - threshold
+                          type: object
                       type: object
                     backup:
                       description: Target for automatic database backups.
@@ -16967,8 +17002,12 @@ spec:
                               list, case sensitive)'
                             type: string
                           type:
-                            description: Type of Redis Enterprise Database Role Permission
+                            description: Type of Redis Enterprise Database Role Permission.
+                              Currently, only "redis-enterprise" is supported, which uses roles and ACLs defined within Redis Enterprise directly.
                             type: string
+                            enum:
+                              - redis-enterprise
+                            default: redis-enterprise
                         required:
                           - acl
                           - role
@@ -17054,17 +17093,25 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: redislabs/operator:7.22.2-22
+          image: redislabs/operator:8.0.2-2
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
             httpGet:
-              path: /healthz
+              path: /liveness
               port: 8080
               scheme: HTTP
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 5
+          readinessProbe:
+            failureThreshold: 3
+            exec:
+              command: ["true"]
+            periodSeconds: 60
+            successThreshold: 1
+            timeoutSeconds: 5
+            initialDelaySeconds: 0
           name: redis-enterprise-operator
           ports:
             - containerPort: 8080
@@ -17102,7 +17149,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: redislabs/operator:7.22.2-22
+          image: redislabs/operator:8.0.2-2
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -17120,7 +17167,7 @@ spec:
           readinessProbe:
             failureThreshold: 3
             httpGet:
-              path: /healthz
+              path: /readiness
               port: 8443
               scheme: HTTPS
             periodSeconds: 10

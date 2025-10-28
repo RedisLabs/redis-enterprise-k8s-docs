@@ -118,6 +118,7 @@ DbAlertsSettings An API object that represents the database alerts configuration
 | bdb_replica_src_syncer_connection_error | Replica-of source - sync has connection error while trying to connect replica source | *[BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
 | bdb_shard_num_ram_values | Number of values kept in a shard's RAM is lower than [values] | *[BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
 | bdb_size | Dataset size has reached the threshold value [% of the memory limit] | *[BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
+| bdb_proxy_cert_expiring_soon | Proxy certificate will expire in less than specified threshold value [days] | *[BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### DbModule
@@ -126,7 +127,7 @@ Redis Enterprise module (see https://redis.io/docs/latest/develop/reference/modu
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | name | The name of the module, e.g. "search" or "ReJSON". The complete list of modules available in the cluster can be retrieved from the '.status.modules' field in the REC. | string |  | true |
-| version | The semantic version of the module, e.g. '1.6.12'. Optional for REDB, but must be set for REAADB. Note that this field is deprecated, and will be removed in future releases. | string |  | false |
+| version | The semantic version of the module, e.g. '1.6.12'. Optional for REDB, but must be set for REAADB. Note that this field is deprecated, and will be removed in future releases. for bundled modules, the version is ignored, and the latest version is used (the only one supported for each redis version) | string |  | false |
 | config | Module command line arguments e.g. VKEY_MAX_ENTITY_COUNT 30 | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
@@ -210,7 +211,7 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | replicaSources | Source databases to replicate from. | [][ReplicaSource](#replicasource) |  | false |
 | alertSettings | Database alert configuration. Note: Alert settings are not supported for Active-Active databases. | *[DbAlertsSettings](#dbalertssettings) |  | false |
 | backup | Target for automatic database backups. | *[BackupSpec](#backupspec) |  | false |
-| modulesList | List of modules associated with the database. Retrieve valid modules from the REC object status. Use the "name" and "versions" fields for module configuration. To specify explicit module versions, disable automatic module upgrades by setting '.upgradeSpec.upgradeModulesToLatest' to 'false' in the REC. Note: Specifying module versions is deprecated and will be removed in future releases. | *[][DbModule](#dbmodule) |  | false |
+| modulesList | List of modules associated with the database. Retrieve valid modules from the REC object status. Use the "name" and "versions" fields for module configuration. To specify explicit module versions, disable automatic module upgrades by setting '.upgradeSpec.upgradeModulesToLatest' to 'false' in the REC. Note: Specifying module versions is deprecated and will be removed in future releases. for Redis version 8 and above, bundled modules are enabled automatically, so there is no need to specify them | *[][DbModule](#dbmodule) |  | false |
 | rolesPermissions | Redis Enterprise ACL and role bindings to apply to the database. | [][RolePermission](#rolepermission) |  | false |
 | defaultUser | Allows connections with the default user. When disabled, the DatabaseSecret is not created or updated. | *bool | true | false |
 | ossCluster | Enables OSS Cluster mode. Note: Not all client libraries support OSS cluster mode. | *bool | false | false |
@@ -284,7 +285,7 @@ Redis Enterprise Role and ACL Binding
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| type | Type of Redis Enterprise Database Role Permission | [RolePermissionType](#rolepermissiontype) |  | true |
+| type | Type of Redis Enterprise Database Role Permission. Currently, only "redis-enterprise" is supported, which uses roles and ACLs defined within Redis Enterprise directly. | [RolePermissionType](#rolepermissiontype) | redis-enterprise | true |
 | role | Role Name of RolePermissionType (note: use exact name of the role from the Redis Enterprise role list, case sensitive) | string |  | true |
 | acl | Acl Name of RolePermissionType (note: use exact name of the ACL from the Redis Enterprise ACL list, case sensitive) | string |  | true |
 [Back to Table of Contents](#table-of-contents)

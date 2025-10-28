@@ -391,6 +391,20 @@ spec:
                             - enabled
                             - threshold
                           type: object
+                        bdb_proxy_cert_expiring_soon:
+                          description: Proxy certificate will expire in less than specified
+                            threshold value [days]
+                          properties:
+                            enabled:
+                              description: Alert enabled or disabled
+                              type: boolean
+                            threshold:
+                              description: Threshold for alert going on/off
+                              type: string
+                          required:
+                            - enabled
+                            - threshold
+                          type: object
                       type: object
                     backup:
                       description: Target for automatic database backups.
@@ -749,8 +763,12 @@ spec:
                               list, case sensitive)'
                             type: string
                           type:
-                            description: Type of Redis Enterprise Database Role Permission
+                            description: Type of Redis Enterprise Database Role Permission.
+                              Currently, only "redis-enterprise" is supported, which uses roles and ACLs defined within Redis Enterprise directly.
                             type: string
+                            enum:
+                              - redis-enterprise
+                            default: redis-enterprise
                         required:
                           - acl
                           - role

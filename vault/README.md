@@ -22,7 +22,6 @@ How to use Hashicorp Vault as a source for secrets:
 9. [ RERC secrets ](#rerc_secrets)
 10. [ REAADB secrets ](#reaadb_secrets)
 
-
 > Note: when using Openshift it might be recommended to use oc instead of kubectl 
 <a name="prerequisites"></a>
 ## Prerequisites
@@ -187,7 +186,7 @@ metadata:
     app: redis-enterprise
 spec:
   nodes: 3
-  
+
   licenseSecretName: <VAULT SECRET NAME HERE>
   clusterCredentialSecretName: <VAULT SECRET NAME HERE>
   certificates:
@@ -198,7 +197,7 @@ spec:
     syncerCertificateSecretName: <VAULT SECRET NAME HERE>
     ldapClientCertificateSecretName: <VAULT SECRET NAME HERE>
 
-  # vault configuration as explained above: 
+  # vault configuration as explained above:
   clusterCredentialSecretType: vault
   clusterCredentialSecretRole: redis-enterprise-rec-<K8S_NAMESPACE>
   vaultCASecret: vault-ca-cert
@@ -206,7 +205,7 @@ spec:
       vault.hashicorp.com/auth-path: auth/<AUTH_PATH>
       vault.hashicorp.com/namespace: <VAULT_NAMESPACE>
 ```
-Edit and apply the rec.yaml or use patch like in this example, which sets API Certificate secret name: 
+Edit and apply the rec.yaml or use patch like in this example, which sets API Certificate secret name:
 ```
   kubectl patch rec rec --type merge --patch "{\"spec\": \
     {\"certificates\": \
@@ -217,7 +216,7 @@ Edit and apply the rec.yaml or use patch like in this example, which sets API Ce
 <a name="redb-admission"></a>
 ### Deploy REDB admission controller (for OLM this is not needed)
 It is not recommended to use the admission bundle here if you want to avoid creation of K8s secrets.
-Instead, do a step-by-step installation.   
+Instead, do a step-by-step installation.
 1. Create the Kubernetes Validating Webhook (for OLM this is not needed)
     **NOTE**: One must replace REPLACE_WITH_NAMESPACE in the following command with the namespace the REC was installed into.
 
@@ -225,7 +224,7 @@ Instead, do a step-by-step installation.
     # save cert
     CERT=`cat  output.json | jq -r ".cert"`
     sed 's/NAMESPACE_OF_SERVICE_ACCOUNT/REPLACE_WITH_NAMESPACE/g' ../admission/webhook.yaml | kubectl create -f -
-    
+
     # create patch file
     cat > modified-webhook.yaml <<EOF
     webhooks:
@@ -247,17 +246,17 @@ Steps to create an REDB:
    `<VAULT_SECRET_ROOT>/<VAULT_SECRET_PREFIX>/redb-<REDB_NAME>`: <br>
    where VAULT_SECRET_ROOT and VAULT_SECRET_PREFIX are defined in the operator's ConfigMap as explained above (or set to default values).<br>
    e.g. ```vault kv put secret/redisenterprise-<K8S_NAMESPACE>/redb-mydb password=somepassword```
-    
-2. Create the REDB custom resource.  
-   Follow the step 6 [here](../README.md). 
-   The REC spec indicted you are running with Vault and no further configuration is required. 
-3. The other REDB secrets (2 to 4) should be created in this path `redisenterprise-<K8S_NAMESPACE>/`. The secrets should comply with the 
-   REDB [secrets schema](https://github.com/RedisLabs/redis-enterprise-operator/blob/master/deploy/redis_enterprise_database_api.md).
+
+2. Create the REDB custom resource.
+   Follow the step 6 [here](../README.md).
+   The REC spec indicted you are running with Vault and no further configuration is required.
+3. The other REDB secrets (2 to 4) should be created in this path `redisenterprise-<K8S_NAMESPACE>/`. The secrets should comply with the
+   REDB [secrets schema](https://github.com/RedisLabsDev/redis-enterprise-operator/blob/master/deploy/redis_enterprise_database_api.md).
 > Note - when using the Redis Enterprise Vault plugin it recommended to set defaultUser: false and associate users through ACL bindings to the REDB
 
 <a name="redb_secrets"></a>
 ### REDB secrets
-An REDB has several secrets associate with it as detailed here.<br> 
+An REDB has several secrets associate with it as detailed here.<br>
 1. The password for the REDB
 2. [Replica Source](../redis_enterprise_database_api.md#replicasource) (optional).<br>
     Specifically: `clientKeySecret` and `serverCertSecret` fields which holds the Vault secret name

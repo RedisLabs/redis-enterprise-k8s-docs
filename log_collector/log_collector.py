@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 LOGGER_FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 logging.basicConfig(format=LOGGER_FORMAT)
-VERSION_LOG_COLLECTOR = "7.22.2-22"
+VERSION_LOG_COLLECTOR = "8.0.2-2"
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
 
@@ -90,7 +90,7 @@ RESTRICTED_MODE_API_RESOURCES = [
     "PersistentVolume",
     "PersistentVolumeClaim",
     "PodDisruptionBudget",
-    "Endpoints",
+    "EndpointSlice",
     "Pod",
     "CustomResourceDefinition",
     "ValidatingWebhookConfiguration",
@@ -104,7 +104,7 @@ OLM_RESOURCES = [
     "Role",
     "RoleBinding",
     "Service",
-    "Endpoints",
+    "EndpointSlice",
 ]
 
 ALL_ONLY_API_RESOURCES = [
@@ -265,15 +265,30 @@ def collect_helm_output(namespace, output_dir, helm_release_name):
     get_helm_output(namespace, cmd, helm_output_dir, "helm_status")
 
 
+def write_output_to_file(output_dir, file_name, output):
+    """
+    Write output to file. Upon failure, issue a warning log but do not fail the whole script.
+    """
+    if not isinstance(output, str):
+        logger.warning("Failed writing output to file %s. Output is not a string.", file_name)
+        return
+
+    output_path = os.path.join(output_dir, file_name)
+    try:
+        with open(output_path, "w+", encoding='UTF-8') as file_handle:
+            file_handle.write(output)
+    # pylint: disable=W0703, C0103
+    except Exception as e:
+        logger.warning("Failed writing output to path %s. Exception: %s", output_path, str(e))
+
+
 def get_helm_output(namespace, cmd, helm_output_dir, file_name):
     """
     Get output related to helm by the release name given.
     """
     error_template = "Namespace '{}': Failed to get Helm output, command: {}.".format(namespace, cmd)
     output = run_shell_command_with_retries(cmd, HELM_RETRIES, error_template)
-    if output:
-        with open(os.path.join(helm_output_dir, file_name), "w+", encoding='UTF-8') as file_handle:
-            file_handle.write(output)
+    write_output_to_file(helm_output_dir, file_name, output)
 
 
 def is_openshift(k8s_cli):
@@ -816,8 +831,7 @@ def collect_events(namespace, output_dir, k8s_cli, mode=MODE_RESTRICTED):
 
     # We get the events in YAML format as well since in YAML format they are a bit more informative.
     output = run_get_resource_yaml(namespace, "Event", k8s_cli)
-    with open(os.path.join(output_dir, "Event.yaml"), "w+", encoding='UTF-8') as file_handle:
-        file_handle.write(output)
+    write_output_to_file(output_dir, "Event.yaml", output)
 
 
 def check_empty_yaml_file(out):
@@ -857,9 +871,7 @@ def collect_olm_auto_generated_resources(namespace, ns_output_dir, k8s_cli):
             resources_out[resource] = output
             log_resource_collected(namespace, resource)
     for entry, out in resources_out.items():
-        with open(os.path.join(olm_output_dir,
-                               "{}.yaml".format(entry)), "w+", encoding='UTF-8') as file_handle:
-            file_handle.write(out)
+        write_output_to_file(olm_output_dir, "{}.yaml".format(entry), out)
 
 
 def collect_olm_auto_generated_resources_description(namespace, ns_output_dir, k8s_cli):
@@ -880,9 +892,7 @@ def collect_olm_auto_generated_resources_description(namespace, ns_output_dir, k
             resources_out[resource] = output
             log_resource_collected(namespace, resource)
     for entry, out in resources_out.items():
-        with open(os.path.join(olm_output_dir,
-                               "{}.txt".format(entry)), "w+", encoding='UTF-8') as file_handle:
-            file_handle.write(out)
+        write_output_to_file(olm_output_dir, "{}.txt".format(entry), out)
 
 
 def collect_api_resources(namespace, output_dir, k8s_cli, api_resources, selector="", collect_empty_files=False):
@@ -921,9 +931,7 @@ def collect_api_resources(namespace, output_dir, k8s_cli, api_resources, selecto
         # collect PV resource
         collect_persistent_volume(namespace, k8s_cli, resources_out, "get", KUBCTL_GET_YAML_RETRIES)
     for entry, out in resources_out.items():
-        with open(os.path.join(output_dir,
-                               "{}.yaml".format(entry)), "w+", encoding='UTF-8') as file_handle:
-            file_handle.write(out)
+        write_output_to_file(output_dir, "{}.yaml".format(entry), out)
 
 
 def check_empty_desc_file(out):
@@ -974,9 +982,7 @@ def collect_api_resources_description(namespace, output_dir, k8s_cli, api_resour
         # collect PV resource
         collect_persistent_volume_description(namespace, k8s_cli, resources_out, KUBCTL_DESCRIBE_RETRIES)
     for entry, out in resources_out.items():
-        with open(os.path.join(output_dir,
-                               "{}.txt".format(entry)), "w+", encoding='UTF-8') as file_handle:
-            file_handle.write(out)
+        write_output_to_file(output_dir, "{}.txt".format(entry), out)
 
 
 def collect_persistent_volume(namespace, k8s_cli, resources_out, collect_func, retries):
@@ -1187,21 +1193,15 @@ def collect_logs_from_pod(namespace, pod, logs_dir, k8s_cli):
     for container in containers:
         cmd = "{} logs -c {} -n  {} {}" \
             .format(k8s_cli, container, namespace, pod)
-        with open(os.path.join(logs_dir, "{}-{}.log".format(pod, container)),
-                  "w+", encoding='UTF-8') as file_handle:
-            _, output = run_shell_command(cmd)
-            file_handle.write(output)
+        write_output_to_file(logs_dir, "{}-{}.log".format(pod, container), run_shell_command(cmd)[1])
 
         # operator and admission containers restart after changing the operator-environment-configmap
         # getting the logs of the containers before the restart can help us with debugging potential bugs
         get_logs_before_restart_cmd = "{} logs -c {} -n  {} {} -p" \
             .format(k8s_cli, container, namespace, pod)
         err_code, output = run_shell_command(get_logs_before_restart_cmd)
-        container_log_before_restart_file = os.path.join(logs_dir,
-                                                         '{}-{}-instance-before-restart.log'.format(pod, container))
         if err_code == 0:  # Previous container instance found; did restart.
-            with open(container_log_before_restart_file, "w+", encoding='UTF-8') as file_handle:
-                file_handle.write(output)
+            write_output_to_file(logs_dir, "{}-{}-instance-before-restart.log".format(pod, container), output)
 
             logger.info("Namespace '%s':  + %s-%s", namespace, pod, container)
 
@@ -1251,9 +1251,8 @@ def collect_helper(output_dir, cmd, file_name, resource_name, namespace=None):
     if return_code:
         logger.warning("Error when running %s: %s", cmd, out)
         return
-    path = os.path.join(output_dir, file_name)
-    with open(path, "w+", encoding='UTF-8') as file_handle:
-        file_handle.write(out)
+
+    write_output_to_file(output_dir, file_name, out)
     log_resource_collected(namespace, resource_name)
 
 
