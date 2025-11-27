@@ -593,6 +593,14 @@ spec:
                       description: Secret name to use for cluster's LDAP client certificate.
                         If left blank, LDAP client certificate authentication will be disabled.
                       type: string
+                    dpInternodeEncryptionCertificateSecretName:
+                      description: Secret name to use for cluster's Data Plane Internode Encryption (DPINE) certificate.
+                        If left blank, a cluster-provided certificate will be used.
+                      type: string
+                    cpInternodeEncryptionCertificateSecretName:
+                      description: Secret name to use for cluster's Control Plane Internode Encryption (CPINE) certificate.
+                        If left blank, a cluster-provided certificate will be used.
+                      type: string
                   type: object
                 enforceIPv4:
                   description: Sets ENFORCE_IPV4 environment variable
@@ -8254,6 +8262,10 @@ spec:
                     syncerCertificateSecretName:
                       type: string
                     ldapClientCertificateSecretName:
+                      type: string
+                    dpInternodeEncryptionCertificateSecretName:
+                      type: string
+                    cpInternodeEncryptionCertificateSecretName:
                       type: string
                   type: object
                 enforceIPv4:
@@ -17054,7 +17066,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: redislabs/operator:7.22.2-22
+          image: redislabs/operator:7.22.2-31
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -17102,7 +17114,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: redislabs/operator:7.22.2-22
+          image: redislabs/operator:7.22.2-31
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3

@@ -365,6 +365,8 @@ Used to specify that the timezone is configured to match the host machine timezo
 | proxyCertificateSecretName | Secret name to use for cluster's Proxy certificate. If left blank, a cluster-provided certificate will be used. | string |  | false |
 | syncerCertificateSecretName | Secret name to use for cluster's Syncer certificate. If left blank, a cluster-provided certificate will be used. | string |  | false |
 | ldapClientCertificateSecretName | Secret name to use for cluster's LDAP client certificate. If left blank, LDAP client certificate authentication will be disabled. | string |  | false |
+| dpInternodeEncryptionCertificateSecretName | Secret name to use for cluster's Data Plane Internode Encryption (DPINE) certificate. If left blank, a cluster-provided certificate will be used. | string |  | false |
+| cpInternodeEncryptionCertificateSecretName | Secret name to use for cluster's Control Plane Internode Encryption (CPINE) certificate. If left blank, a cluster-provided certificate will be used. | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ReadOnlyRootFilesystemPolicy

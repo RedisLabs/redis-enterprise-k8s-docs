@@ -173,6 +173,8 @@ These are the certificates and their field name in the REC:
 * Proxy Certificate: proxyCertificateSecretName
 * Syncer Certificate: syncerCertificateSecretName
 * LDAP client Certificate: ldapClientCertificateSecretName
+* Data Plane Internode Encryption Certificate: dpInterNodeEncryptionCertificateSecretName
+* Control Plane Internode Encryption Certificate: cpInternodeEncryptionCertificateSecretName
 
 You can read more about the different certificates [Here](../redis_enterprise_cluster_api.md#rsclustercertificates)
 
@@ -197,6 +199,8 @@ spec:
     proxyCertificateSecretName: <VAULT SECRET NAME HERE>
     syncerCertificateSecretName: <VAULT SECRET NAME HERE>
     ldapClientCertificateSecretName: <VAULT SECRET NAME HERE>
+    dpInternodeEncryptionCertificateSecretName: <VAULT SECRET NAME HERE>
+    cpInternodeEncryptionCertificateSecretName: <VAULT SECRET NAME HERE>
 
   # vault configuration as explained above: 
   clusterCredentialSecretType: vault
