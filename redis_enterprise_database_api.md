@@ -9,6 +9,7 @@ This document describes the parameters for the Redis Enterprise Database custom 
   * [BackupSpec](#backupspec)
   * [BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold)
   * [DBUpgradeSpec](#dbupgradespec)
+  * [DatabaseAuditingConfiguration](#databaseauditingconfiguration)
   * [DbAlertsSettings](#dbalertssettings)
   * [DbModule](#dbmodule)
   * [FtpStorage](#ftpstorage)
@@ -97,6 +98,14 @@ Threshold for database alert
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | upgradeModulesToLatest | DEPRECATED Upgrades the modules to the latest version that supports the DB version during a DB upgrade action, to upgrade the DB version view the 'redisVersion' field. Notes - All modules must be without specifying the version. in addition, This field is currently not supported for Active-Active databases. The default is true | *bool |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### DatabaseAuditingConfiguration
+DatabaseAuditingConfiguration defines the configuration for auditing database connection and authentication events
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| dbConnsAuditing | Enables auditing of database connection and authentication events. When enabled, connection, authentication, and disconnection events are tracked and sent to the configured audit listener (configured at the cluster level). The cluster-level auditing configuration must be set before enabling this on a database. | *bool |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### DbAlertsSettings
@@ -209,7 +218,7 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | tlsMode | TLS mode for database connections. enabled: All client and replication connections must use TLS. disabled: No connections use TLS. replica_ssl: Only replication connections use TLS. | string | disabled | false |
 | clientAuthenticationCertificates | Names of secrets containing TLS client certificates for authentication. | []string |  | false |
 | replicaSources | Source databases to replicate from. | [][ReplicaSource](#replicasource) |  | false |
-| alertSettings | Database alert configuration. Note: Alert settings are not supported for Active-Active databases. | *[DbAlertsSettings](#dbalertssettings) |  | false |
+| alertSettings | Database alert configuration. | *[DbAlertsSettings](#dbalertssettings) |  | false |
 | backup | Target for automatic database backups. | *[BackupSpec](#backupspec) |  | false |
 | modulesList | List of modules associated with the database. Retrieve valid modules from the REC object status. Use the "name" and "versions" fields for module configuration. To specify explicit module versions, disable automatic module upgrades by setting '.upgradeSpec.upgradeModulesToLatest' to 'false' in the REC. Note: Specifying module versions is deprecated and will be removed in future releases. for Redis version 8 and above, bundled modules are enabled automatically, so there is no need to specify them | *[][DbModule](#dbmodule) |  | false |
 | rolesPermissions | Redis Enterprise ACL and role bindings to apply to the database. | [][RolePermission](#rolepermission) |  | false |
@@ -222,13 +231,15 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | shardsPlacement | Shard placement strategy: "dense" or "sparse". dense: Shards reside on as few nodes as possible. sparse: Shards are distributed across as many nodes as possible. | string | dense | false |
 | type | Database type: redis or memcached. | *[DatabaseType](#databasetype) | redis | false |
 | isRof | Enables Auto Tiering (formerly Redis on Flash) for Redis databases only. Defaults to false. | *bool | false | false |
-| rofRamSize | RAM portion size for Auto Tiering (formerly Redis on Flash) databases using formats like 100MB or 0.1GB. Must be at least 10% of the combined memory size (RAM+Flash) specified in "memorySize". | string |  | false |
+| rofRamSize | RAM portion size for Auto Tiering (formerly Redis on Flash) databases using formats like 100MB or 0.1GB. For v1 (Redis < 8.0): Required. Must be at least 10% of the combined memory size (RAM+Flash) specified in "memorySize". For v2 (Redis >= 8.0): Optional. Specifies the maximum RAM limit for the database. When omitted, RS uses default configuration. Can be used together with rofRamRatio to control both RAM growth strategy and maximum RAM limit. | string |  | false |
+| rofRamRatio | RAM allocation ratio for Redis Flex (v2) databases as a percentage of total data size. Valid range: 0-100. When omitted, RS uses the default value of 50%. Controls how much RAM is allocated per unit of data (e.g., 30% means 3MB RAM per 10MB data). RAM grows proportionally with data until rofRamSize limit is reached (if specified). Only applicable when isRof=true and Redis version >= 8.0 (BigStore v2 - Redis Flex). | *int |  | false |
 | memcachedSaslSecretName | Name of the secret containing credentials for memcached database authentication. Store credentials in an opaque secret with 'username' and 'password' keys. Note: Connections are not encrypted. | string |  | false |
 | redisVersion | Redis OSS version for the database. Specify version as <major.minor> prefix or use channels: 'major': Upgrades to the most recent major Redis version. 'latest': Upgrades to the most recent Redis version. To use 'latest', set redisUpgradePolicy on the cluster first. Back up the database before upgrading. Only applies to Redis databases. Note: Version specification is not supported for Active-Active databases. | string |  | false |
 | upgradeSpec | Database upgrade configuration. | *[DBUpgradeSpec](#dbupgradespec) |  | false |
 | activeActive | Connection and association information for Active-Active databases. | *[ActiveActiveInfo](#activeactiveinfo) |  | false |
 | resp3 | Enables RESP3 protocol support for the database. Deleting this property after setting it has no effect. See the Redis Enterprise documentation for more information. | *bool |  | false |
 | shardingEnabled | Enables database sharding for Active-Active databases. Enabled by default for REAADBs. For regular REDBs, use the shardCount field instead: shardCount = 1 disables sharding, shardCount > 1 enables sharding. | *bool |  | false |
+| auditing | Database auditing configuration. | *[DatabaseAuditingConfiguration](#databaseauditingconfiguration) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseDatabaseStatus
@@ -251,6 +262,7 @@ RedisEnterpriseDatabaseStatus defines the observed state of RedisEnterpriseDatab
 | observedGeneration | The generation (built in update counter of K8s) of the REDB resource that was fully acted upon, meaning that all changes were handled and sent as an API call to the Redis Enterprise Cluster (REC). This field value should equal the current generation when the resource changes were handled. Note: the lastActionStatus field tracks actions handled asynchronously by the Redis Enterprise Cluster. | int64 |  | false |
 | backupInfo | Information on the database's periodic backup | *[BackupInfo](#backupinfo) |  | false |
 | activeActive | Connection/ association to the Active-Active database. | *[ActiveActiveInfo](#activeactiveinfo) |  | false |
+| bigstoreVersion | BigStore version for Redis on Flash databases (1 for Auto Tiering, 2 for Redis Flex). Read-only field populated from RS. | *int |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ReplicaSource
