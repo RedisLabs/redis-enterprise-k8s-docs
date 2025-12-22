@@ -67,9 +67,9 @@ spec:
                         enabled:
                           description: Alert enabled or disabled
                           type: boolean
-    #                   threshold:
-    #                     description: Threshold for alert going on/off
-    #                     type: string
+                      # threshold:
+                      #   description: Threshold for alert going on/off
+                      #   type: string
                       x-kubernetes-preserve-unknown-fields: true
                       type: object
                     bdb_crdt_src_high_syncer_lag:
@@ -79,9 +79,9 @@ spec:
                         enabled:
                           description: Alert enabled or disabled
                           type: boolean
-    #                   threshold:
-    #                     description: Threshold for alert going on/off
-    #                     type: string
+                      # threshold:
+                      #   description: Threshold for alert going on/off
+                      #   type: string
                       x-kubernetes-preserve-unknown-fields: true
                       type: object
                     bdb_crdt_src_syncer_connection_error:
@@ -91,9 +91,9 @@ spec:
                         enabled:
                           description: Alert enabled or disabled
                           type: boolean
-    #                   threshold:
-    #                     description: Threshold for alert going on/off
-    #                     type: string
+                      # threshold:
+                      #   description: Threshold for alert going on/off
+                      #   type: string
                       x-kubernetes-preserve-unknown-fields: true
                       type: object
                     bdb_crdt_src_syncer_general_error:
@@ -103,9 +103,9 @@ spec:
                         enabled:
                           description: Alert enabled or disabled
                           type: boolean
-    #                   threshold:
-    #                     description: Threshold for alert going on/off
-    #                     type: string
+                      # threshold:
+                      #   description: Threshold for alert going on/off
+                      #   type: string
                       x-kubernetes-preserve-unknown-fields: true
                       type: object
                     bdb_high_latency:
@@ -115,9 +115,9 @@ spec:
                         enabled:
                           description: Alert enabled or disabled
                           type: boolean
-    #                   threshold:
-    #                     description: Threshold for alert going on/off
-    #                     type: string
+                      # threshold:
+                      #   description: Threshold for alert going on/off
+                      #   type: string
                       x-kubernetes-preserve-unknown-fields: true
                       type: object
                     bdb_high_throughput:
@@ -127,9 +127,9 @@ spec:
                         enabled:
                           description: Alert enabled or disabled
                           type: boolean
-    #                   threshold:
-    #                     description: Threshold for alert going on/off
-    #                     type: string
+                      # threshold:
+                      #   description: Threshold for alert going on/off
+                      #   type: string
                       x-kubernetes-preserve-unknown-fields: true
                       type: object
                     bdb_long_running_action:
@@ -139,9 +139,9 @@ spec:
                         enabled:
                           description: Alert enabled or disabled
                           type: boolean
-    #                   threshold:
-    #                     description: Threshold for alert going on/off
-    #                     type: string
+                      # threshold:
+                      #   description: Threshold for alert going on/off
+                      #   type: string
                       x-kubernetes-preserve-unknown-fields: true
                       type: object
                     bdb_low_throughput:
@@ -151,9 +151,9 @@ spec:
                         enabled:
                           description: Alert enabled or disabled
                           type: boolean
-    #                   threshold:
-    #                     description: Threshold for alert going on/off
-    #                     type: string
+                      # threshold:
+                      #   description: Threshold for alert going on/off
+                      #   type: string
                       x-kubernetes-preserve-unknown-fields: true
                       type: object
                     bdb_proxy_cert_expiring_soon:
@@ -163,9 +163,9 @@ spec:
                         enabled:
                           description: Alert enabled or disabled
                           type: boolean
-#                        threshold:
-#                          description: Threshold for alert going on/off
-#                          type: string
+                      # threshold:
+                      #   description: Threshold for alert going on/off
+                      #   type: string
                       x-kubernetes-preserve-unknown-fields: true
                       type: object
                     bdb_ram_dataset_overhead:
@@ -175,9 +175,9 @@ spec:
                         enabled:
                           description: Alert enabled or disabled
                           type: boolean
-    #                   threshold:
-    #                     description: Threshold for alert going on/off
-    #                     type: string
+                      # threshold:
+                      #   description: Threshold for alert going on/off
+                      #   type: string
                       x-kubernetes-preserve-unknown-fields: true
                       type: object
                     bdb_ram_values:
@@ -187,9 +187,9 @@ spec:
                         enabled:
                           description: Alert enabled or disabled
                           type: boolean
-    #                   threshold:
-    #                     description: Threshold for alert going on/off
-    #                     type: string
+                      # threshold:
+                      #   description: Threshold for alert going on/off
+                      #   type: string
                       x-kubernetes-preserve-unknown-fields: true
                       type: object
                     bdb_replica_src_high_syncer_lag:
@@ -199,9 +199,9 @@ spec:
                         enabled:
                           description: Alert enabled or disabled
                           type: boolean
-    #                   threshold:
-    #                     description: Threshold for alert going on/off
-    #                     type: string
+                      # threshold:
+                      #   description: Threshold for alert going on/off
+                      #   type: string
                       x-kubernetes-preserve-unknown-fields: true
                       type: object
                     bdb_replica_src_syncer_connection_error:
@@ -211,9 +211,9 @@ spec:
                         enabled:
                           description: Alert enabled or disabled
                           type: boolean
-    #                   threshold:
-    #                     description: Threshold for alert going on/off
-    #                     type: string
+                      # threshold:
+                      #   description: Threshold for alert going on/off
+                      #   type: string
                       x-kubernetes-preserve-unknown-fields: true
                       type: object
                     bdb_shard_num_ram_values:
@@ -223,9 +223,9 @@ spec:
                         enabled:
                           description: Alert enabled or disabled
                           type: boolean
-    #                   threshold:
-    #                     description: Threshold for alert going on/off
-    #                     type: string
+                      # threshold:
+                      #   description: Threshold for alert going on/off
+                      #   type: string
                       x-kubernetes-preserve-unknown-fields: true
                       type: object
                     bdb_size:
@@ -235,9 +235,9 @@ spec:
                         enabled:
                           description: Alert enabled or disabled
                           type: boolean
-    #                   threshold:
-    #                     description: Threshold for alert going on/off
-    #                     type: string
+                      # threshold:
+                      #   description: Threshold for alert going on/off
+                      #   type: string
                       x-kubernetes-preserve-unknown-fields: true
                       type: object
                   type: object
@@ -390,6 +390,17 @@ spec:
                   description: A custom port to be exposed by the database Services. Can be modified/added/removed
                     after REDB creation. If set, it'll replace the default service port (namely, databasePort or defaultRedisPort).
                   type: integer
+                auditing:
+                  description: Database auditing configuration.
+                  properties:
+                    dbConnsAuditing:
+                      description: |-
+                        Enables auditing of database connection and authentication events.
+                        When enabled, connection, authentication, and disconnection events are tracked and sent
+                        to the configured audit listener (configured at the cluster level).
+                        The cluster-level auditing configuration must be set before enabling this on a database.
+                      type: boolean
+                  type: object
                 databaseSecretName:
                   description: 'Name of the secret containing the database password (Redis databases only).
                     The secret is created automatically if it does not exist.
@@ -591,6 +602,15 @@ spec:
                     It must be at least 10% of combined memory
                     size (RAM and Flash), as specified by "memorySize".
                   type: string
+                rofRamRatio:
+                  description: RAM allocation ratio for Redis Flex (v2) databases as a percentage of total data size.
+                    Valid range 0-100. When omitted, RS uses the default value of 50%.
+                    Controls how much RAM is allocated per unit of data (e.g., 30% means 3MB RAM per 10MB data).
+                    RAM grows proportionally with data until rofRamSize limit is reached (if specified).
+                    Only applicable when isRof=true and Redis version >= 8.0 (BigStore v2 - Redis Flex).
+                  type: integer
+                  minimum: 0
+                  maximum: 100
                 redisVersion:
                   description: Redis OSS version.
                     Version can be specified via <major.minor> prefix,
@@ -796,5 +816,8 @@ spec:
                     - name
                     - participatingClusterName
                   type: object
+                bigstoreVersion:
+                  description: BigStore version for Redis on Flash databases (1 for Auto Tiering, 2 for Redis Flex). Read-only field populated from RS.
+                  type: integer
               type: object
           type: object
