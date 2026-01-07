@@ -17066,7 +17066,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: redislabs/operator:7.22.2-31
+          image: redislabs/operator:7.22.2-32
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -17114,7 +17114,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: redislabs/operator:7.22.2-31
+          image: redislabs/operator:7.22.2-32
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
