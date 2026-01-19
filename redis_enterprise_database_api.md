@@ -16,6 +16,7 @@ This document describes the parameters for the Redis Enterprise Database custom 
   * [GoogleStorage](#googlestorage)
   * [InternalEndpoint](#internalendpoint)
   * [MountPointStorage](#mountpointstorage)
+  * [OSSClusterSettings](#ossclustersettings)
   * [RedisEnterpriseConnection](#redisenterpriseconnection)
   * [RedisEnterpriseDatabase](#redisenterprisedatabase)
   * [RedisEnterpriseDatabaseList](#redisenterprisedatabaselist)
@@ -175,6 +176,14 @@ MountPointStorage
 | path | Path to the local mount point. You must create the mount point on all nodes, and the redislabs:redislabs user must have read and write permissions on the local mount point. | string |  | true |
 [Back to Table of Contents](#table-of-contents)
 
+### OSSClusterSettings
+Additional OSS cluster mode settings.
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| enableExternalAccess | Toggles whether this database supports external access in OSS cluster mode. When enabled, advertised database topology includes the external endpoints for the Redis Enterprise nodes hosting the database shards. The external access mechanism (e.g., LoadBalancer services) is configured via the ossClusterSettings.externalAccessType field of the RedisEnterpriseCluster. When external access is enabled, the corresponding database secret will have the list of primary shard IPs in the oss_startup_nodes field. | *bool |  | false |
+[Back to Table of Contents](#table-of-contents)
+
 ### RedisEnterpriseConnection
 Connection between a database, and Its Redis Enterprise Cluster
 
@@ -223,7 +232,8 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | modulesList | List of modules associated with the database. Retrieve valid modules from the REC object status. Use the "name" and "versions" fields for module configuration. To specify explicit module versions, disable automatic module upgrades by setting '.upgradeSpec.upgradeModulesToLatest' to 'false' in the REC. Note: Specifying module versions is deprecated and will be removed in future releases. for Redis version 8 and above, bundled modules are enabled automatically, so there is no need to specify them | *[][DbModule](#dbmodule) |  | false |
 | rolesPermissions | Redis Enterprise ACL and role bindings to apply to the database. | [][RolePermission](#rolepermission) |  | false |
 | defaultUser | Allows connections with the default user. When disabled, the DatabaseSecret is not created or updated. | *bool | true | false |
-| ossCluster | Enables OSS Cluster mode. Note: Not all client libraries support OSS cluster mode. | *bool | false | false |
+| ossCluster | Enables OSS cluster mode for this database. By default, advertised database topology includes the internal endpoints (pod IPs) for the Redis Enterprise nodes hosting the database shards. To enable external access, configure ossClusterSettings.enableExternalAccess for this RedisEnterpriseDatabase as well as ossClusterSettings.externalAccessType for the RedisEnterpriseCluster. Note: Not all client libraries support OSS cluster mode. | *bool | false | false |
+| ossClusterSettings | Additional OSS cluster mode settings. | *[OSSClusterSettings](#ossclustersettings) |  | false |
 | proxyPolicy | Proxy policy for the database. Supported policies: single, all-master-shards, all-nodes. Defaults to single when ossCluster is disabled, all-master-shards when enabled. | string |  | false |
 | dataInternodeEncryption | Internode encryption (INE) setting that overrides the cluster-wide policy. false: INE is disabled for this database regardless of cluster policy. true: INE is enabled if supported by the database, otherwise creation fails. unspecified: INE is disabled if not supported by the database. Deleting this property after setting it has no effect. | *bool |  | false |
 | databasePort | TCP port assigned to the database within the Redis Enterprise cluster. Must be unique across all databases in the Redis Enterprise cluster. Generated automatically if omitted. Cannot be changed after creation. | *int |  | false |

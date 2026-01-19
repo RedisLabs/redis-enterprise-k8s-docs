@@ -1,3 +1,4 @@
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -99,10 +100,16 @@ spec:
                     - down
                   type: string
                 clusterCertificatesGeneration:
-                  description: Versions of the cluster's Proxy and Syncer certificates.
-                    In Active-Active databases, these are used to detect updates to the
-                    certificates, and trigger synchronization across the participating
-                    clusters. .
+                  description: Tracks the certificate generation from the participating
+                    cluster's REC.Status.CertificatesStatus.Generation. The operator
+                    automatically monitors this field to detect when proxy or syncer
+                    certificates are updated on the local participating cluster. When
+                    a change is detected, the operator automatically executes a CRDB
+                    force update (equivalent to 'crdb-cli crdb update --force'), which
+                    synchronizes the certificate changes to all participating clusters,
+                    preventing sync issues. This eliminates the manual step of running
+                    crdb-cli commands when rotating certificates in Active-Active deployments
+                    on Kubernetes.
                   format: int64
                   type: integer
                 secretsStatus:
@@ -637,6 +644,12 @@ spec:
                       description: OSS Cluster mode option. Note that not all client
                         libraries support OSS cluster mode.
                       type: boolean
+                    ossClusterSettings:
+                      description: Additional OSS cluster settings that may be provided to tweak OSS cluster behavior.
+                      type: object
+                      properties:
+                        enableExternalAccess:
+                          type: boolean
                     persistence:
                       description: Database on-disk persistence policy
                       enum:
