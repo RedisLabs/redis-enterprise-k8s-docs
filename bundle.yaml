@@ -16287,6 +16287,8 @@ metadata:
   labels:
     app: redis-enterprise
   name: redis-enterprise-operator
+  labels:
+    name: redis-enterprise-operator
 spec:
   replicas: 1
   selector:
