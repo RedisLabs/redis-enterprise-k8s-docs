@@ -1,3 +1,4 @@
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -456,9 +457,26 @@ spec:
                     type: object
                   type: array
                 ossCluster:
-                  description: 'Enables OSS Cluster mode.
+                  description: 'Enables OSS cluster mode for this database.
+                    By default, advertised database topology includes the internal endpoints (pod IPs)
+                    for the Redis Enterprise nodes hosting the database shards.
+                    To enable external access, configure ossClusterSettings.enableExternalAccess for this RedisEnterpriseDatabase
+                    as well as ossClusterSettings.externalAccessType for the RedisEnterpriseCluster.
                     Note: Not all client libraries support OSS cluster mode.'
                   type: boolean
+                ossClusterSettings:
+                  description: Additional OSS cluster mode settings.
+                  type: object
+                  properties:
+                    enableExternalAccess:
+                      description: 'Toggles whether this database supports external access in OSS cluster mode.
+                        When enabled, advertised database topology includes the external endpoints
+                        for the Redis Enterprise nodes hosting the database shards.
+                        The external access mechanism (e.g., LoadBalancer services) is configured via the
+                        ossClusterSettings.externalAccessType field of the RedisEnterpriseCluster.
+                        When external access is enabled, the corresponding database secret will have the list
+                        of primary shard IPs in the oss_startup_nodes field.'
+                      type: boolean
                 persistence:
                   description: Database persistence policy for on-disk storage.
                   enum:
