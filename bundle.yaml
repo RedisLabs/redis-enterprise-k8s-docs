@@ -1,5 +1,4 @@
 ---
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -175,7 +174,6 @@ rules:
       - delete
       - watch
 ---
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -190,14 +188,12 @@ subjects:
   - kind: ServiceAccount
     name: redis-enterprise-operator
 ---
----
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
     app: redis-enterprise
   name: redis-enterprise-operator
----
 ---
 apiVersion: v1
 kind: Service
@@ -212,7 +208,6 @@ spec:
       targetPort: 8443
   selector:
     name: redis-enterprise-operator
----
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -10175,7 +10170,6 @@ spec:
               type: object
           type: object
 ---
----
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -11017,7 +11011,6 @@ spec:
               type: object
           type: object
 ---
----
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -11110,7 +11103,6 @@ spec:
                 - recNamespace
               type: object
           type: object
----
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -11956,7 +11948,6 @@ spec:
                 - participatingClusters
               type: object
           type: object
----
 ---
 apiVersion: apps/v1
 kind: Deployment
