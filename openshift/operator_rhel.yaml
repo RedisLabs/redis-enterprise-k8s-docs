@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: redis-enterprise-operator
   labels:
     app: redis-enterprise
-  name: redis-enterprise-operator
 spec:
   replicas: 1
   selector:
@@ -14,13 +14,32 @@ spec:
   template:
     metadata:
       labels:
-        app: redis-enterprise
         name: redis-enterprise-operator
+        app: redis-enterprise
     spec:
+      securityContext:
+        runAsNonRoot: true
+      serviceAccountName: redis-enterprise-operator
       containers:
-        - command:
-            - operator-root
-            - operator
+        - name: redis-enterprise-operator
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.2.4-16
+          securityContext:
+            privileged: false
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+          command:
+          - operator-root
+          - operator
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: operator-environment-config
+                optional: true
+          ports:
+            - containerPort: 8080
           env:
             - name: POD_NAMESPACE
               valueFrom:
@@ -36,34 +55,8 @@ spec:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: redis-enterprise-operator
-            - name: IS_OPENSHIFT
+            - name: DEPLOY_RHEL
               value: "true"
-          envFrom:
-            - configMapRef:
-                name: "operator-environment-config"
-                optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:8.0.6-8
-          imagePullPolicy: Always
-          livenessProbe:
-            failureThreshold: 3
-            httpGet:
-              path: /liveness
-              port: 8080
-              scheme: HTTP
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 5
-          readinessProbe:
-            failureThreshold: 3
-            exec:
-              command: ["true"]
-            periodSeconds: 60
-            successThreshold: 1
-            timeoutSeconds: 5
-            initialDelaySeconds: 0
-          name: redis-enterprise-operator
-          ports:
-            - containerPort: 8080
           resources:
             limits:
               cpu: 4000m
@@ -71,16 +64,34 @@ spec:
             requests:
               cpu: 500m
               memory: 256Mi
+          livenessProbe:
+            failureThreshold: 3
+            successThreshold: 1
+            periodSeconds: 10
+            timeoutSeconds: 5
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+        - name: admission
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.2.4-16
           securityContext:
+            privileged: false
+            readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
             capabilities:
               drop:
-                - ALL
-            privileged: false
-            readOnlyRootFilesystem: true
-        - command:
-            - operator-root
-            - admission
+              - ALL
+          command:
+          - operator-root
+          - admission
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: operator-environment-config
+                optional: true
+          ports:
+            - containerPort: 8443
           env:
             - name: POD_NAMESPACE
               valueFrom:
@@ -94,34 +105,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-          envFrom:
-            - configMapRef:
-                name: "operator-environment-config"
-                optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:8.0.6-8
-          imagePullPolicy: Always
-          livenessProbe:
-            failureThreshold: 3
-            httpGet:
-              path: /liveness
-              port: 8443
-              scheme: HTTPS
-            initialDelaySeconds: 15
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 5
-          name: admission
-          ports:
-            - containerPort: 8443
-          readinessProbe:
-            failureThreshold: 3
-            httpGet:
-              path: /readiness
-              port: 8443
-              scheme: HTTPS
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 5
           resources:
             limits:
               cpu: 1000m
@@ -129,15 +112,22 @@ spec:
             requests:
               cpu: 250m
               memory: 256Mi
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
-            privileged: false
-            readOnlyRootFilesystem: true
-      securityContext:
-        seccompProfile:
-          type: RuntimeDefault
-        runAsNonRoot: true
-      serviceAccountName: redis-enterprise-operator
+          readinessProbe:
+            failureThreshold: 3
+            successThreshold: 1
+            periodSeconds: 10
+            timeoutSeconds: 5
+            httpGet:
+              path: /healthz
+              port: 8443
+              scheme: HTTPS
+          livenessProbe:
+            failureThreshold: 3
+            successThreshold: 1
+            periodSeconds: 10
+            timeoutSeconds: 5
+            initialDelaySeconds: 15
+            httpGet:
+              path: /liveness
+              port: 8443
+              scheme: HTTPS

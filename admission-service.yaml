@@ -6,8 +6,8 @@ metadata:
     app: redis-enterprise
 spec:
   ports:
-    - port: 443
-      protocol: TCP
-      targetPort: 8443
+  - port: 443
+    protocol: TCP
+    targetPort: 8443
   selector:
     name: redis-enterprise-operator

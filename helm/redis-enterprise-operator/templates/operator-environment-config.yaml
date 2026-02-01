@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: redis-enterprise
+  name: operator-environment-config
+  namespace: {{ $.Release.Namespace }}
+  annotations:
+    "redis/operator-ver": {{ .Values.operator.image.tag }}
+    "redis/helm-chart-ver": {{ .Chart.Version }}
+data:
+  {{- with .Values.operator }}
+  ACTIVE_ACTIVE_DATABASE_CONTROLLER_ENABLED: {{ .activeActiveDatabaseControllerEnabled | quote }}
+  {{- end }}

@@ -22,8 +22,6 @@ Instance/cluster specifications and configurations.
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | name | The name of the remote cluster CR to link. | string |  | true |
-| externalReplicationPort | The desired replication endpoint's port number for users who utilize LoadBalancers for sync between AA replicas and need to provide the specific port number that the LoadBalancer listens to. | *int |  | false |
-| namespace | Namespace in which the REAADB object will be deployed to within the corresponding participating cluster. The user must ensure that the Redis Enterprise operator is configured to watch this namespace in the corresponding cluster, and the required RBAC configuration is properly set up. See https://redis.io/docs/latest/operate/kubernetes/re-clusters/multi-namespace/ for more information how to set up multiple namespaces. If no namespace is specified, then the REAADB is deployed to the REC's namespace in the corresponding cluster. | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ParticipatingClusterStatus
@@ -80,7 +78,6 @@ RedisEnterpriseActiveActiveDatabaseStatus defines the observed state of RedisEnt
 | redisEnterpriseCluster | The Redis Enterprise Cluster Object this Resource is associated with | string |  | false |
 | secretsStatus | The status of the secrets | []*[SecretStatus](#secretstatus) |  | false |
 | replicationStatus | The overall replication status | [ReplicationStatus](#replicationstatus) |  | false |
-| clusterCertificatesGeneration | Versions of the cluster's Proxy and Syncer certificates. In Active-Active databases, these are used to detect updates to the certificates, and trigger synchronization across the participating clusters. . | *int64 |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### SecretStatus
