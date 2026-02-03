@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -42,7 +43,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:8.0.6-8
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:8.0.10-20
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -98,7 +99,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:8.0.6-8
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:8.0.10-20
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
