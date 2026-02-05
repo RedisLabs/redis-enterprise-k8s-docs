@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -36,31 +37,23 @@ spec:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: redis-enterprise-operator
-            - name: IS_OPENSHIFT
+            - name: DEPLOY_RHEL
               value: "true"
           envFrom:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:8.0.6-8
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.4.6-9
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
             httpGet:
-              path: /liveness
+              path: /healthz
               port: 8080
               scheme: HTTP
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 5
-          readinessProbe:
-            failureThreshold: 3
-            exec:
-              command: ["true"]
-            periodSeconds: 60
-            successThreshold: 1
-            timeoutSeconds: 5
-            initialDelaySeconds: 0
           name: redis-enterprise-operator
           ports:
             - containerPort: 8080
@@ -98,7 +91,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:8.0.6-8
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:7.4.6-9
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -116,7 +109,7 @@ spec:
           readinessProbe:
             failureThreshold: 3
             httpGet:
-              path: /readiness
+              path: /healthz
               port: 8443
               scheme: HTTPS
             periodSeconds: 10
@@ -137,7 +130,5 @@ spec:
             privileged: false
             readOnlyRootFilesystem: true
       securityContext:
-        seccompProfile:
-          type: RuntimeDefault
         runAsNonRoot: true
       serviceAccountName: redis-enterprise-operator

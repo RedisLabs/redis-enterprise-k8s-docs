@@ -1,3 +1,4 @@
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -7,19 +8,11 @@ metadata:
 rules:
   - apiGroups:
       - rbac.authorization.k8s.io
-    resources:
-      - roles
-      - rolebindings
-    verbs:
-      - create
-      - get
-      - update
-      - patch
-      - delete
-  - apiGroups:
       - ""
     resources:
+      - roles
       - serviceaccounts
+      - rolebindings
     verbs:
       - create
       - get
@@ -29,7 +22,18 @@ rules:
   - apiGroups:
       - app.redislabs.com
     resources:
-      - "*"
+      - redisenterpriseclusters
+      - redisenterpriseclusters/status
+      - redisenterpriseclusters/finalizers
+      - redisenterprisedatabases
+      - redisenterprisedatabases/status
+      - redisenterprisedatabases/finalizers
+      - redisenterpriseremoteclusters
+      - redisenterpriseremoteclusters/status
+      - redisenterpriseremoteclusters/finalizers
+      - redisenterpriseactiveactivedatabases
+      - redisenterpriseactiveactivedatabases/status
+      - redisenterpriseactiveactivedatabases/finalizers
     verbs:
       - delete
       - get
@@ -51,9 +55,9 @@ rules:
       - list
       - watch
   - apiGroups:
-      - discovery.k8s.io
+      - ""
     resources:
-      - endpointslices
+      - endpoints
     verbs:
       - get
       - list
@@ -80,18 +84,6 @@ rules:
       - list
       - watch
   - apiGroups:
-      - batch
-    resources:
-      - cronjobs
-    verbs:
-      - create
-      - delete
-      - get
-      - patch
-      - update
-      - list
-      - watch
-  - apiGroups:
       - policy
     resources:
       - poddisruptionbudgets
@@ -101,7 +93,6 @@ rules:
       - get
       - list
       - watch
-      - update
   - apiGroups:
       - ""
     resources:
@@ -148,6 +139,14 @@ rules:
       - delete
       - watch
   - apiGroups:
+      - policy
+    resourceNames:
+      - redis-enterprise-psp
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+  - apiGroups:
       - networking.k8s.io
     resources:
       - ingresses
@@ -188,7 +187,7 @@ rules:
   - apiGroups:
       - security.openshift.io
     resourceNames:
-      - nonroot-v2
+      - nonroot
     resources:
       - securitycontextconstraints
     verbs:
