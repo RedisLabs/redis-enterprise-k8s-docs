@@ -33,6 +33,8 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [ModuleSource](#modulesource)
   * [OcspConfiguration](#ocspconfiguration)
   * [OcspStatus](#ocspstatus)
+  * [OssClusterLoadBalancerSettings](#ossclusterloadbalancersettings)
+  * [OssClusterSettings](#ossclustersettings)
   * [PdnsServer](#pdnsserver)
   * [PersistenceStatus](#persistencestatus)
   * [PersistentConfigurationSpec](#persistentconfigurationspec)
@@ -68,6 +70,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [LDAPProtocol](#ldapprotocol)
   * [LDAPSearchScope](#ldapsearchscope)
   * [OperatingMode](#operatingmode)
+  * [OssClusterExternalAccessType](#ossclusterexternalaccesstype)
   * [PvcStatus](#pvcstatus)
   * [RedisOnFlashsStorageEngine](#redisonflashsstorageengine)
   * [ServicePortPolicy](#serviceportpolicy)
@@ -168,7 +171,7 @@ ClusterCertificatesStatus Stores information about cluster certificates and thei
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| generation | Generation stores the version of the cluster's Proxy and Syncer certificate secrets. In Active-Active databases, when a user updates the proxy or syncer certificate, a crdb-update command needs to be triggered to avoid potential sync issues. This helps the REAADB controller detect a change in a certificate and trigger a crdb-update. The version of the cluster's Proxy certificate secret. | *int64 |  | false |
+| generation | Generation stores the version of the cluster's Proxy and Syncer certificate secrets. This generation counter is automatically incremented when proxy or syncer certificates are updated. In Active-Active databases (REAADB), the operator monitors this field to detect certificate changes and automatically triggers a CRDB force update (equivalent to 'crdb-cli crdb update --force'), which synchronizes the certificate changes to all participating clusters, eliminating the need for manual intervention to maintain sync. | *int64 |  | false |
 | updateStatus | The status of the cluster's certificates update | [CertificatesUpdateStatus](#certificatesupdatestatus) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
@@ -377,6 +380,25 @@ An API object that represents the cluster's OCSP status
 | revocationTime | The time at which the certificate was revoked or placed on hold. | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
+### OssClusterLoadBalancerSettings
+Configuration for LoadBalancer services created to assign public IPs for Redis Enterprise cluster nodes.
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| serviceAnnotations | Additional annotations to set on LoadBalancer services created for Redis Enterprise cluster nodes. These annotations are merged with global service annotations from spec.services.servicesAnnotations. | map[string]string |  | false |
+| externalTrafficPolicy | ExternalTrafficPolicy specifies the externalTrafficPolicy for LoadBalancer services created for Redis Enterprise cluster nodes. Choose "Local" to configure the LoadBalancer to only route traffic to the single worker node hosting the Redis Enterprise cluster node for that service. Choose "Cluster" to route traffic to any worker node, providing a more stable behavior during failovers, but with increased overhead due to additional hop. Defaults to "Local" when podCIDRs is configured, and "Cluster" otherwise. | *v1.ServiceExternalTrafficPolicy |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### OssClusterSettings
+Cluster-level configuration for OSS cluster mode databases.
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| externalAccessType | Specifies the mechanism for enabling external access to OSS cluster databases. When unset or set to "Disabled", external access is not allowed for any OSS cluster databases. When set to a specific mechanism (e.g., "LoadBalancer"), that mechanism is used to provide external access. Note: Individual databases must still enable external access via their ossClusterSettings.enableExternalAccess field. | *[OssClusterExternalAccessType](#ossclusterexternalaccesstype) |  | false |
+| loadBalancer | Configuration for LoadBalancer services created to assign public IPs for Redis Enterprise cluster nodes. | *[OssClusterLoadBalancerSettings](#ossclusterloadbalancersettings) |  | false |
+| podCIDRs | A list of Kubernetes pod CIDR ranges from which pod IPs are allocated. Supports both IPv4 (e.g., "10.30.0.0/16") and IPv6 addresses. This field should only be configured when OSS cluster databases need to be accessed from both internal and external clients. When configured, internal communication can reach pods directly using their pod IPs, bypassing the external access mechanism (e.g., load balancer services) for improved performance. IMPORTANT: For this feature to work correctly, the entire data path must preserve the client source IP address. This is required because the Redis server uses the client's source IP to construct the CLUSTER SHARDS/SLOTS response - returning pod IPs for internal clients (matching podCIDRs) or load balancer addresses for external clients. On cloud platforms, this typically requires configuring the load balancer to preserve source IPs. | []string |  | false |
+[Back to Table of Contents](#table-of-contents)
+
 ### PdnsServer
 
 
@@ -420,8 +442,8 @@ Used to specify that the timezone is configured to match the host machine timezo
 | apiCertificateSecretName | Secret name to use for cluster's API certificate. The secret must contain the following structure - A key 'name' with the value 'api'. - A key 'certificate' with the value of the certificate in PEM format. - A key 'key' with the value of the private key. If left blank, a cluster-provided certificate will be used. | string |  | false |
 | cmCertificateSecretName | Secret name to use for cluster's CM (Cluster Manager) certificate. The secret must contain the following structure - A key 'name' with the value 'cm'. - A key 'certificate' with the value of the certificate in PEM format. - A key 'key' with the value of the private key. If left blank, a cluster-provided certificate will be used. | string |  | false |
 | metricsExporterCertificateSecretName | Secret name to use for cluster's Metrics Exporter certificate. The secret must contain the following structure - A key 'name' with the value 'metrics_exporter'. - A key 'certificate' with the value of the certificate in PEM format. - A key 'key' with the value of the private key. If left blank, a cluster-provided certificate will be used. | string |  | false |
-| proxyCertificateSecretName | Secret name to use for cluster's Proxy certificate. The secret must contain the following structure - A key 'name' with the value 'proxy'. - A key 'certificate' with the value of the certificate in PEM format. - A key 'key' with the value of the private key. If left blank, a cluster-provided certificate will be used. | string |  | false |
-| syncerCertificateSecretName | Secret name to use for cluster's Syncer certificate. The secret must contain the following structure - A key 'name' with the value 'syncer'. - A key 'certificate' with the value of the certificate in PEM format. - A key 'key' with the value of the private key. If left blank, a cluster-provided certificate will be used. | string |  | false |
+| proxyCertificateSecretName | Secret name to use for cluster's Proxy certificate. The secret must contain the following structure - A key 'name' with the value 'proxy'. - A key 'certificate' with the value of the certificate in PEM format. - A key 'key' with the value of the private key. If left blank, a cluster-provided certificate will be used. Note: For Active-Active databases (REAADB), certificate updates are automatically reconciled. When you update this secret, the operator detects the change and automatically executes a CRDB force update (equivalent to 'crdb-cli crdb update --force'), which synchronizes the certificate changes to all participating clusters, eliminating the need for manual intervention. | string |  | false |
+| syncerCertificateSecretName | Secret name to use for cluster's Syncer certificate. The secret must contain the following structure - A key 'name' with the value 'syncer'. - A key 'certificate' with the value of the certificate in PEM format. - A key 'key' with the value of the private key. If left blank, a cluster-provided certificate will be used. Note: For Active-Active databases (REAADB), certificate updates are automatically reconciled. When you update this secret, the operator detects the change and automatically executes a CRDB force update (equivalent to 'crdb-cli crdb update --force'), which synchronizes the certificate changes to all participating clusters, eliminating the need for manual intervention. | string |  | false |
 | ldapClientCertificateSecretName | Secret name to use for cluster's LDAP client certificate. The secret must contain the following structure - A key 'name' with the value 'ldap_client'. - A key 'certificate' with the value of the certificate in PEM format. - A key 'key' with the value of the private key. If left blank, LDAP client certificate authentication will be disabled. | string |  | false |
 | dpInternodeEncryptionCertificateSecretName | Secret name to use for cluster's Data Plane Internode Encryption (DPINE) certificate. The secret must contain the following structure - A key 'name' with the value 'data_internode_encryption'. - A key 'certificate' with the value of the certificate in PEM format. - A key 'key' with the value of the private key. If left blank, a cluster-provided certificate will be used. | string |  | false |
 | cpInternodeEncryptionCertificateSecretName | Secret name to use for cluster's Control Plane Internode Encryption (CPINE) certificate. The secret must contain the following structure - A key 'name' with the value 'ccs_internode_encryption'. - A key 'certificate' with the value of the certificate in PEM format. - A key 'key' with the value of the private key. If left blank, a cluster-provided certificate will be used. | string |  | false |
@@ -497,7 +519,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | redisEnterprisePodAnnotations | Annotations specifically for Redis Enterprise pods. | map[string]string |  | false |
 | podTolerations | Tolerations for all managed pods. For more information, see https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/ | [][v1.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#toleration-v1-core) | empty | false |
 | slaveHA | High availability configuration for replica shards. | *[SlaveHA](#slaveha) |  | false |
-| clusterCredentialSecretName | Name or path of the secret containing cluster credentials. Defaults to the cluster name if left blank. For Kubernetes secrets (default): Must be set to the cluster name or left blank. The secret can be pre-created with 'username' and 'password' fields, or otherwise it will be automatically created with a default username and auto-generated password. For Vault secrets: Can be customized with the path of the secret within Vault. The secret must be pre-created in Vault before REC creation. | string |  | false |
+| clusterCredentialSecretName | Name or path of the secret containing cluster credentials. Defaults to the cluster name if left blank. For Kubernetes secrets (default): Can be customized to any valid secret name, or left blank to use the cluster name. The secret can be pre-created with 'username' and 'password' fields, or otherwise it will be automatically created with a default username and auto-generated password. For Vault secrets: Can be customized with the path of the secret within Vault. The secret must be pre-created in Vault before REC creation. This field cannot be changed after cluster creation. | string |  | false |
 | clusterCredentialSecretType | Type of secret for cluster credentials (vault or kubernetes). Defaults to kubernetes if left blank. | string |  | true |
 | clusterCredentialSecretRole | Vault role for cluster credentials. Used only when ClusterCredentialSecretType is vault. Defaults to "redis-enterprise-rec" if blank. | string |  | true |
 | vaultCASecret | Name of the Kubernetes secret containing Vault's CA certificate. Defaults to "vault-ca-cert". | string |  | false |
@@ -514,6 +536,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | containerTimezone | Container timezone configuration. While the default timezone on all containers is UTC, this setting can be used to set the timezone on services rigger/bootstrapper/RS containers. Currently the only supported value is to propagate the host timezone to all containers. | *[ContainerTimezoneSpec](#containertimezonespec) |  | false |
 | ingressOrRouteSpec | Access configurations for the Redis Enterprise cluster and databases. At most one of ingressOrRouteSpec or activeActive fields can be set at the same time. | *[IngressOrRouteSpec](#ingressorroutespec) |  | false |
 | services | Customization options for operator-managed service resources created for Redis Enterprise clusters and databases | *[Services](#services) |  | false |
+| ossClusterSettings | Cluster-level configuration for OSS cluster mode databases. | *[OssClusterSettings](#ossclustersettings) |  | false |
 | ldap | Cluster-level LDAP configuration, such as server addresses, protocol, authentication and query settings. | *[LDAPSpec](#ldapspec) |  | false |
 | sso | SSO authentication configuration for the Cluster Manager UI. For setup instructions, see https://redis.io/docs/latest/ | *[SSOSpec](#ssospec) |  | false |
 | extraEnvVars | ADVANCED USAGE: use carefully. Add environment variables to RS StatefulSet's containers. | []v1.EnvVar |  | false |
@@ -541,6 +564,7 @@ RedisEnterpriseClusterStatus defines the observed state of RedisEnterpriseCluste
 | redisEnterpriseIPFamily | The chosen IP family of the cluster if was specified in REC spec. | v1.IPFamily |  | false |
 | persistenceStatus | The status of the Persistent Volume Claims that are used for Redis Enterprise cluster persistence. The status will correspond to the status of one or more of the PVCs (failed/resizing if one of them is in resize or failed to resize) | [PersistenceStatus](#persistencestatus) |  | false |
 | certificatesStatus | Stores information about cluster certificates and their update process. In Active-Active databases, this is used to detect updates to the certificates, and trigger synchronization across the participating clusters. | *[ClusterCertificatesStatus](#clustercertificatesstatus) |  | false |
+| clusterCredentialSecretName | The name of the secret containing cluster credentials that was set upon cluster creation. This field is used to prevent changes to ClusterCredentialSecretName after cluster creation. | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseServicesConfiguration
@@ -780,6 +804,17 @@ The search scope for an LDAP query.
 | ----- | ----------- |
 | "enabled" |  |
 | "disabled" |  |
+[Back to Table of Contents](#table-of-contents)
+
+### OssClusterExternalAccessType
+OssClusterExternalAccessType specifies the mechanism used to provide external access to OSS cluster databases.
+This is a cluster-level control that determines whether external access is allowed and which mechanism to use.
+Individual databases must still opt-in to external access via their ossClusterSettings.enableExternalAccess field.
+
+| Value | Description |
+| ----- | ----------- |
+| "LoadBalancer" | OssClusterExternalAccessLoadBalancer uses LoadBalancer services per REC pod to provide external access |
+| "Disabled" | OssClusterExternalAccessDisabled explicitly disables external access for OSS cluster databases |
 [Back to Table of Contents](#table-of-contents)
 
 ### PvcStatus
