@@ -1,4 +1,3 @@
----
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -100,16 +99,10 @@ spec:
                     - down
                   type: string
                 clusterCertificatesGeneration:
-                  description: Tracks the certificate generation from the participating
-                    cluster's REC.Status.CertificatesStatus.Generation. The operator
-                    automatically monitors this field to detect when proxy or syncer
-                    certificates are updated on the local participating cluster. When
-                    a change is detected, the operator automatically executes a CRDB
-                    force update (equivalent to 'crdb-cli crdb update --force'), which
-                    synchronizes the certificate changes to all participating clusters,
-                    preventing sync issues. This eliminates the manual step of running
-                    crdb-cli commands when rotating certificates in Active-Active deployments
-                    on Kubernetes.
+                  description: Versions of the cluster's Proxy and Syncer certificates.
+                    In Active-Active databases, these are used to detect updates to the
+                    certificates, and trigger synchronization across the participating
+                    clusters. .
                   format: int64
                   type: integer
                 secretsStatus:
@@ -157,15 +150,6 @@ spec:
                           who utilize LoadBalancers for sync between AA replicas and need to
                           provide the specific port number that the LoadBalancer listens to.
                         type: integer
-                      namespace:
-                        description: Namespace in which the REAADB object will be deployed to
-                          within the corresponding participating cluster. The user must ensure
-                          that the Redis Enterprise operator is configured to watch this namespace
-                          in the corresponding cluster, and the required RBAC configuration is
-                          properly set up. See https://redis.io/docs/latest/operate/kubernetes/re-clusters/multi-namespace/
-                          for more information how to set up multiple namespaces. If no namespace
-                          is specified, then the REAADB is deployed to the REC's namespace in the corresponding cluster.
-                        type: string
                     required:
                       - name
                     type: object
@@ -200,6 +184,7 @@ spec:
                       type: object
                     alertSettings:
                       description: Settings for database alerts.
+                        Note - Alert settings are not supported for Active-Active database.
                       properties:
                         bdb_backup_delayed:
                           description: Periodic backup has been delayed for longer than
@@ -397,20 +382,6 @@ spec:
                             - enabled
                             - threshold
                           type: object
-                        bdb_proxy_cert_expiring_soon:
-                          description: Proxy certificate will expire in less than specified
-                            threshold value [days]
-                          properties:
-                            enabled:
-                              description: Alert enabled or disabled
-                              type: boolean
-                            threshold:
-                              description: Threshold for alert going on/off
-                              type: string
-                          required:
-                            - enabled
-                            - threshold
-                          type: object
                       type: object
                     backup:
                       description: Target for automatic database backups.
@@ -553,25 +524,10 @@ spec:
                         Deleting this property after explicitly setting its value shall
                         have no effect.
                       type: boolean
-                    auditing:
-                      description: Database auditing configuration.
-                      properties:
-                        dbConnsAuditing:
-                          description:
-                            "Enables auditing of database connection and authentication events.
-                            When enabled, connection, authentication, and disconnection events are tracked and sent
-                            to the configured audit listener (configured at the cluster level).
-                            The cluster-level auditing configuration must be set before enabling this on a database."
-                          type: boolean
-                      type: object
                     databasePort:
                       description: Database port number. TCP port on which the database
                         is available. Will be generated automatically if omitted. can
                         not be changed after creation
-                      type: integer
-                    databaseServicePort:
-                      description: A custom port to be exposed by the database services. Can be be modified/added/removed
-                        after REDB creation. If set, it'll replace the default service port (namely, databasePort or defaultRedisPort).
                       type: integer
                     databaseSecretName:
                       description: The name of the secret that holds the password
@@ -644,12 +600,6 @@ spec:
                       description: OSS Cluster mode option. Note that not all client
                         libraries support OSS cluster mode.
                       type: boolean
-                    ossClusterSettings:
-                      description: Additional OSS cluster settings that may be provided to tweak OSS cluster behavior.
-                      type: object
-                      properties:
-                        enableExternalAccess:
-                          type: boolean
                     persistence:
                       description: Database on-disk persistence policy
                       enum:
@@ -769,15 +719,6 @@ spec:
                         least 10% of combined memory size (RAM+Flash), as specified
                         by "memorySize".
                       type: string
-                    rofRamRatio:
-                      description: RAM allocation ratio for Redis Flex (v2) databases as a percentage of total data size.
-                        Valid range 0-100. When omitted, RS uses the default value of 50%.
-                        Controls how much RAM is allocated per unit of data (e.g., 30% means 3MB RAM per 10MB data).
-                        RAM grows proportionally with data until rofRamSize limit is reached (if specified).
-                        Only applicable when isRof=true and Redis version >= 8.0 (BigStore v2 - Redis Flex).
-                      type: integer
-                      minimum: 0
-                      maximum: 100
                     rolesPermissions:
                       description: List of Redis Enteprise ACL and Role bindings to
                         apply
@@ -795,12 +736,8 @@ spec:
                               list, case sensitive)'
                             type: string
                           type:
-                            description: Type of Redis Enterprise Database Role Permission.
-                              Currently, only "redis-enterprise" is supported, which uses roles and ACLs defined within Redis Enterprise directly.
+                            description: Type of Redis Enterprise Database Role Permission
                             type: string
-                            enum:
-                              - redis-enterprise
-                            default: redis-enterprise
                         required:
                           - acl
                           - role
