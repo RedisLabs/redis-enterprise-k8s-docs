@@ -80,7 +80,7 @@ RedisEnterpriseActiveActiveDatabaseStatus defines the observed state of RedisEnt
 | redisEnterpriseCluster | The Redis Enterprise Cluster Object this Resource is associated with | string |  | false |
 | secretsStatus | The status of the secrets | []*[SecretStatus](#secretstatus) |  | false |
 | replicationStatus | The overall replication status | [ReplicationStatus](#replicationstatus) |  | false |
-| clusterCertificatesGeneration | Tracks the certificate generation from the participating cluster's REC.Status.CertificatesStatus.Generation. The operator automatically monitors this field to detect when proxy or syncer certificates are updated on the local participating cluster. When a change is detected, the operator automatically executes a CRDB force update (equivalent to 'crdb-cli crdb update --force'), which synchronizes the certificate changes to all participating clusters, preventing sync issues. This eliminates the manual step of running crdb-cli commands when rotating certificates in Active-Active deployments on Kubernetes. | *int64 |  | false |
+| clusterCertificatesGeneration | Versions of the cluster's Proxy and Syncer certificates. In Active-Active databases, these are used to detect updates to the certificates, and trigger synchronization across the participating clusters. . | *int64 |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### SecretStatus

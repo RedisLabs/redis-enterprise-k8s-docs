@@ -1,4 +1,3 @@
----
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -18,8 +17,8 @@ rules:
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["update", "get", "watch", "create", "patch", "list"]
-  - apiGroups: ["discovery.k8s.io"]
-    resources: ["endpointslices"]
+  - apiGroups: [""]
+    resources: ["endpoints"]
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["events"]
