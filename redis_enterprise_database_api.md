@@ -181,7 +181,7 @@ Additional OSS cluster mode settings.
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| enableExternalAccess | Toggles whether this database supports external access in OSS cluster mode. When enabled, advertised database topology includes the external endpoints for the Redis Enterprise nodes hosting the database shards. The external access mechanism (e.g., LoadBalancer services) is configured via the ossClusterSettings.externalAccessType field of the RedisEnterpriseCluster. When external access is enabled, the corresponding database secret will have the list of primary shard IPs in the oss_startup_nodes field. | *bool |  | false |
+| enableExternalAccess | Toggles whether this database supports external access in OSS cluster mode. When enabled, advertised database topology includes the external endpoints for the Redis Enterprise nodes hosting the database shards. The external access mechanism (e.g., LoadBalancer services) is configured via the ossClusterSettings.externalAccessType field of the RedisEnterpriseCluster. When external access is enabled, the corresponding database secret will have the list of primary shard IPs in the oss_startup_nodes field. Currently enabling OSS cluster API in conjunction with external access is not supported for active active databases. | *bool |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseConnection
