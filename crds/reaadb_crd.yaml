@@ -649,6 +649,12 @@ spec:
                       type: object
                       properties:
                         enableExternalAccess:
+                          description: 'Toggles whether this database supports external access in OSS cluster mode.
+                            When enabled, advertised database topology includes the external endpoints for the Redis Enterprise nodes hosting the database
+                            shards. The external access mechanism (e.g., LoadBalancer services) is configured via the ossClusterSettings.externalAccessType
+                            field of the RedisEnterpriseCluster. When external access is enabled, the corresponding database secret will have the list of
+                            primary shard IPs in the oss_startup_nodes field. Currently enabling OSS cluster API in conjunction with external access is not
+                            supported for active active databases.'
                           type: boolean
                     persistence:
                       description: Database on-disk persistence policy
