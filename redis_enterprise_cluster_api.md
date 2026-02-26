@@ -11,6 +11,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [BundledDatabaseRedisVersions](#bundleddatabaseredisversions)
   * [BundledDatabaseVersions](#bundleddatabaseversions)
   * [CallHomeClient](#callhomeclient)
+  * [CallHomeS3Target](#callhomes3target)
   * [ClusterCertificate](#clustercertificate)
   * [ClusterCertificatesStatus](#clustercertificatesstatus)
   * [CmServer](#cmserver)
@@ -154,6 +155,23 @@ AuditingConfiguration defines the configuration for auditing database connection
 | imageSpec |  | *[ImageSpec](#imagespec) |  | false |
 | resources | Compute resource requirements for Call Home Client pod | *[v1.ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#resourcerequirements-v1-core) | 0.25 CPU and 256Mi memory | false |
 | proxySecretName | if needed, add proxy details in secret. the name of the proxy secret in the secret, can send the following keys: proxy-url, proxy-username, proxy-password (the url includes the proxy port). | string |  | false |
+| s3Target | S3-compatible storage target for call home data upload. When enabled, call home data will be uploaded to this S3 target only. Before using this feature, please coordinate with Redis. | *[CallHomeS3Target](#callhomes3target) |  | false |
+| interval | Interval between call home reports (e.g., "1h", "30m"). Passed as --interval flag to the call home client binary. If not specified, the CALL_HOME_CLIENT_INTERVAL environment variable is used, or the default value of 24h. Changing defaults is not recommended. | string |  | false |
+| cronExpression | Cron expression for scheduling the call home CronJob (e.g., "0 */6 * * *"). If not specified, the CALL_HOME_CLIENT_CRON_SCHEDULE environment variable is used, or the default value of "0 23 * * *" (23:00 UTC daily). Changing defaults is not recommended. | string |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### CallHomeS3Target
+CallHomeS3Target defines an S3-compatible custom target for call home data upload.
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| enabled | Whether S3 upload is enabled. When true, call home data will be uploaded to the specified S3 target only. | bool |  | false |
+| url | Full S3 URL including bucket (e.g., "https://bucket.s3.region.amazonaws.com" or "s3://bucket/prefix"). | string |  | false |
+| endpoint | S3-compatible endpoint URL. | string |  | false |
+| bucket | S3 bucket name. Required when S3Target is enabled. | string |  | false |
+| region | AWS region for the S3 bucket (e.g., "us-east-1"). | string |  | false |
+| prefix | S3 object key prefix/subfolder for uploaded files (e.g., "reports/2025"). If specified, files will be uploaded to s3://bucket/prefix/filename. | string |  | false |
+| credentialsSecretName | Name of the Kubernetes secret containing S3 credentials. The secret must contain keys "access-key" and "secret-key". Optional keys: "session-token" (for AWS STS), "ca-cert" (for custom CA). The credentials must have s3:PutObject permission on the target bucket. | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ClusterCertificate
