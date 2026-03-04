@@ -1,4 +1,3 @@
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -8,19 +7,11 @@ metadata:
 rules:
   - apiGroups:
       - rbac.authorization.k8s.io
-    resources:
-      - roles
-      - rolebindings
-    verbs:
-      - create
-      - get
-      - update
-      - patch
-      - delete
-  - apiGroups:
       - ""
     resources:
+      - roles
       - serviceaccounts
+      - rolebindings
     verbs:
       - create
       - get
@@ -52,9 +43,9 @@ rules:
       - list
       - watch
   - apiGroups:
-      - discovery.k8s.io
+      - ""
     resources:
-      - endpointslices
+      - endpoints
     verbs:
       - get
       - list
@@ -72,18 +63,6 @@ rules:
       - deployments
       - statefulsets
       - replicasets
-    verbs:
-      - create
-      - delete
-      - get
-      - patch
-      - update
-      - list
-      - watch
-  - apiGroups:
-      - batch
-    resources:
-      - cronjobs
     verbs:
       - create
       - delete
