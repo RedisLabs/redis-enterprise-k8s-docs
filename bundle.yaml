@@ -12070,7 +12070,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: redislabs/operator:8.0.10-23
+          image: redislabs/operator:8.0.16-24
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -12126,7 +12126,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: redislabs/operator:8.0.10-23
+          image: redislabs/operator:8.0.16-24
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
