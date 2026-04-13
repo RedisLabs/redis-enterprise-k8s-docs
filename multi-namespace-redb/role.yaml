@@ -1,4 +1,3 @@
----
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -8,22 +7,17 @@ metadata:
 rules:
   - apiGroups:
       - app.redislabs.com
-    resources: ["redisenterprisedatabases",
-                "redisenterprisedatabases/status",
-                "redisenterprisedatabases/finalizers",
-                "redisenterpriseactiveactivedatabases",
-                "redisenterpriseactiveactivedatabases/status",
-                "redisenterpriseactiveactivedatabases/finalizers"]
+    resources: ["redisenterprisedatabases", "redisenterprisedatabases/status", "redisenterprisedatabases/finalizers"]
     verbs: ["delete", "get", "list", "patch", "create", "update", "watch"]
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["update", "get", "watch", "create", "patch", "list"]
-  - apiGroups: ["discovery.k8s.io"]
-    resources: ["endpointslices"]
+  - apiGroups: [""]
+    resources: ["endpoints"]
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["events"]
-    verbs: ["create", "patch"]
+    verbs: ["create"]
   - apiGroups: [""]
     resources: ["services"]
     verbs: ["get", "list", "update", "patch", "create", "delete", "watch"]
