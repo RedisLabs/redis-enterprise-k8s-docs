@@ -8,6 +8,7 @@ This document describes the parameters for the Redis Enterprise Database custom 
   * [BackupInfo](#backupinfo)
   * [BackupSpec](#backupspec)
   * [BdbAlertSettingsWithThreshold](#bdbalertsettingswiththreshold)
+  * [ConnectionSettings](#connectionsettings)
   * [DBUpgradeSpec](#dbupgradespec)
   * [DatabaseAuditingConfiguration](#databaseauditingconfiguration)
   * [DbAlertsSettings](#dbalertssettings)
@@ -29,6 +30,7 @@ This document describes the parameters for the Redis Enterprise Database custom 
   * [SftpStorage](#sftpstorage)
   * [SwiftStorage](#swiftstorage)
 * [Enums](#enums)
+  * [ConnectionSchedulingPolicy](#connectionschedulingpolicy)
   * [DatabasePersistence](#databasepersistence)
   * [DatabaseStatus](#databasestatus)
   * [DatabaseType](#databasetype)
@@ -74,7 +76,8 @@ The various backup storage options are validated to be mutually exclusive, altho
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| interval | Backup Interval in seconds | int | 86400 | false |
+| interval | Backup Interval in seconds. Specifies the time interval at which periodic backup is performed. | int | 86400 | false |
+| intervalOffset | Backup Interval Offset in seconds. Specifies a time offset in seconds at which the periodic backup job is initiated. The offset is relative to 00:00 UTC for 24-hour mode, and 00:00 + 12:00 UTC for 12-hour mode. This can only be used if the backup interval is 24 hours (86400 seconds) or 12 hours (43200 seconds). If not specified, a random starting time (offset) is automatically chosen. The offset must be less than the backup interval. | *int |  | false |
 | ftp |  | *[FtpStorage](#ftpstorage) |  | false |
 | s3 |  | *[S3Storage](#s3storage) |  | false |
 | abs |  | *[AzureBlobStorage](#azureblobstorage) |  | false |
@@ -91,6 +94,18 @@ Threshold for database alert
 | ----- | ----------- | ------ | -------- | -------- |
 | enabled | Alert enabled or disabled | bool |  | true |
 | threshold | Threshold for alert going on/off | string |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### ConnectionSettings
+ConnectionSettings holds database connection-related settings such as proxy connections, dedicated connection limits, and scheduling policy.
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| internalConnections | The number of internal proxy connections. Defaults to 5 if unspecified. | *int |  | false |
+| globalMaxDedicatedConnections | Defines the maximum number of dedicated server connections for a given database. The total number across all workers. The default is 0 for unlimited. Defaults to 0, which means unlimited. | *int |  | false |
+| minDedicatedConnections | Number of dedicated server connections the DMC has per worker per shard. Defaults to 2 if unspecified. | *int |  | false |
+| connectionLimitType | Connections limit type. | *string |  | false |
+| connectionSchedulingPolicy | Controls how server-side connections are used when forwarding traffic to shards. Values: cmp: Closest to max_pipelined policy. Pick the connection with the most pipelined commands that has not reached the max_pipelined limit. mru: Try to use most recently used connections. spread: Try to use all connections. mnp: Minimal pipeline policy. Pick the connection with the least pipelined commands. | *[ConnectionSchedulingPolicy](#connectionschedulingpolicy) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### DBUpgradeSpec
@@ -235,6 +250,7 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | ossCluster | Enables OSS cluster mode for this database. By default, advertised database topology includes the internal endpoints (pod IPs) for the Redis Enterprise nodes hosting the database shards. To enable external access, configure ossClusterSettings.enableExternalAccess for this RedisEnterpriseDatabase as well as ossClusterSettings.externalAccessType for the RedisEnterpriseCluster. Note: Not all client libraries support OSS cluster mode. | *bool | false | false |
 | ossClusterSettings | Additional OSS cluster mode settings. | *[OSSClusterSettings](#ossclustersettings) |  | false |
 | proxyPolicy | Proxy policy for the database. Supported policies: single, all-master-shards, all-nodes. Defaults to single when ossCluster is disabled, all-master-shards when enabled. | string |  | false |
+| connectionSettings | Connection-related settings such as proxy connections and scheduling policy. | *[ConnectionSettings](#connectionsettings) |  | false |
 | dataInternodeEncryption | Internode encryption (INE) setting that overrides the cluster-wide policy. false: INE is disabled for this database regardless of cluster policy. true: INE is enabled if supported by the database, otherwise creation fails. unspecified: INE is disabled if not supported by the database. Deleting this property after setting it has no effect. | *bool |  | false |
 | databasePort | TCP port assigned to the database within the Redis Enterprise cluster. Must be unique across all databases in the Redis Enterprise cluster. Generated automatically if omitted. Cannot be changed after creation. | *int |  | false |
 | databaseServicePort | A custom port to be exposed by the database services. Can be modified/added/removed after REDB creation. If set, it'll replace the default service port (namely, databasePort or defaultRedisPort). | *int |  | false |
@@ -243,6 +259,7 @@ RedisEnterpriseDatabaseSpec defines the desired state of RedisEnterpriseDatabase
 | isRof | Enables Auto Tiering (formerly Redis on Flash) for Redis databases only. Defaults to false. | *bool | false | false |
 | rofRamSize | RAM portion size for Auto Tiering (formerly Redis on Flash) databases using formats like 100MB or 0.1GB. For v1 (Redis < 8.0): Required. Must be at least 10% of the combined memory size (RAM+Flash) specified in "memorySize". For v2 (Redis >= 8.0): Optional. Specifies the maximum RAM limit for the database. When omitted, RS uses default configuration. Can be used together with rofRamRatio to control both RAM growth strategy and maximum RAM limit. | string |  | false |
 | rofRamRatio | RAM allocation ratio for Redis Flex (v2) databases as a percentage of total data size. Valid range: 0-100. When omitted, RS uses the default value of 50%. Controls how much RAM is allocated per unit of data (e.g., 30% means 3MB RAM per 10MB data). RAM grows proportionally with data until rofRamSize limit is reached (if specified). Only applicable when isRof=true and Redis version >= 8.0 (BigStore v2 - Redis Flex). | *int |  | false |
+| searchOnBigstore | Enables search module indexing on flash storage for Redis Flex (v2) databases. Only applicable when isRof=true and Redis version >= 8.6. Defaults to false. | *bool | false | false |
 | memcachedSaslSecretName | Name of the secret containing credentials for memcached database authentication. Store credentials in an opaque secret with 'username' and 'password' keys. Note: Connections are not encrypted. | string |  | false |
 | redisVersion | Redis OSS version for the database. Specify version as <major.minor> prefix or use channels: 'major': Upgrades to the most recent major Redis version. 'latest': Upgrades to the most recent Redis version. To use 'latest', set redisUpgradePolicy on the cluster first. Back up the database before upgrading. Only applies to Redis databases. Note: Version specification is not supported for Active-Active databases. | string |  | false |
 | upgradeSpec | Database upgrade configuration. | *[DBUpgradeSpec](#dbupgradespec) |  | false |
@@ -283,8 +300,8 @@ RedisEnterpriseDatabaseStatus defines the observed state of RedisEnterpriseDatab
 | replicaSourceType | The type of resource from which the source database URI is derived. If set to 'SECRET', the source database URI is derived from the secret named in the ReplicaSourceName field. The secret must have a key named 'uri' that defines the URI of the source database in the form of 'redis://...'. The type of secret (kubernetes, vault, ...) is determined by the secret mechanism used by the underlying REC object. If set to 'REDB', the source database URI is derived from the RedisEnterpriseDatabase resource named in the ReplicaSourceName field. | [ReplicaSourceType](#replicasourcetype) |  | true |
 | replicaSourceName | The name of the resource from which the source database URI is derived. The type of resource must match the type specified in the ReplicaSourceType field. | string |  | true |
 | compression | GZIP compression level (0-6) to use for replication. | int |  | false |
-| clientKeySecret | Secret that defines the client certificate and key used by the syncer in the target database cluster. The secret must have 2 keys in its map: "cert" which is the PEM encoded certificate, and "key" which is the PEM encoded private key. | *string |  | false |
-| serverCertSecret | Secret that defines the server certificate used by the proxy in the source database cluster. The secret must have 1 key in its map: "cert" which is the PEM encoded certificate. | *string |  | false |
+| clientKeySecret | Secret that defines the client certificate and key used by the syncer in the target database cluster. The secret must the following keys in it's data: - A key named 'cert'/'certificate'/'tls.crt' which is the PEM encoded certificate - A key named 'key'/'tls.key' which is the PEM encoded private key. - Optionally, a key named 'ca.crt', containing the public certificate of the root CA.\n  If present, the root CA certificate is appended to the certificate provided in the 'tls.crt' (or equivalent) key, to form a full certificate chain.\n  Otherwise, the certificate in 'cert'/'certificate'/'tls.crt' must include a full certificate chain inline.\n  This key is typically populated by the cert-manager when it has access to the root certificate. Otherwise, it could be added manually. | *string |  | false |
+| serverCertSecret | Secret that defines the server certificate used by the proxy in the source database cluster. The secret must have 1 key in its map named 'cert'/'certificate'/'tls.crt' which is the PEM encoded certificate. | *string |  | false |
 | tlsSniName | TLS SNI name to use for the replication link. | *string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
@@ -320,6 +337,7 @@ Redis Enterprise Role and ACL Binding
 | awsSecretName | The name of the secret that holds the AWS credentials. The secret must contain the keys "AWS_ACCESS_KEY_ID" and "AWS_SECRET_ACCESS_KEY", and these must hold the corresponding credentials. | string |  | true |
 | bucketName | Amazon S3 bucket name. | string |  | true |
 | subdir | Optional. Amazon S3 subdir under bucket. | string | empty | false |
+| regionName | Optional. Amazon S3 region name. If not specified, the region is auto-detected using a HEAD request to the bucket. For AWS GovCloud or other regions where auto-detection may not work, specify the region explicitly (e.g., "us-gov-east-1"). | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### SftpStorage
@@ -342,6 +360,17 @@ Redis Enterprise Role and ACL Binding
 | prefix | Optional. Prefix (path) of backup files in the swift container. | string | empty | false |
 [Back to Table of Contents](#table-of-contents)
 ## Enums
+
+### ConnectionSchedulingPolicy
+The scheduling policy of DMC proxy connections.
+
+| Value | Description |
+| ----- | ----------- |
+| "cmp" |  |
+| "mru" |  |
+| "spread" |  |
+| "mnp" |  |
+[Back to Table of Contents](#table-of-contents)
 
 ### DatabasePersistence
 Database persistence policy. see https://redis.io/docs/latest/operate/rs/databases/configure/database-persistence/

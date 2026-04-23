@@ -18,6 +18,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [ContainerTimezoneSpec](#containertimezonespec)
   * [CrdbCoordinator](#crdbcoordinator)
   * [CrdbWorker](#crdbworker)
+  * [FeatureSupport](#featuresupport)
   * [HTTPModuleSource](#httpmodulesource)
   * [HTTPSModuleSource](#httpsmodulesource)
   * [ImageSpec](#imagespec)
@@ -65,6 +66,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [UsageMeterSpec](#usagemeterspec)
   * [UserDefinedModule](#userdefinedmodule)
 * [Enums](#enums)
+  * [CBAIdentitySource](#cbaidentitysource)
   * [CertificatesUpdateStatus](#certificatesupdatestatus)
   * [ClusterState](#clusterstate)
   * [IngressMethod](#ingressmethod)
@@ -142,8 +144,9 @@ AuditingConfiguration defines the configuration for auditing database connection
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | dbType |  | string |  | true |
-| version |  | string |  | true |
+| featureSupport |  | [FeatureSupport](#featuresupport) |  | true |
 | major |  | bool |  | false |
+| version |  | string |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### CallHomeClient
@@ -224,6 +227,15 @@ Used to set the timezone across all redis enterprise containers - You can either
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
 | operatingMode | Whether to enable/disable the crdb worker processes | [OperatingMode](#operatingmode) |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### FeatureSupport
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| activeActive |  | bool |  | true |
+| flex |  | bool |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### HTTPModuleSource
@@ -318,6 +330,9 @@ Address of an LDAP server.
 | authenticationQuery | Configuration of authentication queries, mapping between the username, provided to the cluster for authentication, and the LDAP Distinguished Name. | [LDAPAuthenticationQuery](#ldapauthenticationquery) |  | true |
 | authorizationQuery | Configuration of authorization queries, mapping between a user's Distinguished Name and its group memberships. | [LDAPAuthorizationQuery](#ldapauthorizationquery) |  | true |
 | directoryTimeoutSeconds | The connection timeout to the LDAP server when authenticating a user, in seconds | *int |  | false |
+| cba | Whether to allow LDAP as an identity source for certificate-based authentication. Disabled by default. | *bool |  | false |
+| cbaIdentitySource | The certificate subject identity source to use for LDAP lookup. Applicable only when CBA is enabled. One of: SubjectCN, SubjectOID. | *[CBAIdentitySource](#cbaidentitysource) |  | false |
+| cbaIdentityOid | The certificate subject OID to use when CBAIdentitySource is set to SubjectOID. | *string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### LicenseStatus
@@ -439,9 +454,9 @@ Persistent storage configuration for Redis Enterprise cluster
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| enabled | Enables persistent volumes for Redis Enterprise pods. | *bool | True | true |
-| storageClassName | Storage class for persistent volumes in Redis Enterprise pods. Leave empty to use the default storage class. | string |  | true |
-| volumeSize | Size of the persistent volume for each Redis Enterprise pod. To enable resizing after cluster creation, see https://redis.io/docs/latest/operate/kubernetes/re-clusters/expand-pvc/. | resource.Quantity |  | true |
+| enabled | Enables persistent volumes for Redis Enterprise pods. | *bool | true | false |
+| storageClassName | Storage class for persistent volumes in Redis Enterprise pods. Leave empty to use the default storage class. | string |  | false |
+| volumeSize | Size of the persistent volume for each Redis Enterprise pod. To enable resizing after cluster creation, see https://redis.io/docs/latest/operate/kubernetes/re-clusters/expand-pvc/. | resource.Quantity |  | false |
 | enablePersistentVolumeResize | Enables persistent volume resizing. Disabled by default. To enable resizing after cluster creation, see https://redis.io/docs/latest/operate/kubernetes/re-clusters/expand-pvc/. | *bool |  | false |
 [Back to Table of Contents](#table-of-contents)
 
@@ -457,16 +472,16 @@ Used to specify that the timezone is configured to match the host machine timezo
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| apiCertificateSecretName | Secret name to use for cluster's API certificate. The secret must contain the following structure - A key 'name' with the value 'api'. - A key 'certificate' with the value of the certificate in PEM format. - A key 'key' with the value of the private key. If left blank, a cluster-provided certificate will be used. | string |  | false |
-| cmCertificateSecretName | Secret name to use for cluster's CM (Cluster Manager) certificate. The secret must contain the following structure - A key 'name' with the value 'cm'. - A key 'certificate' with the value of the certificate in PEM format. - A key 'key' with the value of the private key. If left blank, a cluster-provided certificate will be used. | string |  | false |
-| metricsExporterCertificateSecretName | Secret name to use for cluster's Metrics Exporter certificate. The secret must contain the following structure - A key 'name' with the value 'metrics_exporter'. - A key 'certificate' with the value of the certificate in PEM format. - A key 'key' with the value of the private key. If left blank, a cluster-provided certificate will be used. | string |  | false |
-| proxyCertificateSecretName | Secret name to use for cluster's Proxy certificate. The secret must contain the following structure - A key 'name' with the value 'proxy'. - A key 'certificate' with the value of the certificate in PEM format. - A key 'key' with the value of the private key. If left blank, a cluster-provided certificate will be used. Note: For Active-Active databases (REAADB), certificate updates are automatically reconciled. When you update this secret, the operator detects the change and automatically executes a CRDB force update (equivalent to 'crdb-cli crdb update --force'), which synchronizes the certificate changes to all participating clusters, eliminating the need for manual intervention. | string |  | false |
-| syncerCertificateSecretName | Secret name to use for cluster's Syncer certificate. The secret must contain the following structure - A key 'name' with the value 'syncer'. - A key 'certificate' with the value of the certificate in PEM format. - A key 'key' with the value of the private key. If left blank, a cluster-provided certificate will be used. Note: For Active-Active databases (REAADB), certificate updates are automatically reconciled. When you update this secret, the operator detects the change and automatically executes a CRDB force update (equivalent to 'crdb-cli crdb update --force'), which synchronizes the certificate changes to all participating clusters, eliminating the need for manual intervention. | string |  | false |
-| ldapClientCertificateSecretName | Secret name to use for cluster's LDAP client certificate. The secret must contain the following structure - A key 'name' with the value 'ldap_client'. - A key 'certificate' with the value of the certificate in PEM format. - A key 'key' with the value of the private key. If left blank, LDAP client certificate authentication will be disabled. | string |  | false |
-| dpInternodeEncryptionCertificateSecretName | Secret name to use for cluster's Data Plane Internode Encryption (DPINE) certificate. The secret must contain the following structure - A key 'name' with the value 'data_internode_encryption'. - A key 'certificate' with the value of the certificate in PEM format. - A key 'key' with the value of the private key. If left blank, a cluster-provided certificate will be used. | string |  | false |
-| cpInternodeEncryptionCertificateSecretName | Secret name to use for cluster's Control Plane Internode Encryption (CPINE) certificate. The secret must contain the following structure - A key 'name' with the value 'ccs_internode_encryption'. - A key 'certificate' with the value of the certificate in PEM format. - A key 'key' with the value of the private key. If left blank, a cluster-provided certificate will be used. | string |  | false |
-| ssoServiceCertificateSecretName | Secret name to use for the SSO Service Provider (SP) certificate. This certificate is used by the cluster to sign SAML requests and encrypt SAML responses. The secret must contain 'name' (set to "sso_service"), 'certificate', and 'key' fields (same format as other cluster certificates). This certificate must be configured as part of the SSO setup and before SSO can be enabled for the cluster. | string |  | false |
-| ssoIssuerCertificateSecretName | Secret name to use for the SSO Identity Provider (IdP) certificate. This is the public certificate from your SAML Identity Provider used to verify SAML assertions. The secret must contain 'name' (set to "sso_issuer") and 'certificate' fields (no 'key' field needed for IdP cert). This certificate must be configured as part of the SSO setup and before SSO can be enabled for the cluster. Note: While IdP metadata XML may contain the certificate, Redis Enterprise Server does not use it from there, so the certificate must be provided separately via this secret. | string |  | false |
+| apiCertificateSecretName | Secret name to use for cluster's API certificate. The secret must have the following keys: - A key named 'certificate'/'cert'/'tls.crt' with the value of the certificate in PEM format. - A key named 'key'/'tls.key with the value of the private key. - Optionally, a key named 'ca.crt', containing the public certificate of the root CA.\n  If present, the root CA certificate is appended to the certificate provided in the 'tls.crt' (or equivalent) key, to form a full certificate chain.\n  Otherwise, the certificate in 'tls.crt' must include a full certificate chain inline.\n  This key is typically populated by the cert-manager when it has access to the root certificate. Otherwise, it could be added manually.\nIf left blank, a cluster-provided certificate will be used. | string |  | false |
+| cmCertificateSecretName | Secret name to use for cluster's CM (Cluster Manager) certificate. The secret must have the following keys: - A key named 'certificate'/'cert'/'tls.crt' with the value of the certificate in PEM format. - A key named 'key'/'tls.key with the value of the private key. - Optionally, a key named 'ca.crt', containing the public certificate of the root CA.\n  If present, the root CA certificate is appended to the certificate provided in the 'tls.crt' (or equivalent) key, to form a full certificate chain.\n  Otherwise, the certificate in 'tls.crt' must include a full certificate chain inline.\n  This key is typically populated by the cert-manager when it has access to the root certificate. Otherwise, it could be added manually.\nIf left blank, a cluster-provided certificate will be used. | string |  | false |
+| metricsExporterCertificateSecretName | Secret name to use for cluster's Metrics Exporter certificate. The secret must have the following keys: - A key named 'certificate'/'cert'/'tls.crt' with the value of the certificate in PEM format. - A key named 'key'/'tls.key with the value of the private key. - Optionally, a key named 'ca.crt', containing the public certificate of the root CA.\n  If present, the root CA certificate is appended to the certificate provided in the 'tls.crt' (or equivalent) key, to form a full certificate chain.\n  Otherwise, the certificate in 'tls.crt' must include a full certificate chain inline.\n  This key is typically populated by the cert-manager when it has access to the root certificate. Otherwise, it could be added manually.\nIf left blank, a cluster-provided certificate will be used. | string |  | false |
+| proxyCertificateSecretName | Secret name to use for cluster's Proxy certificate. The secret must have the following keys: - A key named 'certificate'/'cert'/'tls.crt' with the value of the certificate in PEM format. - A key named 'key'/'tls.key with the value of the private key. - Optionally, a key named 'ca.crt', containing the public certificate of the root CA.\n  If present, the root CA certificate is appended to the certificate provided in the 'tls.crt' (or equivalent) key, to form a full certificate chain.\n  Otherwise, the certificate in 'tls.crt' must include a full certificate chain inline.\n  This key is typically populated by the cert-manager when it has access to the root certificate. Otherwise, it could be added manually.\nIf left blank, a cluster-provided certificate will be used. Note: For Active-Active databases (REAADB), certificate updates are automatically reconciled. When you update this secret, the operator detects the change and automatically executes a CRDB force update (equivalent to 'crdb-cli crdb update --force'), which synchronizes the certificate changes to all participating clusters, eliminating the need for manual intervention. | string |  | false |
+| syncerCertificateSecretName | Secret name to use for cluster's Syncer certificate. The secret must have the following keys: - A key named 'certificate'/'cert'/'tls.crt' with the value of the certificate in PEM format. - A key named 'key'/'tls.key with the value of the private key. - Optionally, a key named 'ca.crt', containing the public certificate of the root CA.\n  If present, the root CA certificate is appended to the certificate provided in the 'tls.crt' (or equivalent) key, to form a full certificate chain.\n  Otherwise, the certificate in 'tls.crt' must include a full certificate chain inline.\n  This key is typically populated by the cert-manager when it has access to the root certificate. Otherwise, it could be added manually.\nIf left blank, a cluster-provided certificate will be used. Note: For Active-Active databases (REAADB), certificate updates are automatically reconciled. When you update this secret, the operator detects the change and automatically executes a CRDB force update (equivalent to 'crdb-cli crdb update --force'), which synchronizes the certificate changes to all participating clusters, eliminating the need for manual intervention. | string |  | false |
+| ldapClientCertificateSecretName | Secret name to use for cluster's LDAP client certificate. The secret must have the following keys: - A key named 'certificate'/'cert'/'tls.crt' with the value of the certificate in PEM format. - A key named 'key'/'tls.key with the value of the private key. - Optionally, a key named 'ca.crt', containing the public certificate of the root CA.\n  If present, the root CA certificate is appended to the certificate provided in the 'tls.crt' (or equivalent) key, to form a full certificate chain.\n  Otherwise, the certificate in 'tls.crt' must include a full certificate chain inline.\n  This key is typically populated by the cert-manager when it has access to the root certificate. Otherwise, it could be added manually.\nIf left blank, LDAP client certificate authentication will be disabled. | string |  | false |
+| dpInternodeEncryptionCertificateSecretName | Secret name to use for cluster's Data Plane Internode Encryption (DPINE) certificate. The secret must have the following keys: - A key named 'certificate'/'cert'/'tls.crt' with the value of the certificate in PEM format. - A key named 'key'/'tls.key with the value of the private key. - Optionally, a key named 'ca.crt', containing the public certificate of the root CA.\n  If present, the root CA certificate is appended to the certificate provided in the 'tls.crt' (or equivalent) key, to form a full certificate chain.\n  Otherwise, the certificate in 'tls.crt' must include a full certificate chain inline.\n  This key is typically populated by the cert-manager when it has access to the root certificate. Otherwise, it could be added manually.\nIf left blank, a cluster-provided certificate will be used. | string |  | false |
+| cpInternodeEncryptionCertificateSecretName | Secret name to use for cluster's Control Plane Internode Encryption (CPINE) certificate. The secret must have the following keys: - A key named 'certificate'/'cert'/'tls.crt' with the value of the certificate in PEM format. - A key named 'key'/'tls.key with the value of the private key. - Optionally, a key named 'ca.crt', containing the public certificate of the root CA.\n  If present, the root CA certificate is appended to the certificate provided in the 'tls.crt' (or equivalent) key, to form a full certificate chain.\n  Otherwise, the certificate in 'tls.crt' must include a full certificate chain inline.\n  This key is typically populated by the cert-manager when it has access to the root certificate. Otherwise, it could be added manually.\nIf left blank, a cluster-provided certificate will be used. | string |  | false |
+| ssoServiceCertificateSecretName | Secret name to use for the SSO Service Provider (SP) certificate. This certificate is used by the cluster to sign SAML requests and encrypt SAML responses, and it must be configured as part of the SSO setup, before SSO can be enabled for the cluster. The secret must have the following keys: - A key named 'certificate'/'cert'/'tls.crt' with the value of the certificate in PEM format. - A key named 'key'/'tls.key with the value of the private key. - Optionally, a key named 'ca.crt', containing the public certificate of the root CA.\n  If present, the root CA certificate is appended to the certificate provided in the 'tls.crt' (or equivalent) key, to form a full certificate chain.\n  Otherwise, the certificate in 'tls.crt' must include a full certificate chain inline.\n  This key is typically populated by the cert-manager when it has access to the root certificate. Otherwise, it could be added manually. | string |  | false |
+| ssoIssuerCertificateSecretName | Secret name to use for the SSO Identity Provider (IdP) certificate. This is the public certificate from your SAML Identity Provider used to verify SAML assertions. The secret must contain a single field named 'certificate'/'cert'/'tls.cert' (no 'key' field needed for IdP cert). This certificate must be configured as part of the SSO setup, before SSO can be enabled for the cluster. Note: While IdP metadata XML may contain the certificate, Redis Enterprise Server does not use it from there, so the certificate must be provided separately via this secret. | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ReadOnlyRootFilesystemPolicy
@@ -503,7 +518,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | ----- | ----------- | ------ | -------- | -------- |
 | nodes | Number of Redis Enterprise nodes (pods) | int32 | 3 | true |
 | serviceAccountName | Name of the service account to use for Redis Enterprise. | string | RedisEnterpriseCluster's name | false |
-| createServiceAccount | Creates a service account for Redis Enterprise. | *bool | True | false |
+| createServiceAccount | Creates a service account for Redis Enterprise. | *bool | true | false |
 | uiServiceType | Service type for exposing the Redis Enterprise UI (https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types). | *v1.ServiceType | ClusterIP | false |
 | uiAnnotations | Additional annotations for the Redis Enterprise UI service. | map[string]string |  | false |
 | servicesRiggerSpec | Specification for service rigger | *[ServicesRiggerConfigurationSpec](#servicesriggerconfigurationspec) |  | false |
@@ -511,7 +526,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | license | Redis Enterprise license key. Defaults to Trial Mode license (https://docs.redislabs.com/latest/rs/administering/cluster-operations/settings/license-keys/#trial-mode). | string | Empty string which is a Trial Mode license | false |
 | licenseSecretName | Name or path of the Kubernetes secret or Vault secret containing the cluster license. When left blank, the license is read from the "license" field. Cannot specify non-empty values in both "license" and "licenseSecretName" fields. The license must be stored under the key "license". | string | Empty string | false |
 | username | Username for the Redis Enterprise admin user. | string | demo@redis.com | false |
-| nodeSelector | Node selector for scheduling Redis Enterprise pods on specific nodes. | *map[string]string |  | false |
+| nodeSelector | Node selector for scheduling pods on specific nodes. This applies to all pods managed by the operator: Redis Enterprise nodes, Services Rigger, and Call Home Client. | *map[string]string |  | false |
 | redisEnterpriseImageSpec | Container image specification for Redis Enterprise. | *[ImageSpec](#imagespec) | the default Redis Enterprise image for this version | false |
 | redisEnterpriseServicesRiggerImageSpec | Container image specification for Services Rigger. | *[ImageSpec](#imagespec) | the default Services Rigger image for this version | false |
 | bootstrapperImageSpec | Container image specification for Bootstrapper. | *[ImageSpec](#imagespec) | the default Bootstrapper image for this version | false |
@@ -526,7 +541,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | antiAffinityAdditionalTopologyKeys | Additional topology keys for anti-affinity rules to support installation across different zones or vCenters. | []string |  | false |
 | activeActive | Ingress connectivity configuration for Active-Active databases. This field is deprecated, use ingressOrRouteSpec instead; cannot be used simultaneously with ingressOrRouteSpec. | *[ActiveActive](#activeactive) |  | false |
 | upgradeSpec | Redis Enterprise upgrade configuration. | *[UpgradeSpec](#upgradespec) |  | false |
-| enforceIPv4 | Forces IPv4 networking by setting the ENFORCE_IPV4 environment variable. | *bool | False | false |
+| enforceIPv4 | Forces IPv4 networking by setting the ENFORCE_IPV4 environment variable. | *bool | false | false |
 | clusterRecovery | Initiates cluster recovery when set to true. This field is automatically cleared after recovery completes. | *bool |  | false |
 | rackAwarenessNodeLabel | Node label that specifies rack ID for creating a rack-aware cluster. Requires the label to exist on all nodes and the operator to have cluster role permissions to list nodes. | string |  | false |
 | priorityClassName | Priority class name for pods managed by the operator. | string |  | false |
@@ -537,9 +552,9 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | redisEnterprisePodAnnotations | Annotations specifically for Redis Enterprise pods. | map[string]string |  | false |
 | podTolerations | Tolerations for all managed pods. For more information, see https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/ | [][v1.Toleration](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#toleration-v1-core) | empty | false |
 | slaveHA | High availability configuration for replica shards. | *[SlaveHA](#slaveha) |  | false |
-| clusterCredentialSecretName | Name or path of the secret containing cluster credentials. Defaults to the cluster name if left blank. For Kubernetes secrets (default): Can be customized to any valid secret name, or left blank to use the cluster name. The secret can be pre-created with 'username' and 'password' fields, or otherwise it will be automatically created with a default username and auto-generated password. For Vault secrets: Can be customized with the path of the secret within Vault. The secret must be pre-created in Vault before REC creation. This field cannot be changed after cluster creation. | string |  | false |
-| clusterCredentialSecretType | Type of secret for cluster credentials (vault or kubernetes). Defaults to kubernetes if left blank. | string |  | true |
-| clusterCredentialSecretRole | Vault role for cluster credentials. Used only when ClusterCredentialSecretType is vault. Defaults to "redis-enterprise-rec" if blank. | string |  | true |
+| clusterCredentialSecretName | Name or path of the secret containing cluster credentials. Defaults to the cluster name if left blank. For Kubernetes secrets (default): Can be customized to any valid secret name, or left blank to use the cluster name. The secret can be pre-created with 'username' and 'password' fields, or otherwise it will be automatically created with a default username and auto-generated password. On running clusters, this field can be changed to point to a different existing secret. The new secret must exist, contain valid 'username' and 'password' fields, and the credentials must work with the RS cluster. For Vault secrets: Can be customized with the path of the secret within Vault. The secret must be pre-created in Vault before REC creation. | string |  | false |
+| clusterCredentialSecretType | Type of secret for cluster credentials (vault or kubernetes). Defaults to kubernetes if left blank. | string |  | false |
+| clusterCredentialSecretRole | Vault role for cluster credentials. Used only when ClusterCredentialSecretType is vault. Defaults to "redis-enterprise-rec" if blank. | string |  | false |
 | vaultCASecret | Name of the Kubernetes secret containing Vault's CA certificate. Defaults to "vault-ca-cert". | string |  | false |
 | redisEnterpriseServicesConfiguration | Configuration for optional Redis Enterprise services. Note: Disabling the CM Server service removes the cluster's UI Service from the Kubernetes cluster. The saslauthd entry is deprecated and will be removed. | *[RedisEnterpriseServicesConfiguration](#redisenterpriseservicesconfiguration) |  | false |
 | dataInternodeEncryption | Cluster-wide internode encryption (INE) policy for new databases. Can be overridden for specific databases using the same setting in RedisEnterpriseDatabase. | *bool |  | false |
@@ -582,7 +597,7 @@ RedisEnterpriseClusterStatus defines the observed state of RedisEnterpriseCluste
 | redisEnterpriseIPFamily | The chosen IP family of the cluster if was specified in REC spec. | v1.IPFamily |  | false |
 | persistenceStatus | The status of the Persistent Volume Claims that are used for Redis Enterprise cluster persistence. The status will correspond to the status of one or more of the PVCs (failed/resizing if one of them is in resize or failed to resize) | [PersistenceStatus](#persistencestatus) |  | false |
 | certificatesStatus | Stores information about cluster certificates and their update process. In Active-Active databases, this is used to detect updates to the certificates, and trigger synchronization across the participating clusters. | *[ClusterCertificatesStatus](#clustercertificatesstatus) |  | false |
-| clusterCredentialSecretName | The name of the secret containing cluster credentials that was set upon cluster creation. This field is used to prevent changes to ClusterCredentialSecretName after cluster creation. | string |  | false |
+| clusterCredentialSecretName | The name of the secret containing cluster credentials currently in use by the cluster. This field tracks the current credential secret name and is updated when the secret name changes. | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseServicesConfiguration
@@ -698,10 +713,10 @@ Specification for service rigger
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| databaseServiceType | Service types for access to databases. should be a comma separated list. The possible values are cluster_ip, headless and load_balancer. | string | cluster_ip,headless | true |
-| serviceNaming | Used to determine how to name the services created automatically when a database is created. When bdb_name is used, the database name will be also used for the service name. When redis-port is used, the service will be named redis-<port> | string | bdb_name | true |
+| databaseServiceType | Service types for access to databases. should be a comma separated list. The possible values are cluster_ip, headless and load_balancer. | string | cluster_ip,headless | false |
+| serviceNaming | Used to determine how to name the services created automatically when a database is created. When bdb_name is used, the database name will be also used for the service name. When redis-port is used, the service will be named redis-<port> | string | bdb_name | false |
 | extraEnvVars |  | []v1.EnvVar |  | false |
-| servicesRiggerAdditionalPodSpecAttributes | ADVANCED USAGE USE AT YOUR OWN RISK - specify pod attributes that are required for the rigger deployment pod. Pod attributes managed by the operator might override these settings (Containers, serviceAccountName, podTolerations, ImagePullSecrets, nodeSelector, PriorityClassName, PodSecurityContext). Also make sure the attributes are supported by the K8s version running on the cluster - the operator does not validate that. | *[v1.PodSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podspec-v1-core) |  | false |
+| servicesRiggerAdditionalPodSpecAttributes | ADVANCED USAGE USE AT YOUR OWN RISK - specify pod attributes that are required for the rigger deployment pod. Pod attributes managed by the operator might override these settings (Containers, serviceAccountName, ImagePullSecrets, nodeSelector, PriorityClassName, PodSecurityContext). podTolerations are merged with tolerations defined here. Also make sure the attributes are supported by the K8s version running on the cluster - the operator does not validate that. | *[v1.PodSpec](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#podspec-v1-core) |  | false |
 | podAnnotations | annotations for the service rigger pod | map[string]string |  | false |
 | databaseServicePortPolicy | DatabaseServicePortPolicy instructs how to determine the service ports for REDB services. Defaults to DatabasePortForward, if not specified otherwise. Note - Regardless whether this flag is set or not, if an REDB/REAADB is configured with databaseServicePort that would be the port exposed by the Service. Options:\n\tDatabasePortForward - The service port will be the same as the database port.\n\tRedisDefaultPort - The service port will be the default Redis port (6379). | [ServicePortPolicy](#serviceportpolicy) | DatabasePortForward | false |
 [Back to Table of Contents](#table-of-contents)
@@ -719,7 +734,7 @@ Specification for service rigger
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| enabled | Enables detection and mitigation of pod startup issues. | *bool | False | true |
+| enabled | Enables detection and mitigation of pod startup issues. | *bool | false | true |
 | startingThresholdSeconds | Time in seconds to wait before taking action on a pod stuck during startup. Set to 0 to disable. | *uint32 | 540 | true |
 [Back to Table of Contents](#table-of-contents)
 
@@ -756,6 +771,15 @@ UserDefinedModule represents a user-defined Redis module to be downloaded and in
 | source | Source location for downloading the module | [ModuleSource](#modulesource) |  | true |
 [Back to Table of Contents](#table-of-contents)
 ## Enums
+
+### CBAIdentitySource
+CBAIdentitySource specifies the certificate subject identity source for LDAP lookup.
+
+| Value | Description |
+| ----- | ----------- |
+| "SubjectCN" |  |
+| "SubjectOID" |  |
+[Back to Table of Contents](#table-of-contents)
 
 ### CertificatesUpdateStatus
 CertificatesUpdateStatus stores the status of the cluster's certificates update

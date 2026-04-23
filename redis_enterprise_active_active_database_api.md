@@ -17,23 +17,23 @@ This document describes the parameters for the Redis Enterprise Active Active Da
 ## Objects
 
 ### ParticipatingCluster
-Instance/cluster specifications and configurations.
+Specifies the configuration for a participating cluster in the Active-Active database.
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| name | The name of the remote cluster CR to link. | string |  | true |
-| externalReplicationPort | The desired replication endpoint's port number for users who utilize LoadBalancers for sync between AA replicas and need to provide the specific port number that the LoadBalancer listens to. | *int |  | false |
-| namespace | Namespace in which the REAADB object will be deployed to within the corresponding participating cluster. The user must ensure that the Redis Enterprise operator is configured to watch this namespace in the corresponding cluster, and the required RBAC configuration is properly set up. See https://redis.io/docs/latest/operate/kubernetes/re-clusters/multi-namespace/ for more information how to set up multiple namespaces. If no namespace is specified, then the REAADB is deployed to the REC's namespace in the corresponding cluster. | string |  | false |
+| name | Name of the remote cluster custom resource to link. | string |  | true |
+| externalReplicationPort | Port number for the replication endpoint. Use this field when you use LoadBalancers for synchronization between Active-Active replicas and need to specify the port number that the LoadBalancer listens on. | *int |  | false |
+| namespace | Namespace where the REAADB object is deployed within the corresponding participating cluster. Ensure that the Redis Enterprise operator is configured to watch this namespace in the corresponding cluster and that the required RBAC configuration is properly set up. For more information about setting up multiple namespaces, see https://redis.io/docs/latest/operate/kubernetes/re-clusters/multi-namespace/. If you don't specify a namespace, the REAADB is deployed to the REC's namespace in the corresponding cluster. | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### ParticipatingClusterStatus
-Status of participating cluster.
+The status of a participating cluster.
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| name | The name of the remote cluster CR that is linked. | string |  | true |
-| id | The corresponding ID of the instance in the active-active database. | *int64 |  | false |
-| replicationStatus | The replication status of the participating cluster | [ReplicationStatus](#replicationstatus) |  | false |
+| name | Name of the linked remote cluster custom resource. | string |  | true |
+| id | ID of the instance in the Active-Active database. | *int64 |  | false |
+| replicationStatus | Replication status of the participating cluster. | [ReplicationStatus](#replicationstatus) |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseActiveActiveDatabase
@@ -60,9 +60,9 @@ RedisEnterpriseActiveActiveDatabaseSpec defines the desired state of RedisEnterp
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| redisEnterpriseCluster | Connection to Redis Enterprise Cluster | *[RedisEnterpriseConnection](#redisenterpriseconnection) |  | false |
-| participatingClusters | The list of instances/ clusters specifications and configurations. | []*[ParticipatingCluster](#participatingcluster) |  | true |
-| globalConfigurations | The Active-Active database global configurations, contains the global properties for each of the participating clusters/ instances databases within the Active-Active database. | *[RedisEnterpriseDatabaseSpec](#redisenterprisedatabasespec) |  | true |
+| redisEnterpriseCluster | Connection to the Redis Enterprise Cluster. | *[RedisEnterpriseConnection](#redisenterpriseconnection) |  | false |
+| participatingClusters | List of participating cluster specifications and configurations. | []*[ParticipatingCluster](#participatingcluster) |  | true |
+| globalConfigurations | Global configurations for the Active-Active database. Contains the global properties for each participating cluster database within the Active-Active database. | *[RedisEnterpriseDatabaseSpec](#redisenterprisedatabasespec) |  | true |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseActiveActiveDatabaseStatus
@@ -70,26 +70,26 @@ RedisEnterpriseActiveActiveDatabaseStatus defines the observed state of RedisEnt
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| specStatus | Whether the desired specification is valid | [SpecStatusName](#specstatusname) |  | false |
-| status | The status of the active active database. This status does not include the replication link (data-path) status For the replication link status please view the 'Replication Status' or the 'status.replicationStatus' on the custom resource. | [ActiveActiveDatabaseStatus](#activeactivedatabasestatus) |  | false |
-| participatingClusters | The list of instances/ clusters statuses. | []*[ParticipatingClusterStatus](#participatingclusterstatus) |  | false |
-| globalConfigurations | The active-active default global configurations linked REDB | string |  | false |
-| linkedRedbs | The linked REDBs. | []string |  | false |
-| guid | The active-active database corresponding GUID. | string |  | false |
-| lastTaskUid | The last active-active database task UID. | string |  | false |
-| redisEnterpriseCluster | The Redis Enterprise Cluster Object this Resource is associated with | string |  | false |
-| secretsStatus | The status of the secrets | []*[SecretStatus](#secretstatus) |  | false |
-| replicationStatus | The overall replication status | [ReplicationStatus](#replicationstatus) |  | false |
-| clusterCertificatesGeneration | Tracks the certificate generation from the participating cluster's REC.Status.CertificatesStatus.Generation. The operator automatically monitors this field to detect when proxy or syncer certificates are updated on the local participating cluster. When a change is detected, the operator automatically executes a CRDB force update (equivalent to 'crdb-cli crdb update --force'), which synchronizes the certificate changes to all participating clusters, preventing sync issues. This eliminates the manual step of running crdb-cli commands when rotating certificates in Active-Active deployments on Kubernetes. | *int64 |  | false |
+| specStatus | Indicates whether the desired specification is valid. | [SpecStatusName](#specstatusname) |  | false |
+| status | Status of the Active-Active database. This status doesn't include the replication link (data path) status. To view the replication link status, see the ReplicationStatus field or status.replicationStatus on the custom resource. | [ActiveActiveDatabaseStatus](#activeactivedatabasestatus) |  | false |
+| participatingClusters | List of participating cluster statuses. | []*[ParticipatingClusterStatus](#participatingclusterstatus) |  | false |
+| globalConfigurations | Name of the REDB with the default global configurations for the Active-Active database. | string |  | false |
+| linkedRedbs | List of linked REDBs. | []string |  | false |
+| guid | GUID of the Active-Active database. | string |  | false |
+| lastTaskUid | UID of the last Active-Active database task. | string |  | false |
+| redisEnterpriseCluster | Name of the Redis Enterprise Cluster that this resource is associated with. | string |  | false |
+| secretsStatus | Status of the secrets. | []*[SecretStatus](#secretstatus) |  | false |
+| replicationStatus | Overall replication status. | [ReplicationStatus](#replicationstatus) |  | false |
+| clusterCertificatesGeneration | Certificate generation number from the participating cluster's REC.Status.CertificatesStatus.Generation. The operator monitors this field to detect when proxy or syncer certificates are updated on the local participating cluster. When the operator detects a change, it automatically runs a CRDB force update (equivalent to 'crdb-cli crdb update --force'), which synchronizes the certificate changes to all participating clusters and prevents sync issues. This eliminates the manual step of running crdb-cli commands when you rotate certificates in Active-Active deployments on Kubernetes. | *int64 |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### SecretStatus
-Status of secrets.
+The status of a secret.
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| name | The name of the secret. | string |  | true |
-| status | The status of the secret. | [ActiveActiveDatabaseSecretStatus](#activeactivedatabasesecretstatus) |  | false |
+| name | Name of the secret. | string |  | true |
+| status | Status of the secret. | [ActiveActiveDatabaseSecretStatus](#activeactivedatabasesecretstatus) |  | false |
 [Back to Table of Contents](#table-of-contents)
 ## Enums
 
@@ -105,13 +105,13 @@ Status of secrets.
 
 | Value | Description |
 | ----- | ----------- |
-| "pending" | Active-active database is pending creation. |
-| "active" | Active-active database is ready to be used. |
-| "active-change-pending" | Database is ready to be used, but a change is pending. |
-| "delete-pending" | Active-active database will be deleted soon. |
-| "creation-failed" | Active-active database creation has failed. |
-| "error" | Active-active database is in recovery. ActiveActiveDatabaseStatusRecovery ActiveActiveDatabaseStatus = "recovery" Active-active database status error. |
-| "" | Active-active database status unknown. |
+| "pending" | The Active-Active database is pending creation. |
+| "active" | The Active-Active database is ready to use. |
+| "active-change-pending" | The database is ready to use, but a change is pending. |
+| "delete-pending" | The Active-Active database is scheduled for deletion. |
+| "creation-failed" | Active-Active database creation failed. |
+| "error" | The Active-Active database is in recovery. ActiveActiveDatabaseStatusRecovery ActiveActiveDatabaseStatus = "recovery" The Active-Active database encountered an error. |
+| "" | The Active-Active database status is unknown. |
 [Back to Table of Contents](#table-of-contents)
 
 ### ReplicationStatus
