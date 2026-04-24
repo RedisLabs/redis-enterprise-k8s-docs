@@ -12,7 +12,7 @@ This document describes the parameters for the Redis Enterprise Remote Cluster c
 ## Objects
 
 ### RedisEnterpriseRemoteCluster
-RedisEntepriseRemoteCluster represents a remote participating cluster.
+Represents a remote participating cluster.
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
@@ -35,12 +35,12 @@ RedisEnterpriseRemoteClusterList contains a list of RedisEnterpriseRemoteCluster
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| recName | The name of the REC that the RERC is pointing at | string |  | true |
-| recNamespace | The namespace of the REC that the RERC is pointing at | string |  | true |
-| secretName | The name of the secret containing cluster credentials. Must be of the following format: "redis-enterprise-<RERC name>" | string |  | false |
-| apiFqdnUrl | The URL of the cluster, will be used for the active-active database URL. | string |  | true |
-| apiPort | The port number of the cluster's URL used for connectivity/sync | *int |  | false |
-| dbFqdnSuffix | The database URL suffix, will be used for the active-active database replication endpoint and replication endpoint SNI. | string |  | false |
+| recName | Name of the REC that this RERC points to. | string |  | true |
+| recNamespace | Namespace of the REC that this RERC points to. | string |  | true |
+| secretName | Name of the secret containing cluster credentials. Must use the following format: "redis-enterprise-<RERC name>". | string |  | false |
+| apiFqdnUrl | URL of the cluster. Used for the Active-Active database URL. | string |  | true |
+| apiPort | Port number of the cluster's URL. Used for connectivity and synchronization. | *int |  | false |
+| dbFqdnSuffix | Database URL suffix. Used for the Active-Active database replication endpoint and replication endpoint SNI. | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 
 ### RedisEnterpriseRemoteClusterStatus
@@ -48,11 +48,11 @@ RedisEnterpriseRemoteClusterList contains a list of RedisEnterpriseRemoteCluster
 
 | Field | Description | Scheme | Default Value | Required |
 | ----- | ----------- | ------ | -------- | -------- |
-| local | Indicates whether this object represents a local or a remote cluster. | *bool |  | false |
-| status | The status of the remote cluster. | [RemoteClusterStatus](#remoteclusterstatus) |  | false |
-| specStatus | Whether the desired specification is valid. | [SpecStatusName](#specstatusname) |  | false |
-| observedGeneration | observedGeneration is the most recent generation observed for this RERC. It corresponds to the RERC's generation, which is updated by the API Server. | int64 |  | false |
-| internalObservedSecretResourceVersion | The observed secret resource version. Used for internal purposes only. | string |  | false |
+| local | Indicates whether this object represents a local or remote cluster. | *bool |  | false |
+| status | Status of the remote cluster. | [RemoteClusterStatus](#remoteclusterstatus) |  | false |
+| specStatus | Indicates whether the desired specification is valid. | [SpecStatusName](#specstatusname) |  | false |
+| observedGeneration | Most recent generation observed for this RERC. Corresponds to the RERC's generation, which is updated by the API Server. | int64 |  | false |
+| internalObservedSecretResourceVersion | Observed secret resource version. For internal use only. | string |  | false |
 [Back to Table of Contents](#table-of-contents)
 ## Enums
 

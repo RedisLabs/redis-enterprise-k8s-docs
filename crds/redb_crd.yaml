@@ -292,7 +292,17 @@ spec:
                         - gcsSecretName
                       type: object
                     interval:
-                      description: Backup Interval in seconds
+                      description: "Backup Interval in seconds. Specifies the time interval
+                        in seconds at which periodic backup is performed."
+                      type: integer
+                    intervalOffset:
+                      description: "Backup Interval Offset in seconds. Specifies a time offset in
+                        seconds at which the periodic backup job starts. This can only
+                        be used if the backup interval is 24 hours (86400 seconds) or
+                        12 hours (43200 seconds). The offset is relative to 00:00 UTC
+                        for 24-hour mode, and 00:00 + 12:00 UTC for 12-hour mode. If
+                        not specified, a random starting time (offset) is automatically
+                        chosen. The offset must be less than the backup interval."
                       type: integer
                     mount:
                       description: MountPointStorage
@@ -318,6 +328,12 @@ spec:
                           type: string
                         subdir:
                           description: Optional. Amazon S3 subdir under bucket.
+                          type: string
+                        regionName:
+                          description: Optional. Amazon S3 region name. If not specified, the region
+                            is auto-detected using a HEAD request to the bucket. For AWS GovCloud
+                            or other regions where auto-detection may not work, specify the region
+                            explicitly (e.g., "us-gov-east-1").
                           type: string
                       required:
                         - awsSecretName
@@ -495,6 +511,41 @@ spec:
                     the default value will be chosen according to the value of ossCluster
                     - single if disabled, all-master-shards when enabled'
                   type: string
+                connectionSettings:
+                  description: Connection-related settings such as proxy connections and scheduling policy.
+                  properties:
+                    internalConnections:
+                      description: The number of internal proxy connections. Defaults to 5 if unspecified.
+                      type: integer
+                    connectionSchedulingPolicy:
+                      description: 'Controls how server-side connections are used when forwarding traffic to shards.
+                        Values:
+                        cmp: Closest to max_pipelined policy. Pick the connection with the most pipelined commands that has not reached the max_pipelined limit.
+                        mru: Try to use most recently used connections.
+                        spread: Try to use all connections.
+                        mnp: Minimal pipeline policy. Pick the connection with the least pipelined commands.'
+                      type: string
+                      enum:
+                        - cmp
+                        - mru
+                        - spread
+                        - mnp
+                    globalMaxDedicatedConnections:
+                      description: 'Defines the maximum number of dedicated server connections for a given database.
+                        The total number across all workers. The default is 0 for unlimited.
+                        Defaults to 0, which means unlimited.'
+                      type: integer
+                    minDedicatedConnections:
+                      description: 'Number of dedicated server connections the DMC has per worker per shard.
+                        Defaults to 2 if unspecified.'
+                      type: integer
+                    connectionLimitType:
+                      description: Connections limit type.
+                      type: string
+                      enum:
+                        - per-thread
+                        - per-shard
+                  type: object
                 rackAware:
                   description: 'Enables rack awareness for improved availability.
                     See https://redis.io/docs/latest/operate/rs/clusters/configure/rack-zone-awareness/'
@@ -514,11 +565,19 @@ spec:
                   items:
                     properties:
                       clientKeySecret:
-                        description: 'Secret that defines the client certificate and
+                        description: "Secret that defines the client certificate and
                           key used by the syncer in the target database cluster. The
-                          secret must have 2 keys in its map: "cert" which is the PEM
-                          encoded certificate, and "key" which is the PEM encoded private
-                          key.'
+                          secret must the following keys in it's data: - A key named
+                          'cert'/'certificate'/'tls.crt' which is the PEM encoded certificate
+                          - A key named 'key'/'tls.key' which is the PEM encoded private
+                          key. - Optionally, a key named 'ca.crt', containing the public
+                          certificate of the root CA. If present, the root CA certificate
+                          is appended to the certificate provided in the 'tls.crt'
+                          (or equivalent) key, to form a full certificate chain. Otherwise,
+                          the certificate in 'cert'/'certificate'/'tls.crt' must include
+                          a full certificate chain inline. This key is typically populated
+                          by the cert-manager when it has access to the root certificate.
+                          Otherwise, it could be added manually."
                         type: string
                       compression:
                         description: GZIP compression level (0-6) to use for replication.
@@ -541,9 +600,10 @@ spec:
                           field.
                         type: string
                       serverCertSecret:
-                        description: 'Secret that defines the server certificate used
+                        description: "Secret that defines the server certificate used
                           by the proxy in the source database cluster. The secret must
-                          have 1 key in its map: "cert" which is the PEM encoded certificate.'
+                          have 1 key in its map named 'cert'/'certificate'/'tls.crt'
+                          which is the PEM encoded certificate."
                         type: string
                       tlsSniName:
                         description: TLS SNI name to use for the replication link.
@@ -631,6 +691,11 @@ spec:
                   type: integer
                   minimum: 0
                   maximum: 100
+                searchOnBigstore:
+                  description: Enables search module indexing on flash storage for Redis
+                    Flex (v2) databases. Only applicable when isRof=true and Redis version
+                    >= 8.6. Defaults to false.
+                  type: boolean
                 redisVersion:
                   description: Redis OSS version.
                     Version can be specified via <major.minor> prefix,
