@@ -429,6 +429,16 @@ spec:
                 encryptPkeys:
                   description: 'Private key encryption Possible values: true/false'
                   type: boolean
+                usageReportFields:
+                  description: 'Controls which fields are included in the usage
+                    (call-home) report. "all" also includes node count and hostname;
+                    "restricted" sends the reduced report. Default is
+                    "restricted". Should not be changed unless instructed by
+                    Redis support.'
+                  enum:
+                    - all
+                    - restricted
+                  type: string
                 certificates:
                   description: RS Cluster Certificates.
                     Used to modify the certificates used by the cluster.
@@ -9598,6 +9608,11 @@ spec:
                   type: boolean
                 encryptPkeys:
                   type: boolean
+                usageReportFields:
+                  enum:
+                    - all
+                    - restricted
+                  type: string
                 certificates:
                   properties:
                     apiCertificateSecretName:

@@ -79,6 +79,7 @@ This document describes the parameters for the Redis Enterprise Cluster custom r
   * [ServicePortPolicy](#serviceportpolicy)
   * [ServiceType](#servicetype)
   * [SpecStatusName](#specstatusname)
+  * [UsageReportFields](#usagereportfields)
 ## Objects
 
 ### APIServiceSpec
@@ -565,6 +566,7 @@ RedisEnterpriseClusterSpec defines the desired state of RedisEnterpriseCluster
 | redisOnFlashSpec | Redis Flex (previously known as Redis on Flash) configuration. When provided, the cluster can create Redis Flex databases. | *[RedisOnFlashSpec](#redisonflashspec) |  | false |
 | ocspConfiguration | An API object that represents the cluster's OCSP configuration. To enable OCSP, the cluster's proxy certificate should contain the OCSP responder URL. | *[OcspConfiguration](#ocspconfiguration) |  | false |
 | encryptPkeys | Private key encryption Possible values: true/false | *bool |  | false |
+| usageReportFields | Controls which fields are included in the usage (call-home) report. "all" also includes node count and hostname; "restricted" sends the reduced report. Default is "restricted". Should not be changed unless instructed by Redis support. | *[UsageReportFields](#usagereportfields) |  | false |
 | redisEnterpriseIPFamily | When the operator is running in a dual-stack environment (both IPv4 and IPv6 network interfaces are available), specifies the IP family of the network interface that will be used by the Redis Enterprise cluster, as well as services created by the operator (API, UI, Prometheus services). | v1.IPFamily |  | false |
 | containerTimezone | Container timezone configuration. While the default timezone on all containers is UTC, this setting can be used to set the timezone on services rigger/bootstrapper/RS containers. Currently the only supported value is to propagate the host timezone to all containers. | *[ContainerTimezoneSpec](#containertimezonespec) |  | false |
 | ingressOrRouteSpec | Access configurations for the Redis Enterprise cluster and databases. At most one of ingressOrRouteSpec or activeActive fields can be set at the same time. | *[IngressOrRouteSpec](#ingressorroutespec) |  | false |
@@ -902,4 +904,13 @@ Whether the REC specification is valid (custom resource)
 | ----- | ----------- |
 | "Invalid" | Specification status invalid |
 | "Valid" | Specification status valid |
+[Back to Table of Contents](#table-of-contents)
+
+### UsageReportFields
+Which fields are included in the usage (call-home) report.
+
+| Value | Description |
+| ----- | ----------- |
+| "all" | Full report, including node count and hostname. |
+| "restricted" | Reduced report without the extended fields. |
 [Back to Table of Contents](#table-of-contents)
