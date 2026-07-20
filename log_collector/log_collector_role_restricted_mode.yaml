@@ -140,6 +140,12 @@ rules:
   - redisenterprisedatabases.app.redislabs.com
   - redisenterpriseremoteclusters.app.redislabs.com
   - redisenterpriseactiveactivedatabases.app.redislabs.com
+  - redisenterpriseacls.app.redislabs.com
+  - redisenterpriseusers.app.redislabs.com
+  - redisenterpriseclusterroles.app.redislabs.com
+  - redisenterpriseclusterrolebindings.app.redislabs.com
+  - redisenterpriseroles.app.redislabs.com
+  - redisenterpriserolebindings.app.redislabs.com
   verbs:
   - list
   - get

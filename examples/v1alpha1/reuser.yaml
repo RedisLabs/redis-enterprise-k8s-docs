@@ -1,0 +1,16 @@
+apiVersion: app.redislabs.com/v1alpha1
+kind: RedisEnterpriseUser
+metadata:
+  name: some-user
+  labels:
+    app: redis-enterprise
+spec:
+  # The email address for the user.
+  email: some-user@some-company.com
+
+  # The username associated with the user.
+  username: some-user
+
+  # Names of one or more secrets holding the user's password.
+  passwordSecrets:
+  - name: some-user-secret

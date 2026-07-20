@@ -307,6 +307,21 @@ spec:
                         Existing databases are not affected and can override this setting individually.'
                       type: boolean
                   type: object
+                accessControl:
+                  description: Access control configuration for the cluster.
+                  properties:
+                    policy:
+                      description: Policy settings for access control behavior.
+                      properties:
+                        allowREDBRolesPermissions:
+                          description: 'Controls whether the deprecated REDB spec.rolesPermissions
+                            field is reconciled. When enabled (default): both spec.rolesPermissions
+                            and RedisEnterpriseRole objects are reconciled. When
+                            disabled: only RedisEnterpriseRole objects are reconciled,
+                            spec.rolesPermissions is ignored.'
+                          type: boolean
+                      type: object
+                  type: object
                 bootstrapperImageSpec:
                   description: Specification for Bootstrapper container image
                   properties:
@@ -428,6 +443,13 @@ spec:
                   type: boolean
                 encryptPkeys:
                   description: 'Private key encryption Possible values: true/false'
+                  type: boolean
+                dmcExternalCBAAuthentication:
+                  description: 'Whether Certificate-Based Authentication (CBA) for
+                    client connections to databases is delegated to an external gRPC
+                    authentication service, instead of being handled locally inside
+                    DMC (the data-path management proxy). If omitted, this field is
+                    evaluated as false. Possible values: true/false'
                   type: boolean
                 usageReportFields:
                   description: 'Controls which fields are included in the usage
@@ -1042,6 +1064,49 @@ spec:
                     "licenseSecretName", only one of these fields can be used to pass
                     the license string. The license needs to be stored under the key "license".
                   type: string
+                metricsConfig:
+                  description: Cluster-level configuration for metrics. Currently controls
+                    which database tag keys may be exposed as labels on Redis Enterprise
+                    metrics.
+                  properties:
+                    exposeDatabaseTags:
+                      description: Master switch for tag-derived metrics. When true,
+                        database tag keys listed in metricsTagKeysExposed may be used
+                        as labels by metrics consumers. When false, no database tag
+                        keys are exposed as metric labels, even if listed in metricsTagKeysExposed.
+                        Defaults to false if unset.
+                      type: boolean
+                    metricsTagKeysExposed:
+                      description: Allowlist of database tag keys that may be exposed
+                        as metric labels when exposeDatabaseTags is true. Keys not listed
+                        here are never exposed as metric labels even if they appear on
+                        a database. Keys are lowercased on the cluster, must be 1-64
+                        characters and not whitespace-only, and may contain ASCII letters,
+                        digits, spaces, '-', '_', '.', '+', '@', and ':'. At most 50
+                        keys are allowed. Defaults to empty list if unset.
+                      items:
+                        type: string
+                      type: array
+                    maxRequestsInFlight:
+                      description: Maximum number of concurrent master_aggregator scrape requests.
+                        Set to 0 to disable the limit. Defaults to 2 if unset.
+                      type: integer
+                    keyDistributionEnabled:
+                      description: When true, emit Prometheus classic histogram metrics for key size/items distributions. Defaults to false if unset.
+                      type: boolean
+                    keySizeBuckets:
+                      type: string
+                      description: Comma-separated bucket boundaries for key size distribution histograms (e.g., "128M,512M"). Defaults to empty string if unset.
+                    keyItemsBuckets:
+                      type: string
+                      description: Comma-separated bucket boundaries for key items distribution histograms (e.g., "1M,8M"). Defaults to empty string if unset.
+                    localStorageMaxSizeMb:
+                      description: Maximum size in MB for local metrics storage. Defaults to 1024 if unset.
+                      type: integer
+                    localStorageRetentionDays:
+                      type: integer
+                      description: Number of days to retain local metrics data. Defaults to 8 if unset.
+                  type: object
                 nodeSelector:
                   additionalProperties:
                     type: string
@@ -4650,6 +4715,13 @@ spec:
                             When this option is enabled, the SYS_RESOURCE capability is
                             added to the Redis Enterprise pods, and their allowPrivilegeEscalation
                             field is set. Turned off by default.
+                          type: boolean
+                      type: object
+                    fips:
+                      description: FIPS-140 compliance mode settings.
+                      properties:
+                        enabled:
+                          description: Toggles whether FIPS-140 compliance mode is enabled or not. Defaults to false.
                           type: boolean
                       type: object
                   type: object
@@ -9538,6 +9610,14 @@ spec:
                     dbConnsAuditing:
                       type: boolean
                   type: object
+                accessControl:
+                  properties:
+                    policy:
+                      properties:
+                        allowREDBRolesPermissions:
+                          type: boolean
+                      type: object
+                  type: object
                 bootstrapperImageSpec:
                   properties:
                     digestHash:
@@ -9607,6 +9687,8 @@ spec:
                 dataInternodeEncryption:
                   type: boolean
                 encryptPkeys:
+                  type: boolean
+                dmcExternalCBAAuthentication:
                   type: boolean
                 usageReportFields:
                   enum:
@@ -9906,6 +9988,27 @@ spec:
                   type: string
                 licenseSecretName:
                   type: string
+                metricsConfig:
+                  properties:
+                    exposeDatabaseTags:
+                      type: boolean
+                    metricsTagKeysExposed:
+                      items:
+                        type: string
+                      type: array
+                    maxRequestsInFlight:
+                      type: integer
+                    keyDistributionEnabled:
+                      type: boolean
+                    keySizeBuckets:
+                      type: string
+                    keyItemsBuckets:
+                      type: string
+                    localStorageMaxSizeMb:
+                      type: integer
+                    localStorageRetentionDays:
+                      type: integer
+                  type: object
                 nodeSelector:
                   additionalProperties:
                     type: string
@@ -10308,33 +10411,22 @@ spec:
                 resp3Default:
                   type: boolean
                 securityContext:
-                  description: The security configuration that will be applied to RS
-                    pods.
                   properties:
                     readOnlyRootFilesystemPolicy:
-                      description: Policy controlling whether to enable read-only root
-                        filesystem for the Redis Enterprise software containers. Note
-                        that certain filesystem paths remain writable through mounted
-                        volumes to ensure proper functionality.
                       properties:
                         enabled:
-                          description: Whether to enable read-only root filesystem
-                            for the Redis Enterprise software containers. Default is
-                            false.
                           type: boolean
                       required:
                         - enabled
                       type: object
                     resourceLimits:
-                      description: Settings pertaining to resource limits management by
-                        the Redis Enterprise node container.
                       properties:
                         allowAutoAdjustment:
-                          description: Allow Redis Enterprise to adjust resource limits,
-                            like max open file descriptors, of its data plane processes.
-                            When this option is enabled, the SYS_RESOURCE capability is
-                            added to the Redis Enterprise pods, and their allowPrivilegeEscalation
-                            field is set. Turned off by default.
+                          type: boolean
+                      type: object
+                    fips:
+                      properties:
+                        enabled:
                           type: boolean
                       type: object
                   type: object

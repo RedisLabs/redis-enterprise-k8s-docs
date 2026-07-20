@@ -20,6 +20,7 @@ from collections import OrderedDict
 from multiprocessing import Process
 
 RLEC_CONTAINER_NAME = "redis-enterprise-node"
+BOOTSTRAPPER_CONTAINER_NAME = "bootstrapper"
 OPERATOR_LABEL = "app=redis-enterprise"
 MODE_RESTRICTED = "restricted"
 MODE_ALL = "all"
@@ -37,7 +38,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 LOGGER_FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 logging.basicConfig(format=LOGGER_FORMAT)
-VERSION_LOG_COLLECTOR = "8.0.20-25"
+VERSION_LOG_COLLECTOR = "8.2.0-10"
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
 
@@ -56,7 +57,13 @@ OPERATOR_CUSTOM_RESOURCE_DEFINITION_NAMES = [
     "redisenterpriseclusters.app.redislabs.com",
     "redisenterprisedatabases.app.redislabs.com",
     "redisenterpriseremoteclusters.app.redislabs.com",
-    "redisenterpriseactiveactivedatabases.app.redislabs.com"
+    "redisenterpriseactiveactivedatabases.app.redislabs.com",
+    "redisenterpriseacls.app.redislabs.com",
+    "redisenterpriseusers.app.redislabs.com",
+    "redisenterpriseclusterroles.app.redislabs.com",
+    "redisenterpriseroles.app.redislabs.com",
+    "redisenterpriseclusterrolebindings.app.redislabs.com",
+    "redisenterpriserolebindings.app.redislabs.com"
 ]
 
 # Resources that aren't created by the operator,
@@ -67,6 +74,12 @@ NON_LABELED_RESOURCES = [
     "RedisEnterpriseDatabase",
     "RedisEnterpriseRemoteCluster",
     "RedisEnterpriseActiveActiveDatabase",
+    "RedisEnterpriseACL",
+    "RedisEnterpriseUser",
+    "RedisEnterpriseClusterRole",
+    "RedisEnterpriseClusterRoleBinding",
+    "RedisEnterpriseRole",
+    "RedisEnterpriseRoleBinding",
     "VolumeAttachment",
     "NetworkPolicy",
 ]
@@ -76,6 +89,12 @@ RESTRICTED_MODE_API_RESOURCES = [
     "RedisEnterpriseDatabase",
     "RedisEnterpriseRemoteCluster",
     "RedisEnterpriseActiveActiveDatabase",
+    "RedisEnterpriseACL",
+    "RedisEnterpriseUser",
+    "RedisEnterpriseClusterRole",
+    "RedisEnterpriseClusterRoleBinding",
+    "RedisEnterpriseRole",
+    "RedisEnterpriseRoleBinding",
     "StatefulSet",
     "Deployment",
     "ReplicaSet",
@@ -119,15 +138,6 @@ ALL_ONLY_API_RESOURCES = [
     "VolumeAttachment",
     "gateways.networking.istio.io",
     "VirtualService",
-]
-
-RBAC_RESOURCES = [
-    "RedisEnterpriseACL",
-    "RedisEnterpriseUser",
-    "RedisEnterpriseClusterRole",
-    "RedisEnterpriseClusterRoleBinding",
-    "RedisEnterpriseDatabaseRole",
-    "RedisEnterpriseDatabaseRoleBinding",
 ]
 
 SHA_DIGESTS_BEFORE_RESTRICTED_MODE_SUPPORT = [
@@ -216,6 +226,7 @@ def collect_from_ns(namespace, output_dir, api_resources, logs_from_all_pods=Fal
     collect_connectivity_check(namespace, ns_output_dir, k8s_cli)
     get_redis_enterprise_debug_info(namespace, ns_output_dir, k8s_cli, mode, skip_support_package, k8s_cli_version)
     collect_pod_rs_logs(namespace, ns_output_dir, k8s_cli, mode, k8s_cli_version)
+    collect_bootstrapper_proc_info(namespace, ns_output_dir, k8s_cli, mode)
     collect_resources_list(namespace, ns_output_dir, k8s_cli, mode)
     collect_events(namespace, ns_output_dir, k8s_cli, mode)
     collect_api_resources(namespace, ns_output_dir, k8s_cli, api_resources, selector, collect_empty_files)
@@ -529,10 +540,6 @@ def run(results):
     if mode == MODE_ALL:
         api_resources = api_resources + ALL_ONLY_API_RESOURCES
 
-    collect_rbac = results.collect_rbac_resources
-    if collect_rbac:
-        api_resources = api_resources + RBAC_RESOURCES
-
     processes = []
     for namespace in namespaces:
         proc = Process(target=collect_from_ns,
@@ -622,6 +629,60 @@ def collect_pod_rs_logs(namespace, output_dir, k8s_cli, mode, k8s_cli_version):
                            rs_pod_name, out)
         else:
             logger.info("Namespace '%s': Collected rs config from pod: %s", namespace, rs_pod_name)
+
+
+# POSIX-sh probe run inside the bootstrapper container. We scan /proc/<pid>/comm to
+# locate the process named "bootstrapper" and read its runtime stats (threads,
+# open fds, sockets, memory) from there.
+BOOTSTRAPPER_PROC_PROBE = r"""
+pid=
+for c in /proc/[0-9]*/comm; do
+  read cn < "$c" 2>/dev/null || continue
+  if [ "$cn" = bootstrapper ]; then p=${c#/proc/}; pid=${p%/comm}; break; fi
+done
+if [ -z "$pid" ]; then echo "bootstrapper process not found under /proc"; exit 0; fi
+echo "=== bootstrapper pid: $pid ==="
+echo "=== cmdline (NUL-separated) ==="; cat /proc/$pid/cmdline 2>/dev/null; echo
+echo "=== status ==="; cat /proc/$pid/status 2>/dev/null
+echo "=== limits ==="; cat /proc/$pid/limits 2>/dev/null
+fd=0; for f in /proc/$pid/fd/*; do [ -L "$f" ] && fd=$((fd+1)); done
+echo "=== open_fd_count: $fd ==="
+tk=0; for t in /proc/$pid/task/*; do [ -d "$t" ] && tk=$((tk+1)); done
+echo "=== thread_count: $tk ==="
+echo "=== net/tcp: port 8787=hex 2253; st 01=ESTAB 06=TIME_WAIT 08=CLOSE_WAIT 0A=LISTEN ==="
+cat /proc/$pid/net/tcp 2>/dev/null
+echo "=== net/tcp6 ==="; cat /proc/$pid/net/tcp6 2>/dev/null
+echo "=== smaps_rollup ==="; cat /proc/$pid/smaps_rollup 2>/dev/null
+exit 0
+"""
+
+
+def collect_bootstrapper_proc_info(namespace, output_dir, k8s_cli, mode):
+    """
+    Collect /proc runtime stats for the bootstrapper process in each Redis
+    Enterprise pod: thread count, open fds, TCP socket states (to spot leaked
+    liveness connections on :8787), limits and memory. The bootstrapper is not
+    PID 1, so the probe scans /proc for the process named 'bootstrapper'.
+    """
+    proc_info_dir = os.path.join(output_dir, "bootstrapper_proc_info")
+    selector = get_selector(mode)
+    rs_pod_names = get_pod_names(namespace=namespace, k8s_cli=k8s_cli, selector=selector)
+    if not rs_pod_names:
+        logger.warning("Namespace '%s' Could not get rs pods list - "
+                       "skipping bootstrapper /proc info collection", namespace)
+        return
+    make_dir(proc_info_dir)
+    for rs_pod_name in rs_pod_names:
+        cmd = (f"{k8s_cli} -n {namespace} exec {rs_pod_name} "
+               f"-c {BOOTSTRAPPER_CONTAINER_NAME} -- sh -c '{BOOTSTRAPPER_PROC_PROBE}'")
+        return_code, out = run_shell_command(cmd)
+        write_output_to_file(proc_info_dir, f"{rs_pod_name}-bootstrapper-proc.txt", out)
+        if return_code:
+            logger.warning("Namespace '%s': Failed to collect bootstrapper /proc info from "
+                           "pod '%s', output: %s", namespace, rs_pod_name, out)
+        else:
+            logger.info("Namespace '%s': Collected bootstrapper /proc info from pod: %s",
+                        namespace, rs_pod_name)
 
 
 def create_debug_info_package_on_pod(namespace, pod_name, attempt, k8s_cli):
@@ -1481,10 +1542,5 @@ if __name__ == "__main__":
                         help='Collect empty log files for missing resources.')
     parser.add_argument('--helm_release_name', action="store", type=str,
                         help='Collect resources related to the given Helm release name.')
-    # Notice! This configuration is temporary once RBAC API is fully implemented and released,
-    # the log collector will collect RBAC API resources by default.
-    parser.add_argument('--collect_rbac_resources', action="store_true",
-                        help='Temporary development flag. '
-                             'Collect all role based access control related custom resources.')
-    parser.set_defaults(collect_istio=False, collect_rbac_resources=False)
+    parser.set_defaults(collect_istio=False)
     run(parser.parse_args())
