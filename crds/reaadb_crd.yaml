@@ -129,6 +129,17 @@ spec:
                       - name
                     type: object
                   type: array
+                managedTags:
+                  description: 'List of user-declared tag keys (from spec.globalConfigurations.tags)
+                    that were last successfully reconciled to the Active-Active database''s
+                    BDBs (default config and every participating-cluster instance). Used
+                    to detect tag deletions on the next reconcile: keys present here but
+                    absent from the current spec.globalConfigurations.tags are removed
+                    from all BDB tag sets. Operator-internal keys (managed_by, redb_resource,
+                    global_configurations_spec, etc.) are not tracked here.'
+                  items:
+                    type: string
+                  type: array
               type: object
             spec:
               description: Defines the desired state of RedisEnterpriseActiveActiveDatabase.
@@ -568,14 +579,18 @@ spec:
                         have no effect.
                       type: boolean
                     auditing:
-                      description: Database auditing configuration.
+                      description: |-
+                        Database auditing configuration.
                       properties:
                         dbConnsAuditing:
-                          description:
-                            "Enables auditing of database connection and authentication events.
+                          description: |-
+                            Deprecated: use auditMode instead.
+                            Enables auditing of database connection and authentication events.
                             When enabled, connection, authentication, and disconnection events are tracked and sent
                             to the configured audit listener (configured at the cluster level).
-                            The cluster-level auditing configuration must be set before enabling this on a database."
+                            The cluster-level auditing configuration must be set before enabling this on a database.
+                            Setting dbConnsAuditing to true is equivalent to auditMode "connection".
+                            If both dbConnsAuditing and auditMode are set, auditMode takes precedence.
                           type: boolean
                       type: object
                     databasePort:
@@ -898,6 +913,22 @@ spec:
                         - redis
                         - memcached
                       type: string
+                    tags:
+                      additionalProperties:
+                        type: string
+                      description: 'Tags to apply to the Active-Active database, as a map
+                        of key to value. The same set is merged into the BDB tags array
+                        of the default config and every participating-cluster instance.
+                        On key collision with an existing BDB tag, the value here wins.
+                        Removing a key after it was previously synced (recorded in
+                        status.managedTags) removes it from every BDB. Operator-reserved
+                        keys (managed_by, redb_name, redb_namespace, db_service_port,
+                        oss_cluster_access, redb_resource, redb_resource_name,
+                        global_configurations_spec, replication_endpoint_port, rerc_name,
+                        and the secret-tracking keys redis.io/db-sec-name,
+                        redis.io/db-sec-latest, redis.io/certs-latest, redis.io/bu-sec-name,
+                        redis.io/bu-sec-latest) are not allowed and will be rejected.'
+                      type: object
                   type: object
               required:
                 - participatingClusters

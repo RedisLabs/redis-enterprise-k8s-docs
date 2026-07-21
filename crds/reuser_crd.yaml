@@ -1,0 +1,281 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: redisenterpriseusers.app.redislabs.com
+spec:
+  group: app.redislabs.com
+  names:
+    kind: RedisEnterpriseUser
+    listKind: RedisEnterpriseUserList
+    plural: redisenterpriseusers
+    singular: redisenterpriseuser
+    shortNames:
+    - reuser
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    additionalPrinterColumns:
+    - jsonPath: .status.username
+      name: Username
+      type: string
+    - jsonPath: .spec.email
+      name: Email
+      type: string
+    - jsonPath: .status.signinStatus
+      name: Signin Status
+      type: string
+    - jsonPath: .status.rolesDisplay
+      name: Roles
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    schema:
+      openAPIV3Schema:
+        description: RedisEnterpriseUser represents a user definition within a Redis
+          Enterprise Cluster.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: RedisEnterpriseUserSpec defines the desired state of a RedisEnterpriseUser.
+            properties:
+              alerts:
+                description: Email alerts settings for this user. User alerts settings
+                  are effective only when cluster alerts settings are configured.
+                properties:
+                  enabled:
+                    description: Master toggle for email alerts.
+                    type: boolean
+                  clusterAlerts:
+                    description: UserClusterAlertSettings specifies cluster alerts
+                      settings for a user.
+                    properties:
+                      enabled:
+                        description: Determines whether cluster alerts are enabled
+                          for the user.
+                        type: boolean
+                    required:
+                    - enabled
+                    type: object
+                  databaseAlerts:
+                    description: UserDatabaseAlertSettings specifies database alerts
+                      settings for a user.
+                    properties:
+                      databases:
+                        description: The databases for which alerts are enabled for
+                          this user. If not specified, defaults to all databases.
+                        items:
+                          description: A reference to another object.
+                          properties:
+                            kind:
+                              description: Kind of the referent.
+                              type: string
+                            name:
+                              description: Name of the referent.
+                              type: string
+                              minLength: 1
+                              maxLength: 253
+                          type: object
+                        type: array
+                    type: object
+                required:
+                - enabled
+                type: object
+              authMethod:
+                description: >-
+                  AuthMethod selects how the user authenticates to Redis Enterprise.
+                  'Basic' (the default) authenticates with Basic Auth, using a password sourced from passwordSecrets.
+                  'Certificate' authenticates with a client certificate whose subject matches
+                  certificateSubjectLine; such users carry no password (passwordSecrets must be empty).
+                  Certificate users additionally require certificate-based authentication to be
+                  configured at the cluster level.
+                type: string
+                enum:
+                - Basic
+                - Certificate
+                default: Basic
+              certificateSubjectLine:
+                description: >-
+                  CertificateSubjectLine is the certificate subject line (RFC2253) used to
+                  match the client certificate for certificate-auth users.
+                  Required when authMethod is 'Certificate'; must not be set otherwise.
+                type: string
+              email:
+                description: >-
+                  The email address for the user. Optional (Redis Enterprise accepts an empty email).
+                  For password users, changing the email after creation is permitted only while
+                  spec.passwordSecrets contains exactly one entry: to change the email of a user
+                  with two password secrets (Rotatable rotation in progress), first reduce
+                  passwordSecrets to a single entry, change the email, then add the second secret back.
+                  Certificate-auth users carry no password, so this restriction does not apply to them.
+                type: string
+              passwordMode:
+                description: >-
+                  Defines how passwords are managed for this user.
+                  Single: Only a single password secret can be specified at a time.
+                  Passwords changes can be done by mutating the secret in-place,
+                  or by replacing the secret reference to point to another secret.
+                  Rotatable: Allows for one or two password secrets to be specified simultaneously.
+                  The secrets are required to be immutable, and the operator automatically sets
+                  their 'immutable: true' attribute (K8s secrets only) if not already set.
+                  Vault secrets are assumed to be used as immutable and are not made immutable automatically.
+                  Password changes are typically done by adding a new password secret,
+                  and later removing the old one when it's no longer needed.
+                  When empty, Single behavior is used.
+                  Must not be set for certificate-auth users (authMethod: Certificate), which carry no password.
+                type: string
+                enum:
+                - Single
+                - Rotatable
+              passwordSecrets:
+                description: >-
+                  List of one or more secrets holding the user's password.
+                  Each secret must have a key named 'password' with the user's desired password.
+                  If multiple secrets are specified, then the passwords from all of them can be
+                  used for authenticating as the user.
+                  When the user signin status is 'Locked', the user won't be able to
+                  authenticate with Redis Enterprise API or UI, and
+                  must be unlocked by another user with Admin-role access.
+                  To unlock the user, first set a new password via the 'passwordSecrets' field,
+                  and then follow the password reset instructions in the following link:
+                  https://redis.io/docs/latest/operate/rs/security/access-control/manage-users/login-lockout/#unlock-locked-user-accounts
+                items:
+                  description: A reference to a Secret object.
+                  properties:
+                    name:
+                      description: Name of the Secret.
+                      type: string
+                      minLength: 1
+                      maxLength: 253
+                  required:
+                  - name
+                  type: object
+                type: array
+              username:
+                description: The username associated with the user. The username must
+                  be unique within the Redis Enterprise cluster, and include only
+                  ASCII characters except &,<,>,". If not specified, a default username
+                  is assigned and can be discovered via the status section of the
+                  RedisEnterpriseUser.
+                type: string
+            type: object
+          status:
+            description: RedisEnterpriseUserStatus defines the observed state of a
+              RedisEnterpriseUser.
+            properties:
+              conditions:
+                description: Conditions represent the latest available observations of the user's state.
+                items:
+                  description: Condition contains details for one aspect of the current state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      description: lastTransitionTime is the last time the condition transitioned from one status to another.
+                      format: date-time
+                      type: string
+                    message:
+                      description: message is a human readable message indicating details about the transition.
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      description: observedGeneration represents the .metadata.generation that the condition was set based upon.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      description: reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - status
+                  - type
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
+              observedGeneration:
+                description: The most recent generation of this resource that was
+                  observed and acted upon by the controller.
+                format: int64
+                type: integer
+              passwordIssueDate:
+                description: The date in which the password was set.
+                type: string
+              passwordSecrets:
+                description: List of secrets holding the user's password, with their versions.
+                items:
+                  description: A versioned reference to a Secret object.
+                  properties:
+                    name:
+                      description: Name of the Secret.
+                      type: string
+                    version:
+                      description: Version of the Secret.
+                      type: string
+                  type: object
+                type: array
+              roles:
+                description: List of roles assigned to the user.
+                items:
+                  description: A reference to another object.
+                  properties:
+                    kind:
+                      description: Kind of the referent.
+                      type: string
+                    name:
+                      description: Name of the referent.
+                      type: string
+                      minLength: 1
+                      maxLength: 253
+                  type: object
+                type: array
+              rolesDisplay:
+                description: Formatted string representation of the roles assigned to the user.
+                type: string
+              signinStatus:
+                description: >-
+                  Sign-in status for the user.
+                  When set to 'Locked', the user won't be able to
+                  authenticate with Redis Enterprise API or UI, and
+                  must be unlocked by another user with Admin-role access.
+                  To unlock the user, set a new password via the 'passwordSecrets' field,
+                  and then follow the password reset instructions in the following link:
+                  https://redis.io/docs/latest/operate/rs/security/access-control/manage-users/login-lockout/#unlock-locked-user-accounts
+                type: string
+              uid:
+                description: The internal UID of the User object defined in the Redis
+                  Enterprise Cluster.
+                type: string
+              username:
+                description: The effective username assigned for the user.
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

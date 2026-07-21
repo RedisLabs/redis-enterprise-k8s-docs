@@ -1,0 +1,105 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: redisenterpriseclusterroles.app.redislabs.com
+spec:
+  group: app.redislabs.com
+  names:
+    kind: RedisEnterpriseClusterRole
+    listKind: RedisEnterpriseClusterRoleList
+    plural: redisenterpriseclusterroles
+    singular: redisenterpriseclusterrole
+    shortNames:
+    - recrole
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    additionalPrinterColumns:
+    - jsonPath: .spec.managementRole
+      name: Management Role
+      type: string
+    - jsonPath: .spec.acl.name
+      name: ACL
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    schema:
+      openAPIV3Schema:
+        description: RedisEnterpriseClusterRole is a cluster role definition. It
+          grants users cluster-scoped access across the Redis Enterprise Cluster.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: RedisEnterpriseClusterRoleSpec defines the desired state
+              of a RedisEnterpriseClusterRole.
+            properties:
+              managementRole:
+                description: ManagementRole is the named set of Redis Enterprise
+                  management permissions assigned to this cluster role. If omitted,
+                  the role uses the None management role.
+                enum:
+                - Admin
+                - ClusterMember
+                - ClusterViewer
+                - DBMember
+                - DBViewer
+                - UserManager
+                - None
+                type: string
+              acl:
+                description: |-
+                  ACL defines the data access permissions granted by this cluster role.
+                  Users with this role can access any database in the Redis Enterprise Cluster,
+                  subject to the permissions granted by the referenced ACL.
+                  References a RedisEnterpriseACL (kind RedisEnterpriseACL or empty) or an
+                  internal Redis Enterprise ACL by name (kind 'redis_acl').
+                properties:
+                  kind:
+                    description: Kind of the referent.
+                    type: string
+                    enum:
+                    - ""
+                    - RedisEnterpriseACL
+                    - redis_acl
+                  name:
+                    description: Name of the referent.
+                    type: string
+                    minLength: 1
+                    maxLength: 253
+                required:
+                - name
+                type: object
+            type: object
+          status:
+            description: RedisEnterpriseRoleStatus defines the observed state of
+              a Redis Enterprise role object. This status type is used by both RedisEnterpriseClusterRole
+              and RedisEnterpriseRole which share the same status structure.
+            properties:
+              uid:
+                description: The internal UID of the Role object defined in the Redis
+                  Enterprise Cluster.
+                type: string
+              observedGeneration:
+                description: The most recent generation of this resource that was
+                  observed and acted upon by the controller.
+                format: int64
+                type: integer
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

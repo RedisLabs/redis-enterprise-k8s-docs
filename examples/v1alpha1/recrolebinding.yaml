@@ -1,0 +1,17 @@
+apiVersion: app.redislabs.com/v1alpha1
+kind: RedisEnterpriseClusterRoleBinding
+metadata:
+  name: cluster-admin
+  labels:
+    app: redis-enterprise
+spec:
+  # A reference to a RedisEnterpriseClusterRole object.
+  roleRef:
+    kind: RedisEnterpriseClusterRole
+    name: cluster-admin
+
+  # A reference to one or more RedisEnterpriseUser objects,
+  # or other kinds of subjects.
+  subjects:
+  - kind: RedisEnterpriseUser
+    name: some-admin-user
