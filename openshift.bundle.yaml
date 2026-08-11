@@ -178,6 +178,7 @@ rules:
       - route.openshift.io
     resources:
       - routes
+      - routes/custom-host
     verbs:
       - create
       - delete
@@ -186,13 +187,6 @@ rules:
       - patch
       - update
       - watch
-  - apiGroups:
-      - route.openshift.io
-    resources:
-      - routes/custom-host
-    verbs:
-      - create
-      - update
   - apiGroups:
       - security.openshift.io
     resourceNames:
@@ -545,21 +539,6 @@ spec:
                         Existing databases are not affected and can override this setting individually.'
                       type: boolean
                   type: object
-                accessControl:
-                  description: Access control configuration for the cluster.
-                  properties:
-                    policy:
-                      description: Policy settings for access control behavior.
-                      properties:
-                        allowREDBRolesPermissions:
-                          description: 'Controls whether the deprecated REDB spec.rolesPermissions
-                            field is reconciled. When enabled (default): both spec.rolesPermissions
-                            and RedisEnterpriseRole objects are reconciled. When
-                            disabled: only RedisEnterpriseRole objects are reconciled,
-                            spec.rolesPermissions is ignored.'
-                          type: boolean
-                      type: object
-                  type: object
                 bootstrapperImageSpec:
                   description: Specification for Bootstrapper container image
                   properties:
@@ -681,13 +660,6 @@ spec:
                   type: boolean
                 encryptPkeys:
                   description: 'Private key encryption Possible values: true/false'
-                  type: boolean
-                dmcExternalCBAAuthentication:
-                  description: 'Whether Certificate-Based Authentication (CBA) for
-                    client connections to databases is delegated to an external gRPC
-                    authentication service, instead of being handled locally inside
-                    DMC (the data-path management proxy). If omitted, this field is
-                    evaluated as false. Possible values: true/false'
                   type: boolean
                 usageReportFields:
                   description: 'Controls which fields are included in the usage
@@ -1302,49 +1274,6 @@ spec:
                     "licenseSecretName", only one of these fields can be used to pass
                     the license string. The license needs to be stored under the key "license".
                   type: string
-                metricsConfig:
-                  description: Cluster-level configuration for metrics. Currently controls
-                    which database tag keys may be exposed as labels on Redis Enterprise
-                    metrics.
-                  properties:
-                    exposeDatabaseTags:
-                      description: Master switch for tag-derived metrics. When true,
-                        database tag keys listed in metricsTagKeysExposed may be used
-                        as labels by metrics consumers. When false, no database tag
-                        keys are exposed as metric labels, even if listed in metricsTagKeysExposed.
-                        Defaults to false if unset.
-                      type: boolean
-                    metricsTagKeysExposed:
-                      description: Allowlist of database tag keys that may be exposed
-                        as metric labels when exposeDatabaseTags is true. Keys not listed
-                        here are never exposed as metric labels even if they appear on
-                        a database. Keys are lowercased on the cluster, must be 1-64
-                        characters and not whitespace-only, and may contain ASCII letters,
-                        digits, spaces, '-', '_', '.', '+', '@', and ':'. At most 50
-                        keys are allowed. Defaults to empty list if unset.
-                      items:
-                        type: string
-                      type: array
-                    maxRequestsInFlight:
-                      description: Maximum number of concurrent master_aggregator scrape requests.
-                        Set to 0 to disable the limit. Defaults to 2 if unset.
-                      type: integer
-                    keyDistributionEnabled:
-                      description: When true, emit Prometheus classic histogram metrics for key size/items distributions. Defaults to false if unset.
-                      type: boolean
-                    keySizeBuckets:
-                      type: string
-                      description: Comma-separated bucket boundaries for key size distribution histograms (e.g., "128M,512M"). Defaults to empty string if unset.
-                    keyItemsBuckets:
-                      type: string
-                      description: Comma-separated bucket boundaries for key items distribution histograms (e.g., "1M,8M"). Defaults to empty string if unset.
-                    localStorageMaxSizeMb:
-                      description: Maximum size in MB for local metrics storage. Defaults to 1024 if unset.
-                      type: integer
-                    localStorageRetentionDays:
-                      type: integer
-                      description: Number of days to retain local metrics data. Defaults to 8 if unset.
-                  type: object
                 nodeSelector:
                   additionalProperties:
                     type: string
@@ -4953,13 +4882,6 @@ spec:
                             When this option is enabled, the SYS_RESOURCE capability is
                             added to the Redis Enterprise pods, and their allowPrivilegeEscalation
                             field is set. Turned off by default.
-                          type: boolean
-                      type: object
-                    fips:
-                      description: FIPS-140 compliance mode settings.
-                      properties:
-                        enabled:
-                          description: Toggles whether FIPS-140 compliance mode is enabled or not. Defaults to false.
                           type: boolean
                       type: object
                   type: object
@@ -9848,14 +9770,6 @@ spec:
                     dbConnsAuditing:
                       type: boolean
                   type: object
-                accessControl:
-                  properties:
-                    policy:
-                      properties:
-                        allowREDBRolesPermissions:
-                          type: boolean
-                      type: object
-                  type: object
                 bootstrapperImageSpec:
                   properties:
                     digestHash:
@@ -9925,8 +9839,6 @@ spec:
                 dataInternodeEncryption:
                   type: boolean
                 encryptPkeys:
-                  type: boolean
-                dmcExternalCBAAuthentication:
                   type: boolean
                 usageReportFields:
                   enum:
@@ -10226,27 +10138,6 @@ spec:
                   type: string
                 licenseSecretName:
                   type: string
-                metricsConfig:
-                  properties:
-                    exposeDatabaseTags:
-                      type: boolean
-                    metricsTagKeysExposed:
-                      items:
-                        type: string
-                      type: array
-                    maxRequestsInFlight:
-                      type: integer
-                    keyDistributionEnabled:
-                      type: boolean
-                    keySizeBuckets:
-                      type: string
-                    keyItemsBuckets:
-                      type: string
-                    localStorageMaxSizeMb:
-                      type: integer
-                    localStorageRetentionDays:
-                      type: integer
-                  type: object
                 nodeSelector:
                   additionalProperties:
                     type: string
@@ -10649,22 +10540,33 @@ spec:
                 resp3Default:
                   type: boolean
                 securityContext:
+                  description: The security configuration that will be applied to RS
+                    pods.
                   properties:
                     readOnlyRootFilesystemPolicy:
+                      description: Policy controlling whether to enable read-only root
+                        filesystem for the Redis Enterprise software containers. Note
+                        that certain filesystem paths remain writable through mounted
+                        volumes to ensure proper functionality.
                       properties:
                         enabled:
+                          description: Whether to enable read-only root filesystem
+                            for the Redis Enterprise software containers. Default is
+                            false.
                           type: boolean
                       required:
                         - enabled
                       type: object
                     resourceLimits:
+                      description: Settings pertaining to resource limits management by
+                        the Redis Enterprise node container.
                       properties:
                         allowAutoAdjustment:
-                          type: boolean
-                      type: object
-                    fips:
-                      properties:
-                        enabled:
+                          description: Allow Redis Enterprise to adjust resource limits,
+                            like max open file descriptors, of its data plane processes.
+                            When this option is enabled, the SYS_RESOURCE capability is
+                            added to the Redis Enterprise pods, and their allowPrivilegeEscalation
+                            field is set. Turned off by default.
                           type: boolean
                       type: object
                   type: object
@@ -11942,99 +11844,15 @@ spec:
                     after REDB creation. If set, it'll replace the default service port (namely, databasePort or defaultRedisPort).
                   type: integer
                 auditing:
-                  description: |-
-                    Database auditing configuration.
+                  description: Database auditing configuration.
                   properties:
-                    auditMode:
-                      description: |-
-                        Scope used for database auditing.
-                        "disabled" - auditing is disabled.
-                        "connection" - audit connection, authentication and disconnection events only.
-                        "connection_and_crud" - audit connection events and data operations (CRUD).
-                        The cluster-level auditing configuration must be set before enabling auditing on a database.
-                        Defaults to "disabled" when not set; removing the auditing configuration disables auditing.
-                      enum:
-                        - disabled
-                        - connection
-                        - connection_and_crud
-                      type: string
                     dbConnsAuditing:
                       description: |-
-                        Deprecated: use auditMode instead.
                         Enables auditing of database connection and authentication events.
                         When enabled, connection, authentication, and disconnection events are tracked and sent
                         to the configured audit listener (configured at the cluster level).
                         The cluster-level auditing configuration must be set before enabling this on a database.
-                        Setting dbConnsAuditing to true is equivalent to auditMode "connection".
-                        If both dbConnsAuditing and auditMode are set, auditMode takes precedence.
                       type: boolean
-                    sourceIpFilter:
-                      description: |-
-                        Filters data operation auditing events by client source IP address.
-                        Only relevant when auditMode is "connection_and_crud".
-                        Note: source IP filtering may not work as expected for Redis clients running outside
-                        of the Kubernetes cluster. The operator does not automatically customize the
-                        LoadBalancer service or ingress/route to preserve the client source IP, so connections
-                        may be seen with a translated (NAT'd) address. If you choose to use this filter, it is
-                        your responsibility to ensure source IP preservation is configured and to verify that
-                        auditing behaves as expected in your environment.
-                      properties:
-                        cidrRanges:
-                          description: List of CIDR ranges (IPv4 and/or IPv6) to filter
-                            by.
-                          items:
-                            type: string
-                          type: array
-                        enabled:
-                          description: |-
-                            Whether the source IP filter is active.
-                            When enabled, at least one entry must be provided across ipAddresses and cidrRanges.
-                          type: boolean
-                        filterType:
-                          description: |-
-                            Filter type to use for the source IP filter.
-                            "inclusive" - only audit events from the listed addresses/ranges.
-                            "exclusive" - audit events from all addresses/ranges except the listed ones.
-                            The combined number of ipAddresses and cidrRanges may not exceed 512.
-                          enum:
-                            - inclusive
-                            - exclusive
-                          type: string
-                        ipAddresses:
-                          description: List of IP addresses (IPv4 and/or IPv6) to filter
-                            by.
-                          items:
-                            type: string
-                          type: array
-                      type: object
-                    usernameFilter:
-                      description: |-
-                        Filters data operation auditing events by client usernames.
-                        Only relevant when auditMode is "connection_and_crud".
-                      properties:
-                        enabled:
-                          description: |-
-                            Whether the username filter is active.
-                            When enabled, usernames must contain at least one entry.
-                          type: boolean
-                        filterType:
-                          description: |-
-                            Filter type to use for the username filter.
-                            "inclusive" - only audit events from the listed usernames.
-                            "exclusive" - audit events from all usernames except the listed ones.
-                          enum:
-                            - inclusive
-                            - exclusive
-                          type: string
-                        usernames:
-                          description: |-
-                            List of usernames to filter by.
-                            Each username must be 1-255 printable ASCII characters and may not contain
-                            the characters '&', '<', '>' or '"'. At most 512 usernames are allowed.
-                          items:
-                            type: string
-                          type: array
-                      type: object
                   type: object
                 databaseSecretName:
                   description: 'Name of the secret containing the database password (Redis databases only).
@@ -12237,9 +12055,7 @@ spec:
                     Defaults to false.
                   type: boolean
                 rolesPermissions:
-                  description: 'Deprecated: List of Redis Enterprise ACL and Role bindings
-                    to apply. This field is deprecated and is ignored when the cluster''s
-                    spec.accessControl.policy.allowREDBRolesPermissions is set to false.'
+                  description: List of Redis Enteprise ACL and Role bindings to apply
                   items:
                     description: Redis Enterprise Role and ACL Binding
                     properties:
@@ -12376,18 +12192,6 @@ spec:
                     Note - Deleting this property after explicitly setting its value shall have no effect.
                     Please view the corresponding field in RS doc for more info.
                   type: boolean
-                tags:
-                  additionalProperties:
-                    type: string
-                  description: 'Tags to apply to the database, as a map of key to
-                    value. Tags are merged into the BDB''s tags on the cluster.
-                    If a key here collides with an existing BDB tag, the value from
-                    spec.tags wins. Removing a key from spec.tags after it was previously
-                    synced (recorded in status.managedTags) will remove it from the BDB.
-                    Operator-reserved keys (managed_by, redb_name, redb_namespace,
-                    db_service_port, oss_cluster_access) are not allowed and will be
-                    rejected.'
-                  type: object
               type: object
             status:
               description: RedisEnterpriseDatabaseStatus defines the observed state of
@@ -12536,60 +12340,6 @@ spec:
                 bigstoreVersion:
                   description: BigStore version for Redis on Flash databases (1 for Auto Tiering, 2 for Redis Flex). Read-only field populated from RS.
                   type: integer
-                rolesPermissions:
-                  description: |-
-                    The set of role-permission tuples associated with this database.
-                    Populated from spec.rolesPermissions (deprecated), RedisEnterpriseRole objects whose
-                    scopes reference this database, and RedisEnterpriseClusterRole objects (whose ACLs
-                    apply to every database in the Redis Enterprise Cluster).
-                  items:
-                    description: |-
-                      RolePermissionStatus is an observed role-ACL binding on the database.
-                      Role kind: RedisEnterpriseRole, RedisEnterpriseClusterRole, or role; ACL kind:
-                      RedisEnterpriseACL or redis_acl.
-                    properties:
-                      role:
-                        description: Reference to the role.
-                        properties:
-                          kind:
-                            description: Kind of the referent.
-                            type: string
-                          name:
-                            description: Name of the referent.
-                            type: string
-                        type: object
-                      acl:
-                        description: Reference to the ACL.
-                        properties:
-                          kind:
-                            description: Kind of the referent.
-                            type: string
-                          name:
-                            description: Name of the referent.
-                            type: string
-                        type: object
-                    required:
-                      - role
-                      - acl
-                    type: object
-                  type: array
-                managedTags:
-                  description: 'List of user-declared tag keys (from spec.tags) that
-                    were last successfully reconciled to the BDB. Used to detect tag
-                    deletions on the next reconcile: keys present here but absent from
-                    the current spec.tags are removed from the BDB. Operator-internal
-                    keys (managed_by, redb_name, etc.) are not tracked here.'
-                  items:
-                    type: string
-                  type: array
-                managedFields:
-                  description: 'List of optional spec fields the operator has taken
-                    ownership of after the user configured them at least once, so removing
-                    such a field resets the BDB to its default instead of leaving the
-                    inherited value in place.'
-                  items:
-                    type: string
-                  type: array
               type: object
           type: object
 ---
@@ -12815,17 +12565,6 @@ spec:
                     required:
                       - name
                     type: object
-                  type: array
-                managedTags:
-                  description: 'List of user-declared tag keys (from spec.globalConfigurations.tags)
-                    that were last successfully reconciled to the Active-Active database''s
-                    BDBs (default config and every participating-cluster instance). Used
-                    to detect tag deletions on the next reconcile: keys present here but
-                    absent from the current spec.globalConfigurations.tags are removed
-                    from all BDB tag sets. Operator-internal keys (managed_by, redb_resource,
-                    global_configurations_spec, etc.) are not tracked here.'
-                  items:
-                    type: string
                   type: array
               type: object
             spec:
@@ -13266,18 +13005,14 @@ spec:
                         have no effect.
                       type: boolean
                     auditing:
-                      description: |-
-                        Database auditing configuration.
+                      description: Database auditing configuration.
                       properties:
                         dbConnsAuditing:
-                          description: |-
-                            Deprecated: use auditMode instead.
-                            Enables auditing of database connection and authentication events.
+                          description:
+                            "Enables auditing of database connection and authentication events.
                             When enabled, connection, authentication, and disconnection events are tracked and sent
                             to the configured audit listener (configured at the cluster level).
-                            The cluster-level auditing configuration must be set before enabling this on a database.
-                            Setting dbConnsAuditing to true is equivalent to auditMode "connection".
-                            If both dbConnsAuditing and auditMode are set, auditMode takes precedence.
+                            The cluster-level auditing configuration must be set before enabling this on a database."
                           type: boolean
                       type: object
                     databasePort:
@@ -13600,898 +13335,11 @@ spec:
                         - redis
                         - memcached
                       type: string
-                    tags:
-                      additionalProperties:
-                        type: string
-                      description: 'Tags to apply to the Active-Active database, as a map
-                        of key to value. The same set is merged into the BDB tags array
-                        of the default config and every participating-cluster instance.
-                        On key collision with an existing BDB tag, the value here wins.
-                        Removing a key after it was previously synced (recorded in
-                        status.managedTags) removes it from every BDB. Operator-reserved
-                        keys (managed_by, redb_name, redb_namespace, db_service_port,
-                        oss_cluster_access, redb_resource, redb_resource_name,
-                        global_configurations_spec, replication_endpoint_port, rerc_name,
-                        and the secret-tracking keys redis.io/db-sec-name,
-                        redis.io/db-sec-latest, redis.io/certs-latest, redis.io/bu-sec-name,
-                        redis.io/bu-sec-latest) are not allowed and will be rejected.'
-                      type: object
                   type: object
               required:
                 - participatingClusters
               type: object
           type: object
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  name: redisenterpriseacls.app.redislabs.com
-spec:
-  group: app.redislabs.com
-  names:
-    kind: RedisEnterpriseACL
-    listKind: RedisEnterpriseACLList
-    plural: redisenterpriseacls
-    singular: redisenterpriseacl
-    shortNames:
-      - reacl
-  scope: Namespaced
-  versions:
-    - name: v1alpha1
-      additionalPrinterColumns:
-        - jsonPath: .spec.acl
-          name: ACL
-          type: string
-        - jsonPath: .metadata.creationTimestamp
-          name: Age
-          type: date
-      schema:
-        openAPIV3Schema:
-          description: RedisEnterpriseACL represents an access control list definition
-            for a Redis database.
-          properties:
-            apiVersion:
-              description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-              type: string
-            kind:
-              description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-              type: string
-            metadata:
-              type: object
-            spec:
-              description: RedisEnterpriseACLSpec defines the desired state of RedisEnterpriseACL
-              properties:
-                acl:
-                  description: Redis ACL rule
-                  type: string
-              type: object
-            status:
-              description: RedisEnterpriseACLStatus defines the observed state of RedisEnterpriseACL
-              properties:
-                uid:
-                  description: The internal UID of the Redis ACL object defined in the
-                    Redis Enterprise Cluster.
-                  type: string
-                observedGeneration:
-                  description: The most recent generation of this resource that was
-                    observed and acted upon by the controller.
-                  format: int64
-                  type: integer
-              type: object
-          type: object
-      served: true
-      storage: true
-      subresources:
-        status: {}
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  name: redisenterpriseusers.app.redislabs.com
-spec:
-  group: app.redislabs.com
-  names:
-    kind: RedisEnterpriseUser
-    listKind: RedisEnterpriseUserList
-    plural: redisenterpriseusers
-    singular: redisenterpriseuser
-    shortNames:
-    - reuser
-  scope: Namespaced
-  versions:
-  - name: v1alpha1
-    additionalPrinterColumns:
-    - jsonPath: .status.username
-      name: Username
-      type: string
-    - jsonPath: .spec.email
-      name: Email
-      type: string
-    - jsonPath: .status.signinStatus
-      name: Signin Status
-      type: string
-    - jsonPath: .status.rolesDisplay
-      name: Roles
-      type: string
-    - jsonPath: .metadata.creationTimestamp
-      name: Age
-      type: date
-    schema:
-      openAPIV3Schema:
-        description: RedisEnterpriseUser represents a user definition within a Redis
-          Enterprise Cluster.
-        properties:
-          apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-            type: string
-          kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: RedisEnterpriseUserSpec defines the desired state of a RedisEnterpriseUser.
-            properties:
-              alerts:
-                description: Email alerts settings for this user. User alerts settings
-                  are effective only when cluster alerts settings are configured.
-                properties:
-                  enabled:
-                    description: Master toggle for email alerts.
-                    type: boolean
-                  clusterAlerts:
-                    description: UserClusterAlertSettings specifies cluster alerts
-                      settings for a user.
-                    properties:
-                      enabled:
-                        description: Determines whether cluster alerts are enabled
-                          for the user.
-                        type: boolean
-                    required:
-                    - enabled
-                    type: object
-                  databaseAlerts:
-                    description: UserDatabaseAlertSettings specifies database alerts
-                      settings for a user.
-                    properties:
-                      databases:
-                        description: The databases for which alerts are enabled for
-                          this user. If not specified, defaults to all databases.
-                        items:
-                          description: A reference to another object.
-                          properties:
-                            kind:
-                              description: Kind of the referent.
-                              type: string
-                            name:
-                              description: Name of the referent.
-                              type: string
-                              minLength: 1
-                              maxLength: 253
-                          type: object
-                        type: array
-                    type: object
-                required:
-                - enabled
-                type: object
-              authMethod:
-                description: >-
-                  AuthMethod selects how the user authenticates to Redis Enterprise.
-                  'Basic' (the default) authenticates with Basic Auth, using a password sourced from passwordSecrets.
-                  'Certificate' authenticates with a client certificate whose subject matches
-                  certificateSubjectLine; such users carry no password (passwordSecrets must be empty).
-                  Certificate users additionally require certificate-based authentication to be
-                  configured at the cluster level.
-                type: string
-                enum:
-                - Basic
-                - Certificate
-                default: Basic
-              certificateSubjectLine:
-                description: >-
-                  CertificateSubjectLine is the certificate subject line (RFC2253) used to
-                  match the client certificate for certificate-auth users.
-                  Required when authMethod is 'Certificate'; must not be set otherwise.
-                type: string
-              email:
-                description: >-
-                  The email address for the user. Optional (Redis Enterprise accepts an empty email).
-                  For password users, changing the email after creation is permitted only while
-                  spec.passwordSecrets contains exactly one entry: to change the email of a user
-                  with two password secrets (Rotatable rotation in progress), first reduce
-                  passwordSecrets to a single entry, change the email, then add the second secret back.
-                  Certificate-auth users carry no password, so this restriction does not apply to them.
-                type: string
-              passwordMode:
-                description: >-
-                  Defines how passwords are managed for this user.
-                  Single: Only a single password secret can be specified at a time.
-                  Passwords changes can be done by mutating the secret in-place,
-                  or by replacing the secret reference to point to another secret.
-                  Rotatable: Allows for one or two password secrets to be specified simultaneously.
-                  The secrets are required to be immutable, and the operator automatically sets
-                  their 'immutable: true' attribute (K8s secrets only) if not already set.
-                  Vault secrets are assumed to be used as immutable and are not made immutable automatically.
-                  Password changes are typically done by adding a new password secret,
-                  and later removing the old one when it's no longer needed.
-                  When empty, Single behavior is used.
-                  Must not be set for certificate-auth users (authMethod: Certificate), which carry no password.
-                type: string
-                enum:
-                - Single
-                - Rotatable
-              passwordSecrets:
-                description: >-
-                  List of one or more secrets holding the user's password.
-                  Each secret must have a key named 'password' with the user's desired password.
-                  If multiple secrets are specified, then the passwords from all of them can be
-                  used for authenticating as the user.
-                  When the user signin status is 'Locked', the user won't be able to
-                  authenticate with Redis Enterprise API or UI, and
-                  must be unlocked by another user with Admin-role access.
-                  To unlock the user, first set a new password via the 'passwordSecrets' field,
-                  and then follow the password reset instructions in the following link:
-                  https://redis.io/docs/latest/operate/rs/security/access-control/manage-users/login-lockout/#unlock-locked-user-accounts
-                items:
-                  description: A reference to a Secret object.
-                  properties:
-                    name:
-                      description: Name of the Secret.
-                      type: string
-                      minLength: 1
-                      maxLength: 253
-                  required:
-                  - name
-                  type: object
-                type: array
-              username:
-                description: The username associated with the user. The username must
-                  be unique within the Redis Enterprise cluster, and include only
-                  ASCII characters except &,<,>,". If not specified, a default username
-                  is assigned and can be discovered via the status section of the
-                  RedisEnterpriseUser.
-                type: string
-            type: object
-          status:
-            description: RedisEnterpriseUserStatus defines the observed state of a
-              RedisEnterpriseUser.
-            properties:
-              conditions:
-                description: Conditions represent the latest available observations of the user's state.
-                items:
-                  description: Condition contains details for one aspect of the current state of this API Resource.
-                  properties:
-                    lastTransitionTime:
-                      description: lastTransitionTime is the last time the condition transitioned from one status to another.
-                      format: date-time
-                      type: string
-                    message:
-                      description: message is a human readable message indicating details about the transition.
-                      maxLength: 32768
-                      type: string
-                    observedGeneration:
-                      description: observedGeneration represents the .metadata.generation that the condition was set based upon.
-                      format: int64
-                      minimum: 0
-                      type: integer
-                    reason:
-                      description: reason contains a programmatic identifier indicating the reason for the condition's last transition.
-                      type: string
-                    status:
-                      description: status of the condition, one of True, False, Unknown.
-                      enum:
-                      - "True"
-                      - "False"
-                      - Unknown
-                      type: string
-                    type:
-                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
-                      maxLength: 316
-                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
-                      type: string
-                  required:
-                  - lastTransitionTime
-                  - status
-                  - type
-                  type: object
-                type: array
-                x-kubernetes-list-map-keys:
-                - type
-                x-kubernetes-list-type: map
-              observedGeneration:
-                description: The most recent generation of this resource that was
-                  observed and acted upon by the controller.
-                format: int64
-                type: integer
-              passwordIssueDate:
-                description: The date in which the password was set.
-                type: string
-              passwordSecrets:
-                description: List of secrets holding the user's password, with their versions.
-                items:
-                  description: A versioned reference to a Secret object.
-                  properties:
-                    name:
-                      description: Name of the Secret.
-                      type: string
-                    version:
-                      description: Version of the Secret.
-                      type: string
-                  type: object
-                type: array
-              roles:
-                description: List of roles assigned to the user.
-                items:
-                  description: A reference to another object.
-                  properties:
-                    kind:
-                      description: Kind of the referent.
-                      type: string
-                    name:
-                      description: Name of the referent.
-                      type: string
-                      minLength: 1
-                      maxLength: 253
-                  type: object
-                type: array
-              rolesDisplay:
-                description: Formatted string representation of the roles assigned to the user.
-                type: string
-              signinStatus:
-                description: >-
-                  Sign-in status for the user.
-                  When set to 'Locked', the user won't be able to
-                  authenticate with Redis Enterprise API or UI, and
-                  must be unlocked by another user with Admin-role access.
-                  To unlock the user, set a new password via the 'passwordSecrets' field,
-                  and then follow the password reset instructions in the following link:
-                  https://redis.io/docs/latest/operate/rs/security/access-control/manage-users/login-lockout/#unlock-locked-user-accounts
-                type: string
-              uid:
-                description: The internal UID of the User object defined in the Redis
-                  Enterprise Cluster.
-                type: string
-              username:
-                description: The effective username assigned for the user.
-                type: string
-            type: object
-        type: object
-    served: true
-    storage: true
-    subresources:
-      status: {}
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  name: redisenterpriseclusterroles.app.redislabs.com
-spec:
-  group: app.redislabs.com
-  names:
-    kind: RedisEnterpriseClusterRole
-    listKind: RedisEnterpriseClusterRoleList
-    plural: redisenterpriseclusterroles
-    singular: redisenterpriseclusterrole
-    shortNames:
-    - recrole
-  scope: Namespaced
-  versions:
-  - name: v1alpha1
-    additionalPrinterColumns:
-    - jsonPath: .spec.managementRole
-      name: Management Role
-      type: string
-    - jsonPath: .spec.acl.name
-      name: ACL
-      type: string
-    - jsonPath: .metadata.creationTimestamp
-      name: Age
-      type: date
-    schema:
-      openAPIV3Schema:
-        description: RedisEnterpriseClusterRole is a cluster role definition. It
-          grants users cluster-scoped access across the Redis Enterprise Cluster.
-        properties:
-          apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-            type: string
-          kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: RedisEnterpriseClusterRoleSpec defines the desired state
-              of a RedisEnterpriseClusterRole.
-            properties:
-              managementRole:
-                description: ManagementRole is the named set of Redis Enterprise
-                  management permissions assigned to this cluster role. If omitted,
-                  the role uses the None management role.
-                enum:
-                - Admin
-                - ClusterMember
-                - ClusterViewer
-                - DBMember
-                - DBViewer
-                - UserManager
-                - None
-                type: string
-              acl:
-                description: |-
-                  ACL defines the data access permissions granted by this cluster role.
-                  Users with this role can access any database in the Redis Enterprise Cluster,
-                  subject to the permissions granted by the referenced ACL.
-                  References a RedisEnterpriseACL (kind RedisEnterpriseACL or empty) or an
-                  internal Redis Enterprise ACL by name (kind 'redis_acl').
-                properties:
-                  kind:
-                    description: Kind of the referent.
-                    type: string
-                    enum:
-                    - ""
-                    - RedisEnterpriseACL
-                    - redis_acl
-                  name:
-                    description: Name of the referent.
-                    type: string
-                    minLength: 1
-                    maxLength: 253
-                required:
-                - name
-                type: object
-            type: object
-          status:
-            description: RedisEnterpriseRoleStatus defines the observed state of
-              a Redis Enterprise role object. This status type is used by both RedisEnterpriseClusterRole
-              and RedisEnterpriseRole which share the same status structure.
-            properties:
-              uid:
-                description: The internal UID of the Role object defined in the Redis
-                  Enterprise Cluster.
-                type: string
-              observedGeneration:
-                description: The most recent generation of this resource that was
-                  observed and acted upon by the controller.
-                format: int64
-                type: integer
-            type: object
-        type: object
-    served: true
-    storage: true
-    subresources:
-      status: {}
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  name: redisenterpriseroles.app.redislabs.com
-spec:
-  group: app.redislabs.com
-  names:
-    kind: RedisEnterpriseRole
-    listKind: RedisEnterpriseRoleList
-    plural: redisenterpriseroles
-    singular: redisenterpriserole
-    shortNames:
-    - rerole
-  scope: Namespaced
-  versions:
-  - name: v1alpha1
-    additionalPrinterColumns:
-    - jsonPath: .spec.managementRole
-      name: Management Role
-      type: string
-    - jsonPath: .spec.acl.name
-      name: ACL
-      type: string
-    - jsonPath: .spec.scopes[*].name
-      name: Scopes
-      type: string
-    - jsonPath: .metadata.creationTimestamp
-      name: Age
-      type: date
-    schema:
-      openAPIV3Schema:
-        description: RedisEnterpriseRole is a scoped role definition. It grants
-          users access to selected databases within a Redis Enterprise Cluster.
-        properties:
-          apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-            type: string
-          kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: RedisEnterpriseRoleSpec defines the desired state
-              of a RedisEnterpriseRole.
-            properties:
-              managementRole:
-                description: ManagementRole is the named set of Redis Enterprise
-                  management permissions assigned to this scoped role. RedisEnterpriseRole
-                  supports only database-scoped management roles. If omitted, the
-                  role uses the None management role.
-                enum:
-                - DBMember
-                - DBViewer
-                - None
-                type: string
-              scopes:
-                description: |-
-                  Scopes define the databases to which this role applies.
-                  Each scope references a RedisEnterpriseDatabase by name or selector (kind
-                  RedisEnterpriseDatabase or empty), or an internal Redis Enterprise database
-                  by name (kind 'bdb', name only).
-                  For 'bdb' scopes the role grants management access only; its ACL is not bound
-                  to that database's permissions.
-                minItems: 1
-                items:
-                  description: A reference to another object(s), either directly
-                    by name, or via a label selector.
-                  properties:
-                    kind:
-                      description: Kind of the referent.
-                      type: string
-                      enum:
-                      - ""
-                      - RedisEnterpriseDatabase
-                      - bdb
-                    name:
-                      description: Name of the referent.
-                      type: string
-                      minLength: 1
-                      maxLength: 253
-                    selector:
-                      description: Selector based on label attached to the object.
-                      minProperties: 1
-                      properties:
-                        matchExpressions:
-                          description: matchExpressions is a list of label selector
-                            requirements. The requirements are ANDed.
-                          items:
-                            description: A label selector requirement is a selector
-                              that contains values, a key, and an operator that relates
-                              the key and values.
-                            properties:
-                              key:
-                                description: key is the label key that the selector
-                                  applies to.
-                                type: string
-                              operator:
-                                description: operator represents a key's relationship
-                                  to a set of values. Valid operators are In, NotIn,
-                                  Exists and DoesNotExist.
-                                type: string
-                              values:
-                                description: values is an array of string values.
-                                  If the operator is In or NotIn, the values array
-                                  must be non-empty. If the operator is Exists or
-                                  DoesNotExist, the values array must be empty. This
-                                  array is replaced during a strategic merge patch.
-                                items:
-                                  type: string
-                                type: array
-                            required:
-                            - key
-                            - operator
-                            type: object
-                          type: array
-                        matchLabels:
-                          additionalProperties:
-                            type: string
-                          description: matchLabels is a map of {key,value} pairs.
-                            A single {key,value} in the matchLabels map is equivalent
-                            to an element of matchExpressions, whose key field is
-                            "key", the operator is "In", and the values array contains
-                            only "value". The requirements are ANDed.
-                          type: object
-                      type: object
-                  type: object
-                  oneOf:
-                  - required:
-                    - name
-                  - required:
-                    - selector
-                  x-kubernetes-validations:
-                  - rule: '!(has(self.kind) && self.kind == ''bdb'') || has(self.name)'
-                    message: scopes with kind 'bdb' must reference a database by name
-                type: array
-              acl:
-                description: |-
-                  ACL defines the data access permissions granted by this scoped role.
-                  References a RedisEnterpriseACL (kind RedisEnterpriseACL or empty) or an
-                  internal Redis Enterprise ACL by name (kind 'redis_acl').
-                properties:
-                  kind:
-                    description: Kind of the referent.
-                    type: string
-                    enum:
-                    - ""
-                    - RedisEnterpriseACL
-                    - redis_acl
-                  name:
-                    description: Name of the referent.
-                    type: string
-                    minLength: 1
-                    maxLength: 253
-                required:
-                - name
-                type: object
-            required:
-            - scopes
-            type: object
-          status:
-            description: RedisEnterpriseRoleStatus defines the observed state of
-              a Redis Enterprise role object. This status type is used by both RedisEnterpriseClusterRole
-              and RedisEnterpriseRole which share the same status structure.
-            properties:
-              uid:
-                description: The internal UID of the Role object defined in the Redis
-                  Enterprise Cluster.
-                type: string
-              observedGeneration:
-                description: The most recent generation of this resource that was
-                  observed and acted upon by the controller.
-                format: int64
-                type: integer
-            type: object
-        type: object
-    served: true
-    storage: true
-    subresources:
-      status: {}
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  name: redisenterpriseclusterrolebindings.app.redislabs.com
-spec:
-  group: app.redislabs.com
-  names:
-    kind: RedisEnterpriseClusterRoleBinding
-    listKind: RedisEnterpriseClusterRoleBindingList
-    plural: redisenterpriseclusterrolebindings
-    singular: redisenterpriseclusterrolebinding
-    shortNames:
-    - recrolebinding
-  scope: Namespaced
-  versions:
-  - name: v1alpha1
-    additionalPrinterColumns:
-    - jsonPath: .spec.roleRef.name
-      name: Role
-      type: string
-    - jsonPath: .spec.subjects[*].name
-      name: Subjects
-      type: string
-    - jsonPath: .metadata.creationTimestamp
-      name: Age
-      type: date
-    schema:
-      openAPIV3Schema:
-        description: RedisEnterpriseClusterRoleBinding binds users to a RedisEnterpriseClusterRole.
-          It grants the users the cluster access defined by that role.
-        properties:
-          apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-            type: string
-          kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: RedisEnterpriseRoleBindingSpec defines the desired state
-              of a RedisEnterpriseClusterRoleBinding or RedisEnterpriseRoleBinding.
-            properties:
-              roleRef:
-                description: RoleRef holds a reference to the role object being bound.
-                  For RedisEnterpriseClusterRoleBinding, this references a RedisEnterpriseClusterRole
-                  in the same namespace (kind RedisEnterpriseClusterRole or empty) or an
-                  internal Redis Enterprise role by name (kind 'role'). For RedisEnterpriseRoleBinding,
-                  this references a RedisEnterpriseRole in the same namespace (kind RedisEnterpriseRole
-                  or empty) or an internal Redis Enterprise role by name (kind 'role').
-                properties:
-                  kind:
-                    description: Kind of the referent.
-                    type: string
-                    enum:
-                    - ""
-                    - RedisEnterpriseClusterRole
-                    - role
-                  name:
-                    description: Name of the referent.
-                    type: string
-                    minLength: 1
-                    maxLength: 253
-                required:
-                - name
-                type: object
-              subjects:
-                description: Subjects holds references to the objects the role applies
-                  to. Each subject is a reference to a RedisEnterpriseUser object
-                  within the same namespace. The 'kind' field can be left empty,
-                  or set to RedisEnterpriseUser. A maximum of 100 subjects may be
-                  specified; to bind more, create additional bindings referencing
-                  the same role.
-                maxItems: 100
-                items:
-                  description: A reference to another object.
-                  properties:
-                    kind:
-                      description: Kind of the referent.
-                      type: string
-                      enum:
-                      - ""
-                      - RedisEnterpriseUser
-                      maxLength: 32
-                    name:
-                      description: Name of the referent.
-                      type: string
-                      minLength: 1
-                      maxLength: 253
-                  required:
-                  - name
-                  type: object
-                type: array
-                x-kubernetes-validations:
-                - rule: |
-                    self.all(s1, self.exists_one(s2,
-                      (has(s1.kind) && s1.kind != '' ? s1.kind : 'RedisEnterpriseUser') ==
-                      (has(s2.kind) && s2.kind != '' ? s2.kind : 'RedisEnterpriseUser') &&
-                      s1.name == s2.name))
-                  message: subjects must be unique by kind and name
-            required:
-            - roleRef
-            type: object
-          status:
-            description: RedisEnterpriseRoleBindingStatus defines the observed state
-              of a RedisEnterpriseClusterRoleBinding or RedisEnterpriseRoleBinding.
-            type: object
-        type: object
-    served: true
-    storage: true
-    subresources:
-      status: {}
----
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
-metadata:
-  name: redisenterpriserolebindings.app.redislabs.com
-spec:
-  group: app.redislabs.com
-  names:
-    kind: RedisEnterpriseRoleBinding
-    listKind: RedisEnterpriseRoleBindingList
-    plural: redisenterpriserolebindings
-    singular: redisenterpriserolebinding
-    shortNames:
-    - rerolebinding
-  scope: Namespaced
-  versions:
-  - name: v1alpha1
-    additionalPrinterColumns:
-    - jsonPath: .spec.roleRef.name
-      name: Role
-      type: string
-    - jsonPath: .spec.subjects[*].name
-      name: Subjects
-      type: string
-    - jsonPath: .metadata.creationTimestamp
-      name: Age
-      type: date
-    schema:
-      openAPIV3Schema:
-        description: RedisEnterpriseRoleBinding binds users to a RedisEnterpriseRole.
-          It grants the users the scoped access defined by that role.
-        properties:
-          apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation
-              of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-            type: string
-          kind:
-            description: 'Kind is a string value representing the REST resource this
-              object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-            type: string
-          metadata:
-            type: object
-          spec:
-            description: RedisEnterpriseRoleBindingSpec defines the desired state
-              of a RedisEnterpriseClusterRoleBinding or RedisEnterpriseRoleBinding.
-            properties:
-              roleRef:
-                description: RoleRef holds a reference to the role object being bound.
-                  For RedisEnterpriseClusterRoleBinding, this references a RedisEnterpriseClusterRole
-                  in the same namespace (kind RedisEnterpriseClusterRole or empty) or an
-                  internal Redis Enterprise role by name (kind 'role'). For RedisEnterpriseRoleBinding,
-                  this references a RedisEnterpriseRole in the same namespace (kind RedisEnterpriseRole
-                  or empty) or an internal Redis Enterprise role by name (kind 'role').
-                properties:
-                  kind:
-                    description: Kind of the referent.
-                    type: string
-                    enum:
-                    - ""
-                    - RedisEnterpriseRole
-                    - role
-                  name:
-                    description: Name of the referent.
-                    type: string
-                    minLength: 1
-                    maxLength: 253
-                required:
-                - name
-                type: object
-              subjects:
-                description: Subjects holds references to the objects the role applies
-                  to. Each subject is a reference to a RedisEnterpriseUser object
-                  within the same namespace. The 'kind' field can be left empty,
-                  or set to RedisEnterpriseUser. A maximum of 100 subjects may be
-                  specified; to bind more, create additional bindings referencing
-                  the same role.
-                maxItems: 100
-                items:
-                  description: A reference to another object.
-                  properties:
-                    kind:
-                      description: Kind of the referent.
-                      type: string
-                      enum:
-                      - ""
-                      - RedisEnterpriseUser
-                      maxLength: 32
-                    name:
-                      description: Name of the referent.
-                      type: string
-                      minLength: 1
-                      maxLength: 253
-                  required:
-                  - name
-                  type: object
-                type: array
-                x-kubernetes-validations:
-                - rule: |
-                    self.all(s1, self.exists_one(s2,
-                      (has(s1.kind) && s1.kind != '' ? s1.kind : 'RedisEnterpriseUser') ==
-                      (has(s2.kind) && s2.kind != '' ? s2.kind : 'RedisEnterpriseUser') &&
-                      s1.name == s2.name))
-                  message: subjects must be unique by kind and name
-            required:
-            - roleRef
-            type: object
-          status:
-            description: RedisEnterpriseRoleBindingStatus defines the observed state
-              of a RedisEnterpriseClusterRoleBinding or RedisEnterpriseRoleBinding.
-            type: object
-        type: object
-    served: true
-    storage: true
-    subresources:
-      status: {}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -14537,7 +13385,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:8.2.0-13
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:8.0.20-26
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -14593,7 +13441,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:8.2.0-13
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:8.0.20-26
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3

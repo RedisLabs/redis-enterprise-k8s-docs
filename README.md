@@ -11,13 +11,17 @@ This content [has moved](https://redis.io/docs/latest/operate/kubernetes/deploym
 
 This content [has moved](https://redis.io/docs/latest/operate/kubernetes/deployment/openshift/openshift-cli/) to the Redis Enterprise doc site, [redis.io/docs](https://redis.io/docs/latest/operate/kubernetes/).
 
+### Installation on VMWare Tanzu
+
+This content [has moved](https://redis.io/docs/latest/operate/kubernetes/deployment/tanzu/) to the [Redis Enterprise docs site](https://redis.io/docs/latest/operate/kubernetes/).
+ 
 ## Configuration
 
 ### RedisEnterpriseCluster custom resource
 
 The operator deploys a `RedisEnterpriseCluster` with default configurations values, but those can be customized in the `RedisEnterpriseCluster` spec.
 
-* Full detail can be found in [RedisEnterpriseCluster (REC) API Reference](https://redis.io/docs/latest/operate/kubernetes/reference/api/redis_enterprise_cluster_api/).
+* Full detail can be found in [RedisEnterpriseCluster (REC) API Reference](https://redis.io/docs/latest/operate/kubernetes/reference/redis_enterprise_cluster_api/).
 
 ### Private Repositories
 
@@ -30,8 +34,8 @@ This content [has moved](https://redis.io/docs/latest/operate/kubernetes/deploym
 ### Advanced Configuration
 
 - To configure priority class, node pool, eviction thresholds and other advanced configuration see [Recommendations](https://redis.io/docs/latest/operate/kubernetes/recommendations/).
-- Full [RedisEnterpriseCluster API Reference](https://redis.io/docs/latest/operate/kubernetes/reference/api/redis_enterprise_cluster_api/)
-- Full [RedisEnterprsieDatabase API Reference](https://redis.io/docs/latest/operate/kubernetes/reference/api/redis_enterprise_database_api/)
+- Full [RedisEnterpriseCluster API Reference](https://redis.io/docs/latest/operate/kubernetes/reference/redis_enterprise_cluster_api/)
+- Full [RedisEnterprsieDatabase API Reference](https://redis.io/docs/latest/operate/kubernetes/reference/redis_enterprise_database_api/)
 
 ## Connect to Redis Enterprise Software web console
 

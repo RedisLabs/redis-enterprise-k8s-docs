@@ -5,8 +5,8 @@ Hashicorp Vault can be configured as the source of secrets used by the Redis Ent
 Clarification: when running in Vault mode, all secrets referenced in the Redis Enterprise custom resources are read from
 Vault instead of from Kubernetes Secrets. This includes credentials to access the cluster and databases, certificates,
 license, credentials to access backup storage targets, LDAP servers, etc.<br> For a full list of secrets that can be
-specified, please refer to the [`RedisEnterpriseCluster`](https://redis.io/docs/latest/operate/kubernetes/reference/api/redis_enterprise_cluster_api/)
-and [`RedisEnterpriseDatabase`](https://redis.io/docs/latest/operate/kubernetes/reference/api/redis_enterprise_database_api/) API reference pages.
+specified, please refer to the [`RedisEnterpriseCluster`](../redis_enterprise_cluster_api.md)
+and [`RedisEnterpriseDatabase`](../redis_enterprise_database_api.md) API reference pages.
 
 To configure the operator to read secrets from Vault, set `.spec.clusterCredentialSecretType: "vault"` in the `RedisEnterpriseCluster` resource. This will be further explained next.
 
@@ -158,7 +158,7 @@ Hashicorp Vault and the Redis Enterprise Operator can be deployed in multiple sc
 
 <a name="example_rec"></a>
 ### Redis Enterprise Cluster secrets
-> The full and detailed REC fields documentation can be found [here](https://redis.io/docs/latest/operate/kubernetes/reference/api/redis_enterprise_cluster_api/)
+> The full and detailed REC fields documentation can be found [here](../redis_enterprise_cluster_api.md)
 
 #### Cluster credentials and license fields:
 * Cluster Credential Secret: `clusterCredentialSecretName`
@@ -175,7 +175,7 @@ These are the certificates and their field name in the REC:
 * Data Plane Internode Encryption Certificate: dpInterNodeEncryptionCertificateSecretName
 * Control Plane Internode Encryption Certificate: cpInternodeEncryptionCertificateSecretName
 
-You can read more about the different certificates [Here](https://redis.io/docs/latest/operate/kubernetes/reference/api/redis_enterprise_cluster_api/)
+You can read more about the different certificates [Here](../redis_enterprise_cluster_api.md#rsclustercertificates)
 
 <details><summary><b>Show REC example</b></summary>
 
@@ -255,24 +255,24 @@ Steps to create an REDB:
    Follow the step 6 [here](../README.md).
    The REC spec indicted you are running with Vault and no further configuration is required.
 3. The other REDB secrets (2 to 4) should be created in this path `redisenterprise-<K8S_NAMESPACE>/`. The secrets should comply with the
-   REDB [secrets schema](https://redis.io/docs/latest/operate/kubernetes/reference/api/redis_enterprise_database_api/).
+   REDB [secrets schema](https://github.com/RedisLabsDev/redis-enterprise-operator/blob/master/deploy/redis_enterprise_database_api.md).
 > Note - when using the Redis Enterprise Vault plugin it recommended to set defaultUser: false and associate users through ACL bindings to the REDB
 
 <a name="redb_secrets"></a>
 ### REDB secrets
 An REDB has several secrets associate with it as detailed here.<br>
 1. The password for the REDB
-2. Replica Source (optional).<br>
+2. [Replica Source](../redis_enterprise_database_api.md#replicasource) (optional).<br>
     Specifically: `clientKeySecret` and `serverCertSecret` fields which holds the Vault secret name
-3. Backup Credentials (optional)<br>
+3. [Backup Credentials](../redis_enterprise_database_api.md#backupspec) (optional)<br>
     These are backup options, they contain (among other fields) a field for a secret used to access the backup.
-    * S3 Storage: `awsSecretName`
-    * sftp storage: `sftpSecretName`
-    * Swift Storage: `swiftSecretName`
-    * Azure Blob Storage: `absSecretName`
-    * Google Storage: `gcsSecretName`
-4. Client Auth (optional) - The Secrets containing TLS Client Certificate to use for Authentication
-> The full and detailed REDB fields documentation can be found [here](https://redis.io/docs/latest/operate/kubernetes/reference/api/redis_enterprise_database_api/)
+    * [S3 Storage](../redis_enterprise_database_api.md#s3storage): `awsSecretName`
+    * [sftp storage](../redis_enterprise_database_api.md#sftpstorage): `sftpSecretName`
+    * [Swift Storage](../redis_enterprise_database_api.md#SwiftStorage): `swiftSecretName`
+    * [Azure Blob Storage](../redis_enterprise_database_api.md#azureblobstorage): `absSecretName`
+    * [Google Storage](../redis_enterprise_database_api.md#googlestorage): `gcsSecretName`
+4. [Client Auth](../redis_enterprise_database_api.md#redisenterprisedatabasespec) (optional) - The Secrets containing TLS Client Certificate to use for Authentication
+> The full and detailed REDB fields documentation can be found [here](../redis_enterprise_database_api.md#redisenterprisedatabasespec)
 
 <a name="rerc_secrets"></a>
 ### RERC secrets

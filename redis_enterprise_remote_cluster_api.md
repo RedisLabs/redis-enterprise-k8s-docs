@@ -1,7 +1,66 @@
 # Redis Enterprise Remote Cluster API
+This document describes the parameters for the Redis Enterprise Remote Cluster custom resource
+> Note this document is auto-generated from code comments. To contribute a change please change the code comments.
+## Table of Contents
+* [Objects](#objects)
+  * [RedisEnterpriseRemoteCluster](#redisenterpriseremotecluster)
+  * [RedisEnterpriseRemoteClusterList](#redisenterpriseremoteclusterlist)
+  * [RedisEnterpriseRemoteClusterSpec](#redisenterpriseremoteclusterspec)
+  * [RedisEnterpriseRemoteClusterStatus](#redisenterpriseremoteclusterstatus)
+* [Enums](#enums)
+  * [RemoteClusterStatus](#remoteclusterstatus)
+## Objects
 
-This API reference has moved to the official Redis docs site:
-https://redis.io/docs/latest/operate/kubernetes/reference/api/redis_enterprise_remote_cluster_api/
+### RedisEnterpriseRemoteCluster
+Represents a remote participating cluster.
 
-The authoritative field definitions also live in the CRD itself — run
-`kubectl explain RedisEnterpriseRemoteCluster` or see the [CRD schema](crds/).
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| metadata |  | [metav1.ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#objectmeta-v1-meta) |  | false |
+| spec |  | [RedisEnterpriseRemoteClusterSpec](#redisenterpriseremoteclusterspec) |  | false |
+| status |  | [RedisEnterpriseRemoteClusterStatus](#redisenterpriseremoteclusterstatus) |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### RedisEnterpriseRemoteClusterList
+RedisEnterpriseRemoteClusterList contains a list of RedisEnterpriseRemoteCluster
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| metadata |  | [metav1.ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.24/#listmeta-v1-meta) |  | false |
+| items |  | [][RedisEnterpriseRemoteCluster](#redisenterpriseremotecluster) |  | true |
+[Back to Table of Contents](#table-of-contents)
+
+### RedisEnterpriseRemoteClusterSpec
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| recName | Name of the REC that this RERC points to. | string |  | true |
+| recNamespace | Namespace of the REC that this RERC points to. | string |  | true |
+| secretName | Name of the secret containing cluster credentials. Must use the following format: "redis-enterprise-<RERC name>". | string |  | false |
+| apiFqdnUrl | URL of the cluster. Used for the Active-Active database URL. | string |  | true |
+| apiPort | Port number of the cluster's URL. Used for connectivity and synchronization. | *int |  | false |
+| dbFqdnSuffix | Database URL suffix. Used for the Active-Active database replication endpoint and replication endpoint SNI. | string |  | false |
+[Back to Table of Contents](#table-of-contents)
+
+### RedisEnterpriseRemoteClusterStatus
+
+
+| Field | Description | Scheme | Default Value | Required |
+| ----- | ----------- | ------ | -------- | -------- |
+| local | Indicates whether this object represents a local or remote cluster. | *bool |  | false |
+| status | Status of the remote cluster. | [RemoteClusterStatus](#remoteclusterstatus) |  | false |
+| specStatus | Indicates whether the desired specification is valid. | [SpecStatusName](#specstatusname) |  | false |
+| observedGeneration | Most recent generation observed for this RERC. Corresponds to the RERC's generation, which is updated by the API Server. | int64 |  | false |
+| internalObservedSecretResourceVersion | Observed secret resource version. For internal use only. | string |  | false |
+[Back to Table of Contents](#table-of-contents)
+## Enums
+
+### RemoteClusterStatus
+TODO: Add a kubebuilder enum annotation here.
+
+| Value | Description |
+| ----- | ----------- |
+| "Active" |  |
+| "Error" |  |
+[Back to Table of Contents](#table-of-contents)
