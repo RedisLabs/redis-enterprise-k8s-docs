@@ -1,9 +1,0 @@
-apiVersion: app.redislabs.com/v1alpha1
-kind: RedisEnterpriseACL
-metadata:
-  name: read-only
-  labels:
-    app: redis-enterprise
-spec:
-  # Example ACL expression granting read-only access to all keys.
-  acl: +@read ~*
