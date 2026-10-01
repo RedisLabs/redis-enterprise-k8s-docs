@@ -14537,7 +14537,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:8.2.0-15
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:8.2.0-18
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -14573,6 +14573,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
+            runAsNonRoot: true
         - command:
             - operator-root
             - admission
@@ -14593,7 +14594,7 @@ spec:
             - configMapRef:
                 name: "operator-environment-config"
                 optional: true
-          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:8.2.0-15
+          image: registry.connect.redhat.com/redislabs/redis-enterprise-operator:8.2.0-18
           imagePullPolicy: Always
           livenessProbe:
             failureThreshold: 3
@@ -14631,6 +14632,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
+            runAsNonRoot: true
       securityContext:
         seccompProfile:
           type: RuntimeDefault
