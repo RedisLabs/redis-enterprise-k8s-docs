@@ -12,7 +12,7 @@ spec:
   # The scopes (databases) for which this role grants dataplane access to.
   scopes:
   - kind: RedisEnterpriseDatabase
-    name: some-db
+    name: redb
 
   # The dataplane permissions (ACL) granted by this role.
   acl:

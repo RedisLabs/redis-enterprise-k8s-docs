@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 LOGGER_FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
 logging.basicConfig(format=LOGGER_FORMAT)
-VERSION_LOG_COLLECTOR = "8.2.0-19"
+VERSION_LOG_COLLECTOR = "8.2.6-21"
 
 TIME_FORMAT = time.strftime("%Y%m%d-%H%M%S")
 
@@ -53,48 +53,36 @@ TIMEOUT = 180
 KUBECTL_K8S_CLI = "kubectl"
 OC_K8S_CLI = "oc"
 
+DEFAULT_API_GROUP = "app.redislabs.com"
+
+OPERATOR_CUSTOM_RESOURCE_KINDS_TO_PLURALS = {
+    "RedisEnterpriseCluster": "redisenterpriseclusters",
+    "RedisEnterpriseDatabase": "redisenterprisedatabases",
+    "RedisEnterpriseRemoteCluster": "redisenterpriseremoteclusters",
+    "RedisEnterpriseActiveActiveDatabase": "redisenterpriseactiveactivedatabases",
+    "RedisEnterpriseACL": "redisenterpriseacls",
+    "RedisEnterpriseUser": "redisenterpriseusers",
+    "RedisEnterpriseClusterRole": "redisenterpriseclusterroles",
+    "RedisEnterpriseRole": "redisenterpriseroles",
+    "RedisEnterpriseClusterRoleBinding": "redisenterpriseclusterrolebindings",
+    "RedisEnterpriseRoleBinding": "redisenterpriserolebindings",
+}
+
 OPERATOR_CUSTOM_RESOURCE_DEFINITION_NAMES = [
-    "redisenterpriseclusters.app.redislabs.com",
-    "redisenterprisedatabases.app.redislabs.com",
-    "redisenterpriseremoteclusters.app.redislabs.com",
-    "redisenterpriseactiveactivedatabases.app.redislabs.com",
-    "redisenterpriseacls.app.redislabs.com",
-    "redisenterpriseusers.app.redislabs.com",
-    "redisenterpriseclusterroles.app.redislabs.com",
-    "redisenterpriseroles.app.redislabs.com",
-    "redisenterpriseclusterrolebindings.app.redislabs.com",
-    "redisenterpriserolebindings.app.redislabs.com"
+    f"{plural}.{DEFAULT_API_GROUP}" for plural in OPERATOR_CUSTOM_RESOURCE_KINDS_TO_PLURALS.values()
 ]
+
+OPERATOR_CUSTOM_RESOURCE_KINDS = list(OPERATOR_CUSTOM_RESOURCE_KINDS_TO_PLURALS)
 
 # Resources that aren't created by the operator,
 # and hence don't have the 'app: redis-enterprise' label.
 # For these resources, we avoid using a label selector.
-NON_LABELED_RESOURCES = [
-    "RedisEnterpriseCluster",
-    "RedisEnterpriseDatabase",
-    "RedisEnterpriseRemoteCluster",
-    "RedisEnterpriseActiveActiveDatabase",
-    "RedisEnterpriseACL",
-    "RedisEnterpriseUser",
-    "RedisEnterpriseClusterRole",
-    "RedisEnterpriseClusterRoleBinding",
-    "RedisEnterpriseRole",
-    "RedisEnterpriseRoleBinding",
+NON_LABELED_RESOURCES = OPERATOR_CUSTOM_RESOURCE_KINDS + [
     "VolumeAttachment",
     "NetworkPolicy",
 ]
 
-RESTRICTED_MODE_API_RESOURCES = [
-    "RedisEnterpriseCluster",
-    "RedisEnterpriseDatabase",
-    "RedisEnterpriseRemoteCluster",
-    "RedisEnterpriseActiveActiveDatabase",
-    "RedisEnterpriseACL",
-    "RedisEnterpriseUser",
-    "RedisEnterpriseClusterRole",
-    "RedisEnterpriseClusterRoleBinding",
-    "RedisEnterpriseRole",
-    "RedisEnterpriseRoleBinding",
+RESTRICTED_MODE_API_RESOURCES = OPERATOR_CUSTOM_RESOURCE_KINDS + [
     "StatefulSet",
     "Deployment",
     "ReplicaSet",
@@ -153,6 +141,60 @@ UNRECOGNIZED_RESOURCE = "error: the server doesn't have a resource type"
 OLM_LABEL = "operators.coreos.com/redis-enterprise-operator-cert.%s"
 
 
+def check_api_group(value):
+    """
+        Validate an API group is a DNS subdomain, as the group is embedded in shell commands
+    """
+    label = r"[a-z0-9]([-a-z0-9]*[a-z0-9])?"
+    if len(value) > 253 or not re.fullmatch(rf"{label}(\.{label})*", value):
+        raise argparse.ArgumentTypeError(f"{value} is not a valid API group (must be a DNS subdomain, "
+                                         f"e.g. app.redislabs.com)")
+    return value
+
+
+def get_api_groups(api_group_args):
+    """
+        The API groups to collect from, deduplicated, defaulting to the default group
+    """
+    return list(dict.fromkeys(api_group_args)) if api_group_args else [DEFAULT_API_GROUP]
+
+
+def get_operator_crd_names(api_groups):
+    """
+        CRD object names (<plural>.<group>) of the Redis Enterprise CRDs in the given API groups
+    """
+    return [f"{plural}.{group}"
+            for group in api_groups
+            for plural in OPERATOR_CUSTOM_RESOURCE_KINDS_TO_PLURALS.values()]
+
+
+def qualify_re_api_resources(api_resources, api_groups):
+    """
+        Replace bare Redis Enterprise kinds with group-qualified resource names
+        (e.g. redisenterpriseclusters.custom.group); kubectl resolves a bare kind
+        to only one API group, so bare kinds cannot cover multiple groups.
+    """
+    if api_groups == [DEFAULT_API_GROUP]:
+        return api_resources
+    resources = []
+    for resource in api_resources:
+        if resource in OPERATOR_CUSTOM_RESOURCE_KINDS_TO_PLURALS:
+            plural = OPERATOR_CUSTOM_RESOURCE_KINDS_TO_PLURALS[resource]
+            resources.extend(f"{plural}.{group}" for group in api_groups)
+        else:
+            resources.append(resource)
+    return resources
+
+
+def is_re_qualified_resource(resource):
+    """
+        Whether the resource is a group-qualified Redis Enterprise resource name
+        produced by qualify_re_api_resources
+    """
+    plural, _, group = resource.partition(".")
+    return bool(group) and plural in OPERATOR_CUSTOM_RESOURCE_KINDS_TO_PLURALS.values()
+
+
 def set_file_logger(output_dir):
     """
         add a file handler to the logger
@@ -209,32 +251,46 @@ def collect_k8s_version_info(ns_output_dir, k8s_cli):
     collect_helper(ns_output_dir, cmd, "Version.yaml", "Version")
 
 
+# pylint: disable=R0914
 def collect_from_ns(namespace, output_dir, api_resources, logs_from_all_pods=False, k8s_cli_input="",
-                    mode=MODE_RESTRICTED, skip_support_package=False, collect_empty_files=False, helm_release_name=""):
+                    mode=MODE_RESTRICTED, skip_support_package=False, collect_empty_files=False, helm_release_name="",
+                    api_groups=None):
     "Collect the context of a specific namespace. Typically runs in parallel processes."
     set_file_logger(output_dir)
-    k8s_cli = detect_k8s_cli(k8s_cli_input)
-    k8s_cli_version = detect_k8s_cli_version(k8s_cli)
-    logger.info("Started collecting from namespace '%s'", namespace)
-    ns_output_dir = os.path.join(output_dir, namespace)
-    make_dir(ns_output_dir)
+    try:
+        k8s_cli = detect_k8s_cli(k8s_cli_input)
+        k8s_cli_version = detect_k8s_cli_version(k8s_cli)
+        logger.info("Started collecting from namespace '%s'", namespace)
+        ns_output_dir = os.path.join(output_dir, namespace)
+        make_dir(ns_output_dir)
+    except Exception:  # pylint: disable=broad-except
+        logger.exception("Namespace '%s': Failed to initialize collection", namespace)
+        sys.exit(1)
 
-    selector = ""
-    if mode == MODE_RESTRICTED:
-        selector = selector_flag(OPERATOR_LABEL)
-    collect_k8s_version_info(ns_output_dir, k8s_cli)
-    collect_connectivity_check(namespace, ns_output_dir, k8s_cli)
-    get_redis_enterprise_debug_info(namespace, ns_output_dir, k8s_cli, mode, skip_support_package, k8s_cli_version)
-    collect_pod_rs_logs(namespace, ns_output_dir, k8s_cli, mode, k8s_cli_version)
-    collect_bootstrapper_proc_info(namespace, ns_output_dir, k8s_cli, mode)
-    collect_resources_list(namespace, ns_output_dir, k8s_cli, mode)
-    collect_events(namespace, ns_output_dir, k8s_cli, mode)
-    collect_api_resources(namespace, ns_output_dir, k8s_cli, api_resources, selector, collect_empty_files)
-    collect_olm_auto_generated_resources(namespace, ns_output_dir, k8s_cli)
-    collect_api_resources_description(namespace, ns_output_dir, k8s_cli, api_resources, selector, collect_empty_files)
-    collect_olm_auto_generated_resources_description(namespace, ns_output_dir, k8s_cli)
-    collect_pods_logs(namespace, ns_output_dir, k8s_cli, logs_from_all_pods)
-    collect_helm_output(namespace, ns_output_dir, helm_release_name)
+    selector = selector_flag(OPERATOR_LABEL) if mode == MODE_RESTRICTED else ""
+
+    collection_steps = [
+        ("k8s version info", collect_k8s_version_info, (ns_output_dir, k8s_cli)),
+        ("connectivity check", collect_connectivity_check, (namespace, ns_output_dir, k8s_cli)),
+        ("RS debug info", get_redis_enterprise_debug_info,
+        (namespace, ns_output_dir, k8s_cli, mode, skip_support_package, k8s_cli_version)),
+        ("RS pod logs", collect_pod_rs_logs, (namespace, ns_output_dir, k8s_cli, mode, k8s_cli_version)),
+        ("bootstrapper proc info", collect_bootstrapper_proc_info, (namespace, ns_output_dir, k8s_cli, mode)),
+        ("resources list", collect_resources_list, (namespace, ns_output_dir, k8s_cli, mode)),
+        ("events", collect_events, (namespace, ns_output_dir, k8s_cli, mode)),
+        ("api resources", collect_api_resources,
+        (namespace, ns_output_dir, k8s_cli, api_resources, selector, collect_empty_files, api_groups)),
+        ("OLM resources", collect_olm_auto_generated_resources, (namespace, ns_output_dir, k8s_cli)),
+        ("api resources description", collect_api_resources_description,
+        (namespace, ns_output_dir, k8s_cli, api_resources, selector, collect_empty_files, api_groups)),
+        ("OLM resources description", collect_olm_auto_generated_resources_description,
+        (namespace, ns_output_dir, k8s_cli)),
+        ("pod logs", collect_pods_logs, (namespace, ns_output_dir, k8s_cli, logs_from_all_pods)),
+        ("helm output", collect_helm_output, (namespace, ns_output_dir, helm_release_name)),
+    ]
+
+    for description, func, args in collection_steps:
+        try_collect(namespace, description, func, *args)
 
 
 # pylint: disable=R0913
@@ -505,6 +561,8 @@ def run(results):
     """
         Collect logs
     """
+    api_groups = get_api_groups(results.api_group)
+
     output_file_name = f"redis_enterprise_k8s_debug_info_{TIME_FORMAT}"
     output_dir = results.output_dir
     if not output_dir:
@@ -539,13 +597,14 @@ def run(results):
     api_resources = RESTRICTED_MODE_API_RESOURCES
     if mode == MODE_ALL:
         api_resources = api_resources + ALL_ONLY_API_RESOURCES
+    api_resources = qualify_re_api_resources(api_resources, api_groups)
 
     processes = []
     for namespace in namespaces:
         proc = Process(target=collect_from_ns,
                        args=[namespace, output_dir, api_resources, results.logs_from_all_pods,
                              k8s_cli, mode, results.skip_support_package, results.collect_empty_files,
-                             helm_release_name])
+                             helm_release_name, api_groups])
         proc.start()
         processes.append(proc)
 
@@ -559,15 +618,18 @@ def run(results):
 
     for proc in processes:
         proc.join()
+        if proc.exitcode != 0:
+            logger.error("Process '%s' exited with code %s, collection may be incomplete",
+                         proc.name, proc.exitcode)
 
-    create_collection_report(output_dir, output_file_name, k8s_cli, namespaces, start_time, mode)
+    create_collection_report(output_dir, output_file_name, k8s_cli, namespaces, start_time, mode, api_groups)
 
     archive_files(output_dir, output_file_name)
     logger.info("Finished Redis Enterprise log collector")
     logger.info("--- Run time: %d minutes ---", round(((time.time() - start_time) / 60), 3))
 
 
-def create_collection_report(output_dir, output_file_name, k8s_cli, namespaces, start_time, mode):
+def create_collection_report(output_dir, output_file_name, k8s_cli, namespaces, start_time, mode, api_groups):
     """
         create a file with some data about the collection
     """
@@ -579,6 +641,7 @@ def create_collection_report(output_dir, output_file_name, k8s_cli, namespaces, 
             "namespaces": namespaces,
             "start_time": start_time,
             "mode": mode,
+            "api_groups": api_groups,
             "log_collector_version": VERSION_LOG_COLLECTOR
         }, output_fh)
 
@@ -910,7 +973,8 @@ def collect_olm_auto_generated_resources(namespace, ns_output_dir, k8s_cli):
     logger.info("Namespace '%s': Collecting OLM autogenerated resources", namespace)
     resources_out = OrderedDict()
     for resource in OLM_RESOURCES:
-        output = run_get_resource_yaml(namespace, resource, k8s_cli, selector)
+        output = try_collect(namespace, f"OLM resource {resource}", run_get_resource_yaml,
+                             namespace, resource, k8s_cli, selector)
         if output:
             resources_out[resource] = output
             log_resource_collected(namespace, resource)
@@ -931,7 +995,8 @@ def collect_olm_auto_generated_resources_description(namespace, ns_output_dir, k
     logger.info("Namespace '%s': Collecting OLM autogenerated resources description", namespace)
     resources_out = OrderedDict()
     for resource in OLM_RESOURCES:
-        output = describe_resource(namespace, resource, k8s_cli, selector)
+        output = try_collect(namespace, f"OLM resource description {resource}", describe_resource,
+                             namespace, resource, k8s_cli, selector)
         if output:
             resources_out[resource] = output
             log_resource_collected(namespace, resource)
@@ -939,32 +1004,54 @@ def collect_olm_auto_generated_resources_description(namespace, ns_output_dir, k
         write_output_to_file(olm_output_dir, f"{entry}.txt", out)
 
 
-def collect_api_resources(namespace, output_dir, k8s_cli, api_resources, selector="", collect_empty_files=False):
+def resolve_resource_output(namespace, resource, k8s_cli, selector, crd_names, collect_fn):
+    """
+        Runs the right kubectl get/describe variant (collect_fn) for a single API resource.
+        Returns (resource, output), where resource may have been renamed (e.g. Gateways).
+    """
+    if resource == "Namespace":
+        return resource, collect_fn(namespace, resource, k8s_cli, resource_names=[namespace])
+    if resource == "CustomResourceDefinition":
+        return resource, collect_fn(namespace, resource, k8s_cli, resource_names=crd_names)
+    # We use this fully qualified resource kind to avoid potential clashes with Gateway API if it’s installed
+    if resource == "gateways.networking.istio.io":
+        return "Gateways", collect_fn(namespace, resource, k8s_cli)
+    if resource in NON_LABELED_RESOURCES or is_re_qualified_resource(resource):
+        return resource, collect_fn(namespace, resource, k8s_cli)
+    return resource, collect_fn(namespace, resource, k8s_cli, selector)
+
+
+def try_collect(namespace, description, func, *args):
+    """
+        Run func(*args), logging (and swallowing) any exception instead of letting it
+        abort the caller's loop or discard already-collected output.
+    """
+    try:
+        return func(*args)
+    except Exception:  # pylint: disable=broad-except
+        logger.exception("Namespace '%s': Failed to collect %s, skipping it", namespace, description)
+        return None
+
+
+def collect_api_resources(namespace, output_dir, k8s_cli, api_resources, selector="", collect_empty_files=False,
+                          api_groups=None):
     """
         Creates file for each of the API resources
         with the output of kubectl get <resource> -o yaml
     """
     logger.info("Namespace '%s': Collecting API resources", namespace)
+    crd_names = get_operator_crd_names(api_groups) if api_groups else OPERATOR_CUSTOM_RESOURCE_DEFINITION_NAMES
     resources_out = OrderedDict()
     message = f"Namespace '{namespace}': No resources of type %s are found" if not selector else \
         f"Namespace '{namespace}': no {extract_label(selector)} labeled resources of type %s are found"
 
     message = f"{message}, skip collecting empty log file"
     for resource in api_resources:
-        if resource == "Namespace":
-            output = run_get_resource_yaml(namespace, resource, k8s_cli,
-                                           resource_names=[namespace])
-        elif resource == "CustomResourceDefinition":
-            output = run_get_resource_yaml(namespace, resource, k8s_cli,
-                                           resource_names=OPERATOR_CUSTOM_RESOURCE_DEFINITION_NAMES)
-        # We use this fully qualified resource kind to avoid potential clashes with Gateway API if it’s installed
-        elif resource == "gateways.networking.istio.io":
-            output = run_get_resource_yaml(namespace, resource, k8s_cli)
-            resource = "Gateways"
-        elif resource in NON_LABELED_RESOURCES:
-            output = run_get_resource_yaml(namespace, resource, k8s_cli)
-        else:
-            output = run_get_resource_yaml(namespace, resource, k8s_cli, selector)
+        result = try_collect(namespace, resource, resolve_resource_output,
+                             namespace, resource, k8s_cli, selector, crd_names, run_get_resource_yaml)
+        if result is None:
+            continue
+        resource, output = result
         if output:
             if check_empty_yaml_file(output) and not collect_empty_files:
                 logger.info(message, resource)
@@ -973,7 +1060,8 @@ def collect_api_resources(namespace, output_dir, k8s_cli, api_resources, selecto
                 log_resource_collected(namespace, resource)
     if selector:
         # collect PV resource
-        collect_persistent_volume(namespace, k8s_cli, resources_out, "get", KUBCTL_GET_YAML_RETRIES)
+        try_collect(namespace, "PersistentVolume", collect_persistent_volume,
+                    namespace, k8s_cli, resources_out, "get", KUBCTL_GET_YAML_RETRIES)
     for entry, out in resources_out.items():
         write_output_to_file(output_dir, f"{entry}.yaml", out)
 
@@ -991,31 +1079,24 @@ def extract_label(selector):
 
 
 def collect_api_resources_description(namespace, output_dir, k8s_cli, api_resources, selector="",
-                                      collect_empty_files=False):
+                                      collect_empty_files=False, api_groups=None):
     """
         Creates file for each of the API resources
         with the output of kubectl describe <resource>
     """
     logger.info("Namespace '%s': Collecting API resources description", namespace)
+    crd_names = get_operator_crd_names(api_groups) if api_groups else OPERATOR_CUSTOM_RESOURCE_DEFINITION_NAMES
     resources_out = OrderedDict()
     message = f"Namespace '{namespace}': No resources of type %s are found" if not selector else \
         f"Namespace '{namespace}': no {extract_label(selector)} labeled resources of type %s are found"
 
     message = f"{message}, skip collecting empty log file"
     for resource in api_resources:
-        if resource == "Namespace":
-            output = describe_resource(namespace, resource, k8s_cli,
-                                       resource_names=[namespace])
-        elif resource == "CustomResourceDefinition":
-            output = describe_resource(namespace, resource, k8s_cli,
-                                       resource_names=OPERATOR_CUSTOM_RESOURCE_DEFINITION_NAMES)
-        elif resource == "gateways.networking.istio.io":
-            output = describe_resource(namespace, resource, k8s_cli)
-            resource = "Gateways"
-        elif resource in NON_LABELED_RESOURCES:
-            output = describe_resource(namespace, resource, k8s_cli)
-        else:
-            output = describe_resource(namespace, resource, k8s_cli, selector)
+        result = try_collect(namespace, f"description for resource {resource}", resolve_resource_output,
+                             namespace, resource, k8s_cli, selector, crd_names, describe_resource)
+        if result is None:
+            continue
+        resource, output = result
         if output:
             if check_empty_desc_file(output) and not collect_empty_files:
                 logger.info(message, resource)
@@ -1024,7 +1105,8 @@ def collect_api_resources_description(namespace, output_dir, k8s_cli, api_resour
                 log_resource_collected(namespace, resource)
     if selector:
         # collect PV resource
-        collect_persistent_volume_description(namespace, k8s_cli, resources_out, KUBCTL_DESCRIBE_RETRIES)
+        try_collect(namespace, "PersistentVolume description", collect_persistent_volume_description,
+                    namespace, k8s_cli, resources_out, KUBCTL_DESCRIBE_RETRIES)
     for entry, out in resources_out.items():
         write_output_to_file(output_dir, f"{entry}.txt", out)
 
@@ -1037,7 +1119,7 @@ def collect_persistent_volume(namespace, k8s_cli, resources_out, collect_func, r
     resource = "PersistentVolume"
     output = collect_pv_by_pvc_names(namespace, k8s_cli, collect_func, retries)
     if output:
-        resources_out["PersistentVolume"] = output
+        resources_out[resource] = output
         log_resource_collected(namespace, resource)
 
 
@@ -1049,7 +1131,7 @@ def collect_persistent_volume_description(namespace, k8s_cli, resources_out, ret
     resource = "PersistentVolume"
     output = collect_pv_by_pvc_name_description(namespace, k8s_cli, retries)
     if output:
-        resources_out["PersistentVolume"] = output
+        resources_out[resource] = output
         log_resource_collected(namespace, resource)
 
 
@@ -1070,8 +1152,9 @@ def collect_pv_by_pvc_names(namespace, k8s_cli, collect_func, retries):
         Collect PersistentVolume resource (get/describe - collect_func) when use restricted mode
     """
     pv_output = ""
-    error_template = failed_to_get_resource_error(namespace, "PersistentVolumeClaim")
-    volumes_names = get_pv_names(k8s_cli, namespace, error_template)
+    pvc_error_template = failed_to_get_resource_error(namespace, "PersistentVolumeClaim")
+    volumes_names = get_pv_names(k8s_cli, namespace, pvc_error_template)
+    pv_error_template = failed_to_get_resource_error(namespace, "PersistentVolume", action=collect_func)
     for volume in volumes_names:
         if volume == "<none>":
             logger.info('skipping nameless pvc')
@@ -1081,8 +1164,9 @@ def collect_pv_by_pvc_names(namespace, k8s_cli, collect_func, retries):
         missing_resource_template = (f"Namespace '{namespace}': Skip collecting information for"
                                       f" PersistentVolume - {volume}. "
                                       f"Server has no resource of type PersistentVolume - {volume}")
-        output = run_shell_command_with_retries(cmd, retries, error_template, missing_resource_template)
-        pv_output = pv_output + output
+        output = run_shell_command_with_retries(cmd, retries, pv_error_template, missing_resource_template)
+        if output:
+            pv_output = pv_output + output
     return pv_output
 
 
@@ -1091,8 +1175,10 @@ def collect_pv_by_pvc_name_description(namespace, k8s_cli, retries):
         Collect PersistentVolume resource description
     """
     pv_output = ""
-    error_template = failed_to_get_resource_error(namespace, "PersistentVolumeClaim")
-    volumes_names = get_pv_names(k8s_cli, namespace, error_template)
+    pvc_error_template = failed_to_get_resource_error(namespace, "PersistentVolumeClaim")
+    volumes_names = get_pv_names(k8s_cli, namespace, pvc_error_template)
+    pv_get_error_template = failed_to_get_resource_error(namespace, "PersistentVolume")
+    pv_describe_error_template = failed_to_get_resource_error(namespace, "PersistentVolume", action="describe")
     for volume in volumes_names:
         if volume == "<none>":
             logger.info('skipping nameless pvc')
@@ -1101,12 +1187,15 @@ def collect_pv_by_pvc_name_description(namespace, k8s_cli, retries):
         cmd = f"{k8s_cli} get -n {namespace} PersistentVolume --field-selector=metadata.name={volume} -o=name"
         missing_resource_template = f"Namespace '{namespace}': Skip collecting information for PersistentVolume - " \
                                     f"{volume}. Server has no resource of type PersistentVolume - {volume}"
-        pv_name = run_shell_command_with_retries(cmd, retries, error_template, missing_resource_template)
+        pv_name = run_shell_command_with_retries(cmd, retries, pv_get_error_template, missing_resource_template)
+        if not pv_name:
+            continue
         cmd = f"{k8s_cli} describe -n {namespace} {pv_name}"
         missing_resource_template = f"Namespace '{namespace}': Skip collecting description for PersistentVolume - " \
                                     f"{volume}. Server has no resource of type PersistentVolume - {volume}"
-        output = run_shell_command_with_retries(cmd, retries, error_template, missing_resource_template)
-        pv_output = pv_output + output
+        output = run_shell_command_with_retries(cmd, retries, pv_describe_error_template, missing_resource_template)
+        if output:
+            pv_output = pv_output + output
     return pv_output
 
 
@@ -1225,12 +1314,13 @@ def collect_logs_from_pod(namespace, pod, logs_dir, k8s_cli):
         Helper function getting logs of a pod
     """
     containers = get_list_of_containers_from_pod(namespace, pod, k8s_cli)
-    init_containers = get_list_of_init_containers_from_pod(namespace, pod, k8s_cli)
-    containers.extend(init_containers)
     if containers is None:
         logger.warning("Namespace '%s' Could not get containers for pod: %s list - "
                        "skipping pods logs collection", namespace, pod)
         return
+    init_containers = get_list_of_init_containers_from_pod(namespace, pod, k8s_cli)
+    if init_containers:
+        containers.extend(init_containers)
     for container in containers:
         cmd = f"{k8s_cli} logs -c {container} -n  {namespace} {pod}"
         write_output_to_file(logs_dir, f"{pod}-{container}.log", run_shell_command(cmd)[1])
@@ -1452,7 +1542,7 @@ def describe_resource(namespace, resource_type, k8s_cli, selector="", resource_n
     """
     resource_name_args = " ".join(resource_names) if resource_names else ""
     cmd = f"{k8s_cli} describe -n {namespace} {resource_type} {resource_name_args} {selector}"
-    error_template = failed_to_get_resource_error(namespace, resource_type)
+    error_template = failed_to_get_resource_error(namespace, resource_type, action="describe")
     missing_resource_template = f"Namespace '{namespace}': Skip collecting description for {resource_type}. " \
                                 f"Server has no resource of type {resource_type}"
     return run_shell_command_with_retries(cmd, KUBCTL_GET_YAML_RETRIES, error_template, missing_resource_template)
@@ -1475,11 +1565,13 @@ def log_resource_collected(namespace, resource):
     logger.info("Namespace '%s': Collected %s", namespace, resource)
 
 
-def failed_to_get_resource_error(namespace, resource):
+def failed_to_get_resource_error(namespace, resource, action="get"):
     """
-    Helper function to log failure in getting a resource
+    Helper function to build a warning template for a failed resource command.
+    Leaves a literal '{}' placeholder (escaped here as '{{}}') for the caller to
+    interpolate the actual command output via str.format().
     """
-    return f"Namespace '{namespace}': Failed to get resource: {resource}."
+    return f"Namespace '{namespace}': Failed to {action} {resource} resource: {{}}."
 
 
 def selector_flag(selector):
@@ -1542,5 +1634,10 @@ if __name__ == "__main__":
                         help='Collect empty log files for missing resources.')
     parser.add_argument('--helm_release_name', action="store", type=str,
                         help='Collect resources related to the given Helm release name.')
+    parser.add_argument('--api_group', action="append", type=check_api_group,
+                        help="The API group of the Redis Enterprise custom resources to collect.\n"
+                             "Can be repeated to collect from multiple API groups.\n"
+                             "Only needed when the operator runs with API_GROUP_OVERRIDE;\n"
+                             "defaults to app.redislabs.com.")
     parser.set_defaults(collect_istio=False)
     run(parser.parse_args())

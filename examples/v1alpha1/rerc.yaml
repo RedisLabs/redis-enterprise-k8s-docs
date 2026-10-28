@@ -18,6 +18,9 @@ spec:
   # database replication endpoint and replication endpoint SNI.
   dbFqdnSuffix: -example-new-york-1-ns1.redislabs.com
 
-  # The name of the secret containing cluster credentials.
+  # The name of the secret containing cluster credentials, either basic-auth
+  # ('username' and 'password' keys) or a client certificate/key pair of a
+  # cluster user with the proper permissions, optionally with a 'trusted_ca'
+  # PEM bundle for verifying the cluster's server certificate.
   # Needs to be formatted as: "redis-enterprise-<RERC name>"
   secretName: redis-enterprise-new-york-1

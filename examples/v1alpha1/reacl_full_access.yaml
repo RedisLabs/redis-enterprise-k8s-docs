@@ -1,0 +1,9 @@
+apiVersion: app.redislabs.com/v1alpha1
+kind: RedisEnterpriseACL
+metadata:
+  name: full-access
+  labels:
+    app: redis-enterprise
+spec:
+  # Example ACL expression granting full access to all keys.
+  acl: +@all ~*

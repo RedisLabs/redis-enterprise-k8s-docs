@@ -66,7 +66,8 @@ Hashicorp Vault and the Redis Enterprise Operator can be deployed in multiple sc
 3. Create the operator's configuration in configmap named 'operator-environment-config' with the relevant Vault configuration:<br>
    edit and save this content in a file called `operator-environment-config.yaml`<br>
    run `kubectl apply -f operator-environment-config.yaml`<br>
-   see notes on the parameters below.
+   see notes on the parameters below.<br>
+   > Note - when installing with the Helm chart, set these keys under the `operator.environment` chart value instead of applying the configmap, so the chart manages it.
    ```
    apiVersion: v1
    kind: ConfigMap
