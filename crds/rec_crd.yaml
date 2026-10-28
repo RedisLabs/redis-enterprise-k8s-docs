@@ -182,6 +182,37 @@ spec:
                         the cluster LDAP configuration according to the '.spec.ldap'
                         field in the RedisEnterpriseCluster resource.
                       type: boolean
+                    disconnectClientsOnPasswordRemoval:
+                      description: Indicate whether disconnect-clients-on-password-removal
+                        is managed by the operator. Enabled automatically for new
+                        clusters. Once enabled, the operator keeps reconciling the
+                        cluster value even if the user removes
+                        spec.disconnectClientsOnPasswordRemoval; in that case the
+                        operator writes the auto default.
+                      type: boolean
+                    apiCertificateBasedAuth:
+                      description: Indicate whether control-plane certificate-based
+                        authentication (CBA) is managed by the operator. Enabled once
+                        spec.apiCertificateBasedAuth is set for the first
+                        time. Once enabled, the operator keeps reconciling the
+                        cluster's mtls_certificate_authentication setting even if
+                        the spec block is removed; in that case the operator disables
+                        it.
+                      type: boolean
+                    clientMaintenanceNotificationsProxyMode:
+                      description: Indicate whether proxy-mode client maintenance notifications
+                        are managed by the operator. Enabled once
+                        spec.clientMaintenanceNotifications.proxyMode.enabled is set for
+                        the first time, and stays enabled if the field is later removed;
+                        in that case the operator disables the setting.
+                      type: boolean
+                    clientMaintenanceNotificationsOssMode:
+                      description: Indicate whether OSS cluster client maintenance notifications
+                        are managed by the operator. Enabled once
+                        spec.clientMaintenanceNotifications.ossMode.enabled is set for
+                        the first time, and stays enabled if the field is later removed;
+                        in that case the operator disables the setting.
+                      type: boolean
                   type: object
                 certificatesStatus:
                   description: Stores information about cluster certificates and their
@@ -210,9 +241,193 @@ spec:
                     currently in use by the cluster. This field tracks the current
                     credential secret name and is updated when the secret name changes.
                   type: string
+                apiCertificateBasedAuthActive:
+                  description: |-
+                    Whether control-plane certificate authentication (mtls_certificate_authentication)
+                    was last observed enabled on the cluster. The operator and services rigger present
+                    client certificates only while this is true.
+                  type: boolean
+                gateway:
+                  description: Status of cluster service endpoints exposed through the
+                    Kubernetes Gateway API.
+                  properties:
+                    api:
+                      properties:
+                        conditions:
+                          items:
+                            properties:
+                              lastTransitionTime:
+                                format: date-time
+                                type: string
+                              message:
+                                maxLength: 32768
+                                type: string
+                              observedGeneration:
+                                format: int64
+                                minimum: 0
+                                type: integer
+                              reason:
+                                maxLength: 1024
+                                minLength: 1
+                                pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                                type: string
+                              status:
+                                enum:
+                                  - "True"
+                                  - "False"
+                                  - Unknown
+                                type: string
+                              type:
+                                maxLength: 316
+                                pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                                type: string
+                            required:
+                              - lastTransitionTime
+                              - message
+                              - reason
+                              - status
+                              - type
+                            type: object
+                          type: array
+                        fqdn:
+                          type: string
+                        routeName:
+                          type: string
+                      type: object
+                    metrics:
+                      properties:
+                        conditions:
+                          items:
+                            properties:
+                              lastTransitionTime:
+                                format: date-time
+                                type: string
+                              message:
+                                maxLength: 32768
+                                type: string
+                              observedGeneration:
+                                format: int64
+                                minimum: 0
+                                type: integer
+                              reason:
+                                maxLength: 1024
+                                minLength: 1
+                                pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                                type: string
+                              status:
+                                enum:
+                                  - "True"
+                                  - "False"
+                                  - Unknown
+                                type: string
+                              type:
+                                maxLength: 316
+                                pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                                type: string
+                            required:
+                              - lastTransitionTime
+                              - message
+                              - reason
+                              - status
+                              - type
+                            type: object
+                          type: array
+                        fqdn:
+                          type: string
+                        routeName:
+                          type: string
+                      type: object
+                    ui:
+                      properties:
+                        conditions:
+                          items:
+                            properties:
+                              lastTransitionTime:
+                                format: date-time
+                                type: string
+                              message:
+                                maxLength: 32768
+                                type: string
+                              observedGeneration:
+                                format: int64
+                                minimum: 0
+                                type: integer
+                              reason:
+                                maxLength: 1024
+                                minLength: 1
+                                pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                                type: string
+                              status:
+                                enum:
+                                  - "True"
+                                  - "False"
+                                  - Unknown
+                                type: string
+                              type:
+                                maxLength: 316
+                                pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                                type: string
+                            required:
+                              - lastTransitionTime
+                              - message
+                              - reason
+                              - status
+                              - type
+                            type: object
+                          type: array
+                        fqdn:
+                          type: string
+                        routeName:
+                          type: string
+                      type: object
+                  type: object
                 ingressOrRouteMethodStatus:
                   description: The ingressOrRouteSpec/ActiveActive spec method that exist
                   type: string
+                initContainerFailures:
+                  description: Failures of operator-managed init containers (such as the
+                    read-only root filesystem setup), one entry per failing pod and container;
+                    empty when all such init containers are healthy.
+                  items:
+                    description: InitContainerFailure describes a failed operator-managed
+                      init container detected in one of the cluster's pods.
+                    properties:
+                      containerName:
+                        description: Name of the init container that failed.
+                        type: string
+                      exitCode:
+                        description: Exit code of the failed init container, when known.
+                        format: int32
+                        type: integer
+                      message:
+                        description: Human-readable description of the failure, including
+                          the command to inspect the init container logs for the underlying
+                          cause.
+                        type: string
+                      podName:
+                        description: Name of the pod whose init container failed.
+                        type: string
+                      reason:
+                        description: Reason reported by Kubernetes for the failure (for
+                          example, "Error" or "CrashLoopBackOff").
+                        type: string
+                    type: object
+                  type: array
+                operatorClientCertStatus:
+                  description: Status of the operator's control-plane client certificate
+                    when spec.operatorClientAuth.method is Certificate. Cleared when
+                    certificate authentication is not in use.
+                  properties:
+                    state:
+                      description: 'State of the client certificate: Valid, ExpiringSoon, or Expired.'
+                      type: string
+                    expirationDate:
+                      description: When the leaf client certificate expires (RFC3339).
+                      type: string
+                    secretName:
+                      description: Name of the secret referenced by spec.operatorClientAuth.clientCertificateSecretName.
+                      type: string
+                  type: object
                 persistenceStatus:
                   description: The status of the Persistent Volume Claims that are used
                     for Redis Enterprise cluster persistence. The status will correspond
@@ -319,6 +534,29 @@ spec:
                             and RedisEnterpriseRole objects are reconciled. When
                             disabled: only RedisEnterpriseRole objects are reconciled,
                             spec.rolesPermissions is ignored.'
+                          type: boolean
+                      type: object
+                  type: object
+                clientMaintenanceNotifications:
+                  description: Controls proactive client maintenance notification settings.
+                  properties:
+                    ossMode:
+                      description: Client maintenance notifications settings for clients
+                        connected to databases with OSS cluster API enabled.
+                      properties:
+                        enabled:
+                          description: Whether client maintenance notifications are enabled
+                            for OSS clusters. Defaults to False.
+                          type: boolean
+                      type: object
+                    proxyMode:
+                      description: Client maintenance notifications settings for clients
+                        connected to databases running in enterprise (proxy) mode.
+                      properties:
+                        enabled:
+                          description: Whether client maintenance notifications are enabled
+                            for DBs with no OSS cluster API enabled (a.k.a. Proxy/Enterprise
+                            mode). Defaults to False.
                           type: boolean
                       type: object
                   type: object
@@ -430,6 +668,133 @@ spec:
                       type: object
                     timezoneName:
                       description: POSIX-style timezone name as a string to be passed as EnvVar to RE pods, e.g. "Europe/London".
+                      type: string
+                  type: object
+                apiCertificateBasedAuth:
+                  description: |-
+                    Configures Certificate-Based Authentication (CBA), i.e. mutual TLS client
+                    certificate authentication, for the Redis Enterprise control-plane REST API.
+                    This setting is additive on the server side: enabling it makes client certificates
+                    an accepted authentication method for connecting to the control plane, in addition
+                    to basic/digest authentication, unless basic authentication is explicitly turned
+                    off via apiBasicAuth.
+                  properties:
+                    authorizedSubjects:
+                      description: |-
+                        The list of certificate subjects authorized to authenticate to the control-plane
+                        REST API using client certificates. Maps to the cluster's 'mtls_authorized_subjects'
+                        setting. The subject declared in operatorClientAuth.certificateSubjectLine is
+                        added automatically and need not be listed here.
+                      items:
+                        description: |-
+                          CertificateSubject identifies an X.509 certificate subject (distinguished name) that is
+                          authorized to authenticate to the control plane using a client certificate. Field names
+                          follow standard X.509 distinguished name (DN) component abbreviations.
+                        properties:
+                          C:
+                            description: Country (C) component of the certificate subject.
+                            type: string
+                          CN:
+                            description: Common Name (CN) component of the certificate subject. Required.
+                            type: string
+                          L:
+                            description: Locality (L) component of the certificate subject.
+                            type: string
+                          O:
+                            description: Organization (O) component of the certificate subject.
+                            type: string
+                          OU:
+                            description: Organizational Unit (OU) components of the certificate subject.
+                            items:
+                              type: string
+                            type: array
+                          ST:
+                            description: State or province (ST) component of the certificate subject.
+                            type: string
+                        required:
+                          - CN
+                        type: object
+                      type: array
+                    clientCertSubjectValidationType:
+                      description: |-
+                        Determines how the Redis Enterprise cluster validates the subject of client
+                        certificates presented for authentication. Maps to the cluster's
+                        'mtls_client_cert_subject_validation_type' setting.
+                        'Disabled' performs no subject validation; 'SanCn' validates the Subject Alternative
+                        Name / Common Name; 'FullSubject' validates the full certificate subject.
+                      enum:
+                        - Disabled
+                        - SanCn
+                        - FullSubject
+                      type: string
+                    enabled:
+                      description: |-
+                        Whether the control-plane REST API accepts client certificate authentication.
+                        Maps to the Redis Enterprise cluster's 'mtls_certificate_authentication' setting.
+                        Evaluated as false when omitted while the operator manages CBA (see
+                        status.managedAPIs); if CBA was never configured through this block, the
+                        cluster setting is left unchanged.
+                        Possible values: true/false
+                      type: boolean
+                    trustedCASecretName:
+                      description: |-
+                        Name or path of the secret containing the trusted CA used to validate client
+                        certificates presented to the control-plane REST API. The CA certificate is pushed
+                        to the Redis Enterprise cluster as 'mtls_trusted_ca'.
+                        The secret must contain the CA certificate in PEM format under a key named
+                        'certificate', 'cert', or 'tls.crt'.
+                      type: string
+                  type: object
+                apiBasicAuth:
+                  description: Configures basic (username/password) authentication for
+                    the Redis Enterprise REST API.
+                  properties:
+                    enabled:
+                      description: |-
+                        Whether the Redis Enterprise cluster accepts basic (username/password) authentication
+                        on its REST API. Maps to the cluster's 'control_plane_basic_authentication' setting
+                        and requires Redis Enterprise 8.2.0 or newer. When set to false, the cluster rejects
+                        passwords on all REST API requests; only certificate-based (mTLS) and JWT
+                        authentication are accepted, and the operator itself must be configured to use
+                        certificate authentication (operatorClientAuth.method: Certificate). The operator
+                        applies this setting only after verifying that certificate authentication is fully in
+                        effect, to avoid losing access to the cluster. When unset, the operator does not
+                        manage this cluster setting.
+                      type: boolean
+                  type: object
+                operatorClientAuth:
+                  description: |-
+                    Selects which credential the operator presents to the control-plane REST API.
+                    This is a client-side concern: it does not, by itself, configure the cluster to
+                    accept certificates (see apiCertificateBasedAuth).
+                  properties:
+                    certificateSubjectLine:
+                      description: |-
+                        CertificateSubjectLine is the subject line of the client certificate the operator
+                        presents; never derived from the certificate itself. Required when Method is
+                        'Certificate'; CN/O/OU/L/ST/C attributes only, CN mandatory. Must exactly match the
+                        certificate's RFC2253 subject string, no spaces after commas (e.g. 'CN=operator,O=redis'):
+                        the cluster matches certificate-auth users by the literal string.
+                        The operator adds this subject to the cluster's 'mtls_authorized_subjects'.
+                      type: string
+                    clientCertificateSecretName:
+                      description: |-
+                        Name or path of the secret containing the client certificate/key the operator
+                        presents to the control-plane REST API. Required when Method is 'certificate'.
+                        The secret must be in the same format as other operator-managed certificate
+                        secrets (cert-manager TLS secret, or legacy opaque secret with 'tls.crt'/'cert'
+                        and 'tls.key'/'key'). When ClusterCredentialSecretType is 'vault', this is a
+                        Vault KV path (same naming rules as ClusterCredentialSecretName); the services
+                        rigger, bootstrapper, node hook scripts and call-home client receive the cert via
+                        Vault Agent inject.
+                      type: string
+                    method:
+                      description: |-
+                        Method selects how the operator authenticates to the control-plane REST API.
+                        If omitted, this field is evaluated as 'Basic'.
+                      enum:
+                        - Basic
+                        - Certificate
                       type: string
                   type: object
                 createServiceAccount:
@@ -549,7 +914,8 @@ spec:
                         If present, the root CA certificate is appended to the certificate provided in the 'tls.crt' (or equivalent) key, to form a full certificate chain.
                         Otherwise, the certificate in 'tls.crt' must include a full certificate chain inline.
                         This key is typically populated by the cert-manager when it has access to the root certificate. Otherwise, it could be added manually.
-                        If left blank, a cluster-provided certificate will be used.
+                        If left blank and cpInternodeEncryptionCertificateSecretName is set, the CPINE certificate is used for DPINE as well.
+                        If both are left blank, cluster-provided certificates are used.
                       type: string
                     cpInternodeEncryptionCertificateSecretName:
                       description: Secret name to use for cluster's Control Plane Internode Encryption (CPINE) certificate.
@@ -560,7 +926,8 @@ spec:
                         If present, the root CA certificate is appended to the certificate provided in the 'tls.crt' (or equivalent) key, to form a full certificate chain.
                         Otherwise, the certificate in 'tls.crt' must include a full certificate chain inline.
                         This key is typically populated by the cert-manager when it has access to the root certificate. Otherwise, it could be added manually.
-                        If left blank, a cluster-provided certificate will be used.
+                        If left blank and dpInternodeEncryptionCertificateSecretName is set, the DPINE certificate is used for CPINE as well.
+                        If both are left blank, cluster-provided certificates are used.
                       type: string
                     ssoServiceCertificateSecretName:
                       description: Secret name to use for the SSO Service Provider (SP) certificate.
@@ -670,6 +1037,305 @@ spec:
                         type: string
                     type: object
                   type: array
+                gateway:
+                  description: |-
+                    Configures exposure of cluster service endpoints and Active-Active databases via
+                    the Kubernetes Gateway API.
+                  properties:
+                    activeActiveDatabases:
+                      description: |-
+                        Exposes Active-Active databases via Gateway. REC-scoped only; per-database
+                        overrides are not supported for Active-Active databases.
+                      properties:
+                        autoEnable:
+                          description: |-
+                            Controls which Active-Active databases are Gateway-enabled by default:
+                            None (default), All, or Selector (only those matching selector).
+                          enum:
+                            - None
+                            - All
+                            - Selector
+                          type: string
+                        fqdnSuffix:
+                          description: |-
+                            FQDN suffix for Active-Active endpoints; the per-database FQDN defaults to
+                            <db-name>.<fqdnSuffix>.
+                          type: string
+                        gatewayRef:
+                          description: Overrides default.gatewayRef for this endpoint.
+                          properties:
+                            name:
+                              description: Name of the Gateway.
+                              type: string
+                            namespace:
+                              description: Namespace of the Gateway. Defaults to the
+                                resource's namespace if omitted.
+                              type: string
+                          required:
+                            - name
+                          type: object
+                        listenerName:
+                          description: |-
+                            Gateway listener name; maps to the Route's parentRef.sectionName. If omitted,
+                            the Gateway implementation selects a compatible listener.
+                          type: string
+                        listenerPort:
+                          description: Gateway listener port; maps to the Route's parentRef.port.
+                          maximum: 65535
+                          minimum: 1
+                          type: integer
+                        routeAnnotations:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Annotations for this endpoint's TLSRoute (e.g. for external-dns), merged over
+                            gateway.default.routeAnnotations (these win on key conflicts).
+                          type: object
+                        routeLabels:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Labels for this endpoint's TLSRoute, merged over gateway.default.routeLabels
+                            (these win on key conflicts). Operator-managed labels always take precedence.
+                          type: object
+                        selector:
+                          description: Label selector over Active-Active databases.
+                            Used only when autoEnable=Selector.
+                          properties:
+                            matchExpressions:
+                              description: matchExpressions is a list of label selector
+                                requirements. The requirements are ANDed.
+                              items:
+                                description: |-
+                                  A label selector requirement is a selector that contains values, a key, and an operator that
+                                  relates the key and values.
+                                properties:
+                                  key:
+                                    description: key is the label key that the selector
+                                      applies to.
+                                    type: string
+                                  operator:
+                                    description: |-
+                                      operator represents a key's relationship to a set of values.
+                                      Valid operators are In, NotIn, Exists and DoesNotExist.
+                                    type: string
+                                  values:
+                                    description: |-
+                                      values is an array of string values. If the operator is In or NotIn,
+                                      the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                      the values array must be empty. This array is replaced during a strategic
+                                      merge patch.
+                                    items:
+                                      type: string
+                                    type: array
+                                    x-kubernetes-list-type: atomic
+                                required:
+                                  - key
+                                  - operator
+                                type: object
+                              type: array
+                              x-kubernetes-list-type: atomic
+                            matchLabels:
+                              additionalProperties:
+                                type: string
+                              description: |-
+                                matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                                map is equivalent to an element of matchExpressions, whose key field is "key", the
+                                operator is "In", and the values array contains only "value". The requirements are ANDed.
+                              type: object
+                          type: object
+                          x-kubernetes-map-type: atomic
+                      type: object
+                    api:
+                      description: Exposes the RS API endpoint via Gateway.
+                      properties:
+                        enabled:
+                          description: Whether this endpoint is exposed via Gateway.
+                            Defaults to false.
+                          type: boolean
+                        fqdn:
+                          description: Explicit FQDN for this endpoint. Defaults to
+                            <prefix>.<default.fqdnSuffix>.
+                          type: string
+                        gatewayRef:
+                          description: Overrides default.gatewayRef for this endpoint.
+                          properties:
+                            name:
+                              description: Name of the Gateway.
+                              type: string
+                            namespace:
+                              description: Namespace of the Gateway. Defaults to the
+                                resource's namespace if omitted.
+                              type: string
+                          required:
+                            - name
+                          type: object
+                        listenerName:
+                          description: |-
+                            Gateway listener name; maps to the Route's parentRef.sectionName. If omitted,
+                            the Gateway implementation selects a compatible listener.
+                          type: string
+                        listenerPort:
+                          description: Gateway listener port; maps to the Route's parentRef.port.
+                          maximum: 65535
+                          minimum: 1
+                          type: integer
+                        routeAnnotations:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Annotations for this endpoint's TLSRoute (e.g. for external-dns), merged over
+                            gateway.default.routeAnnotations (these win on key conflicts).
+                          type: object
+                        routeLabels:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Labels for this endpoint's TLSRoute, merged over gateway.default.routeLabels
+                            (these win on key conflicts). Operator-managed labels always take precedence.
+                          type: object
+                      type: object
+                    default:
+                      description: |-
+                        Shared fallbacks (gatewayRef, fqdnSuffix) used by endpoints that do not set
+                        their own.
+                      properties:
+                        fqdnSuffix:
+                          description: |-
+                            Base FQDN suffix used to derive endpoint hostnames when an explicit FQDN is not
+                            set. Defaults: api.<fqdnSuffix>, ui.<fqdnSuffix>, metrics.<fqdnSuffix>,
+                            <db-name>.db.<fqdnSuffix> (database), <db-name>.crdb.<fqdnSuffix> (Active-Active).
+                          type: string
+                        gatewayRef:
+                          description: Default Gateway referenced by endpoints that
+                            do not specify their own gatewayRef.
+                          properties:
+                            name:
+                              description: Name of the Gateway.
+                              type: string
+                            namespace:
+                              description: Namespace of the Gateway. Defaults to the
+                                resource's namespace if omitted.
+                              type: string
+                          required:
+                            - name
+                          type: object
+                        routeAnnotations:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Default annotations applied to the TLSRoutes the operator creates (e.g. for
+                            external-dns). A per-endpoint routeAnnotations entry overrides the matching
+                            default key.
+                          type: object
+                        routeLabels:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Default labels applied to the TLSRoutes the operator creates. A per-endpoint
+                            routeLabels entry overrides the matching default key; operator-managed labels
+                            always take precedence.
+                          type: object
+                      type: object
+                    metrics:
+                      description: Exposes the metrics exporter endpoint via Gateway.
+                      properties:
+                        enabled:
+                          description: Whether this endpoint is exposed via Gateway.
+                            Defaults to false.
+                          type: boolean
+                        fqdn:
+                          description: Explicit FQDN for this endpoint. Defaults to
+                            <prefix>.<default.fqdnSuffix>.
+                          type: string
+                        gatewayRef:
+                          description: Overrides default.gatewayRef for this endpoint.
+                          properties:
+                            name:
+                              description: Name of the Gateway.
+                              type: string
+                            namespace:
+                              description: Namespace of the Gateway. Defaults to the
+                                resource's namespace if omitted.
+                              type: string
+                          required:
+                            - name
+                          type: object
+                        listenerName:
+                          description: |-
+                            Gateway listener name; maps to the Route's parentRef.sectionName. If omitted,
+                            the Gateway implementation selects a compatible listener.
+                          type: string
+                        listenerPort:
+                          description: Gateway listener port; maps to the Route's parentRef.port.
+                          maximum: 65535
+                          minimum: 1
+                          type: integer
+                        routeAnnotations:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Annotations for this endpoint's TLSRoute (e.g. for external-dns), merged over
+                            gateway.default.routeAnnotations (these win on key conflicts).
+                          type: object
+                        routeLabels:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Labels for this endpoint's TLSRoute, merged over gateway.default.routeLabels
+                            (these win on key conflicts). Operator-managed labels always take precedence.
+                          type: object
+                      type: object
+                    ui:
+                      description: Exposes the CM UI endpoint via Gateway.
+                      properties:
+                        enabled:
+                          description: Whether this endpoint is exposed via Gateway.
+                            Defaults to false.
+                          type: boolean
+                        fqdn:
+                          description: Explicit FQDN for this endpoint. Defaults to
+                            <prefix>.<default.fqdnSuffix>.
+                          type: string
+                        gatewayRef:
+                          description: Overrides default.gatewayRef for this endpoint.
+                          properties:
+                            name:
+                              description: Name of the Gateway.
+                              type: string
+                            namespace:
+                              description: Namespace of the Gateway. Defaults to the
+                                resource's namespace if omitted.
+                              type: string
+                          required:
+                            - name
+                          type: object
+                        listenerName:
+                          description: |-
+                            Gateway listener name; maps to the Route's parentRef.sectionName. If omitted,
+                            the Gateway implementation selects a compatible listener.
+                          type: string
+                        listenerPort:
+                          description: Gateway listener port; maps to the Route's parentRef.port.
+                          maximum: 65535
+                          minimum: 1
+                          type: integer
+                        routeAnnotations:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Annotations for this endpoint's TLSRoute (e.g. for external-dns), merged over
+                            gateway.default.routeAnnotations (these win on key conflicts).
+                          type: object
+                        routeLabels:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Labels for this endpoint's TLSRoute, merged over gateway.default.routeLabels
+                            (these win on key conflicts). Operator-managed labels always take precedence.
+                          type: object
+                      type: object
+                  type: object
                 ingressOrRouteSpec:
                   description: Access configurations for the Redis Enterprise cluster
                     and databases. At most one of ingressOrRouteSpec
@@ -4687,6 +5353,18 @@ spec:
                     setting its value shall have no effect. Please view the corresponding
                     field in RS doc for more info.
                   type: boolean
+                disconnectClientsOnPasswordRemoval:
+                  description: Controls whether the proxy disconnects clients whose
+                    password was removed. Tri-state; the operator only writes this
+                    value when status.managedAPIs.disconnectClientsOnPasswordRemoval
+                    is true (it flips true the first time this field is set). On
+                    new clusters the operator manages this field from creation and
+                    enforces the Auto default until the spec is set.
+                  enum:
+                    - Enabled
+                    - Disabled
+                    - Auto
+                  type: string
                 securityContext:
                   description: The security configuration that will be applied to RS
                     pods.
@@ -9543,11 +10221,178 @@ spec:
                   type: object
                 clusterCredentialSecretName:
                   type: string
+                apiCertificateBasedAuthActive:
+                  type: boolean
+                gateway:
+                  properties:
+                    api:
+                      properties:
+                        conditions:
+                          items:
+                            properties:
+                              lastTransitionTime:
+                                format: date-time
+                                type: string
+                              message:
+                                maxLength: 32768
+                                type: string
+                              observedGeneration:
+                                format: int64
+                                minimum: 0
+                                type: integer
+                              reason:
+                                maxLength: 1024
+                                minLength: 1
+                                pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                                type: string
+                              status:
+                                enum:
+                                  - "True"
+                                  - "False"
+                                  - Unknown
+                                type: string
+                              type:
+                                maxLength: 316
+                                pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                                type: string
+                            required:
+                              - lastTransitionTime
+                              - message
+                              - reason
+                              - status
+                              - type
+                            type: object
+                          type: array
+                        fqdn:
+                          type: string
+                        routeName:
+                          type: string
+                      type: object
+                    metrics:
+                      properties:
+                        conditions:
+                          items:
+                            properties:
+                              lastTransitionTime:
+                                format: date-time
+                                type: string
+                              message:
+                                maxLength: 32768
+                                type: string
+                              observedGeneration:
+                                format: int64
+                                minimum: 0
+                                type: integer
+                              reason:
+                                maxLength: 1024
+                                minLength: 1
+                                pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                                type: string
+                              status:
+                                enum:
+                                  - "True"
+                                  - "False"
+                                  - Unknown
+                                type: string
+                              type:
+                                maxLength: 316
+                                pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                                type: string
+                            required:
+                              - lastTransitionTime
+                              - message
+                              - reason
+                              - status
+                              - type
+                            type: object
+                          type: array
+                        fqdn:
+                          type: string
+                        routeName:
+                          type: string
+                      type: object
+                    ui:
+                      properties:
+                        conditions:
+                          items:
+                            properties:
+                              lastTransitionTime:
+                                format: date-time
+                                type: string
+                              message:
+                                maxLength: 32768
+                                type: string
+                              observedGeneration:
+                                format: int64
+                                minimum: 0
+                                type: integer
+                              reason:
+                                maxLength: 1024
+                                minLength: 1
+                                pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                                type: string
+                              status:
+                                enum:
+                                  - "True"
+                                  - "False"
+                                  - Unknown
+                                type: string
+                              type:
+                                maxLength: 316
+                                pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                                type: string
+                            required:
+                              - lastTransitionTime
+                              - message
+                              - reason
+                              - status
+                              - type
+                            type: object
+                          type: array
+                        fqdn:
+                          type: string
+                        routeName:
+                          type: string
+                      type: object
+                  type: object
                 ingressOrRouteMethodStatus:
                   type: string
+                initContainerFailures:
+                  items:
+                    properties:
+                      containerName:
+                        type: string
+                      exitCode:
+                        format: int32
+                        type: integer
+                      message:
+                        type: string
+                      podName:
+                        type: string
+                      reason:
+                        type: string
+                    type: object
+                  type: array
+                operatorClientCertStatus:
+                  properties:
+                    state:
+                      type: string
+                    expirationDate:
+                      type: string
+                    secretName:
+                      type: string
+                  type: object
                 managedAPIs:
                   properties:
                     ldap:
+                      type: boolean
+                    disconnectClientsOnPasswordRemoval:
+                      type: boolean
+                    apiCertificateBasedAuth:
+                      type: boolean
+                    clientMaintenanceNotificationsProxyMode:
+                      type: boolean
+                    clientMaintenanceNotificationsOssMode:
                       type: boolean
                   type: object
                 persistenceStatus:
@@ -9618,6 +10463,19 @@ spec:
                           type: boolean
                       type: object
                   type: object
+                clientMaintenanceNotifications:
+                  properties:
+                    ossMode:
+                      properties:
+                        enabled:
+                          type: boolean
+                      type: object
+                    proxyMode:
+                      properties:
+                        enabled:
+                          type: boolean
+                      type: object
+                  type: object
                 bootstrapperImageSpec:
                   properties:
                     digestHash:
@@ -9680,6 +10538,57 @@ spec:
                     propagateHost:
                       type: object
                     timezoneName:
+                      type: string
+                  type: object
+                apiCertificateBasedAuth:
+                  properties:
+                    authorizedSubjects:
+                      items:
+                        properties:
+                          C:
+                            type: string
+                          CN:
+                            type: string
+                          L:
+                            type: string
+                          O:
+                            type: string
+                          OU:
+                            items:
+                              type: string
+                            type: array
+                          ST:
+                            type: string
+                        required:
+                          - CN
+                        type: object
+                      type: array
+                    clientCertSubjectValidationType:
+                      enum:
+                        - Disabled
+                        - SanCn
+                        - FullSubject
+                      type: string
+                    enabled:
+                      type: boolean
+                    trustedCASecretName:
+                      type: string
+                  type: object
+                apiBasicAuth:
+                  properties:
+                    enabled:
+                      type: boolean
+                  type: object
+                operatorClientAuth:
+                  properties:
+                    certificateSubjectLine:
+                      type: string
+                    clientCertificateSecretName:
+                      type: string
+                    method:
+                      enum:
+                        - Basic
+                        - Certificate
                       type: string
                   type: object
                 createServiceAccount:
@@ -9798,6 +10707,302 @@ spec:
                         type: string
                     type: object
                   type: array
+                gateway:
+                  properties:
+                    activeActiveDatabases:
+                      description: |-
+                        Exposes Active-Active databases via Gateway. REC-scoped only; per-database
+                        overrides are not supported for Active-Active databases.
+                      properties:
+                        autoEnable:
+                          description: |-
+                            Controls which Active-Active databases are Gateway-enabled by default:
+                            None (default), All, or Selector (only those matching selector).
+                          enum:
+                            - None
+                            - All
+                            - Selector
+                          type: string
+                        fqdnSuffix:
+                          description: |-
+                            FQDN suffix for Active-Active endpoints; the per-database FQDN defaults to
+                            <db-name>.<fqdnSuffix>.
+                          type: string
+                        gatewayRef:
+                          description: Overrides default.gatewayRef for this endpoint.
+                          properties:
+                            name:
+                              description: Name of the Gateway.
+                              type: string
+                            namespace:
+                              description: Namespace of the Gateway. Defaults to the
+                                resource's namespace if omitted.
+                              type: string
+                          required:
+                            - name
+                          type: object
+                        listenerName:
+                          description: |-
+                            Gateway listener name; maps to the Route's parentRef.sectionName. If omitted,
+                            the Gateway implementation selects a compatible listener.
+                          type: string
+                        listenerPort:
+                          description: Gateway listener port; maps to the Route's parentRef.port.
+                          maximum: 65535
+                          minimum: 1
+                          type: integer
+                        routeAnnotations:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Annotations for this endpoint's TLSRoute (e.g. for external-dns), merged over
+                            gateway.default.routeAnnotations (these win on key conflicts).
+                          type: object
+                        routeLabels:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Labels for this endpoint's TLSRoute, merged over gateway.default.routeLabels
+                            (these win on key conflicts). Operator-managed labels always take precedence.
+                          type: object
+                        selector:
+                          description: Label selector over Active-Active databases.
+                            Used only when autoEnable=Selector.
+                          properties:
+                            matchExpressions:
+                              description: matchExpressions is a list of label selector
+                                requirements. The requirements are ANDed.
+                              items:
+                                description: |-
+                                  A label selector requirement is a selector that contains values, a key, and an operator that
+                                  relates the key and values.
+                                properties:
+                                  key:
+                                    description: key is the label key that the selector
+                                      applies to.
+                                    type: string
+                                  operator:
+                                    description: |-
+                                      operator represents a key's relationship to a set of values.
+                                      Valid operators are In, NotIn, Exists and DoesNotExist.
+                                    type: string
+                                  values:
+                                    description: |-
+                                      values is an array of string values. If the operator is In or NotIn,
+                                      the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                                      the values array must be empty. This array is replaced during a strategic
+                                      merge patch.
+                                    items:
+                                      type: string
+                                    type: array
+                                    x-kubernetes-list-type: atomic
+                                required:
+                                  - key
+                                  - operator
+                                type: object
+                              type: array
+                              x-kubernetes-list-type: atomic
+                            matchLabels:
+                              additionalProperties:
+                                type: string
+                              description: |-
+                                matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                                map is equivalent to an element of matchExpressions, whose key field is "key", the
+                                operator is "In", and the values array contains only "value". The requirements are ANDed.
+                              type: object
+                          type: object
+                          x-kubernetes-map-type: atomic
+                      type: object
+                    api:
+                      description: Exposes the RS API endpoint via Gateway.
+                      properties:
+                        enabled:
+                          description: Whether this endpoint is exposed via Gateway.
+                            Defaults to false.
+                          type: boolean
+                        fqdn:
+                          description: Explicit FQDN for this endpoint. Defaults to
+                            <prefix>.<default.fqdnSuffix>.
+                          type: string
+                        gatewayRef:
+                          description: Overrides default.gatewayRef for this endpoint.
+                          properties:
+                            name:
+                              description: Name of the Gateway.
+                              type: string
+                            namespace:
+                              description: Namespace of the Gateway. Defaults to the
+                                resource's namespace if omitted.
+                              type: string
+                          required:
+                            - name
+                          type: object
+                        listenerName:
+                          description: |-
+                            Gateway listener name; maps to the Route's parentRef.sectionName. If omitted,
+                            the Gateway implementation selects a compatible listener.
+                          type: string
+                        listenerPort:
+                          description: Gateway listener port; maps to the Route's parentRef.port.
+                          maximum: 65535
+                          minimum: 1
+                          type: integer
+                        routeAnnotations:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Annotations for this endpoint's TLSRoute (e.g. for external-dns), merged over
+                            gateway.default.routeAnnotations (these win on key conflicts).
+                          type: object
+                        routeLabels:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Labels for this endpoint's TLSRoute, merged over gateway.default.routeLabels
+                            (these win on key conflicts). Operator-managed labels always take precedence.
+                          type: object
+                      type: object
+                    default:
+                      description: |-
+                        Shared fallbacks (gatewayRef, fqdnSuffix) used by endpoints that do not set
+                        their own.
+                      properties:
+                        fqdnSuffix:
+                          description: |-
+                            Base FQDN suffix used to derive endpoint hostnames when an explicit FQDN is not
+                            set. Defaults: api.<fqdnSuffix>, ui.<fqdnSuffix>, metrics.<fqdnSuffix>,
+                            <db-name>.db.<fqdnSuffix> (database), <db-name>.crdb.<fqdnSuffix> (Active-Active).
+                          type: string
+                        gatewayRef:
+                          description: Default Gateway referenced by endpoints that
+                            do not specify their own gatewayRef.
+                          properties:
+                            name:
+                              description: Name of the Gateway.
+                              type: string
+                            namespace:
+                              description: Namespace of the Gateway. Defaults to the
+                                resource's namespace if omitted.
+                              type: string
+                          required:
+                            - name
+                          type: object
+                        routeAnnotations:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Default annotations applied to the TLSRoutes the operator creates (e.g. for
+                            external-dns). A per-endpoint routeAnnotations entry overrides the matching
+                            default key.
+                          type: object
+                        routeLabels:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Default labels applied to the TLSRoutes the operator creates. A per-endpoint
+                            routeLabels entry overrides the matching default key; operator-managed labels
+                            always take precedence.
+                          type: object
+                      type: object
+                    metrics:
+                      description: Exposes the metrics exporter endpoint via Gateway.
+                      properties:
+                        enabled:
+                          description: Whether this endpoint is exposed via Gateway.
+                            Defaults to false.
+                          type: boolean
+                        fqdn:
+                          description: Explicit FQDN for this endpoint. Defaults to
+                            <prefix>.<default.fqdnSuffix>.
+                          type: string
+                        gatewayRef:
+                          description: Overrides default.gatewayRef for this endpoint.
+                          properties:
+                            name:
+                              description: Name of the Gateway.
+                              type: string
+                            namespace:
+                              description: Namespace of the Gateway. Defaults to the
+                                resource's namespace if omitted.
+                              type: string
+                          required:
+                            - name
+                          type: object
+                        listenerName:
+                          description: |-
+                            Gateway listener name; maps to the Route's parentRef.sectionName. If omitted,
+                            the Gateway implementation selects a compatible listener.
+                          type: string
+                        listenerPort:
+                          description: Gateway listener port; maps to the Route's parentRef.port.
+                          maximum: 65535
+                          minimum: 1
+                          type: integer
+                        routeAnnotations:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Annotations for this endpoint's TLSRoute (e.g. for external-dns), merged over
+                            gateway.default.routeAnnotations (these win on key conflicts).
+                          type: object
+                        routeLabels:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Labels for this endpoint's TLSRoute, merged over gateway.default.routeLabels
+                            (these win on key conflicts). Operator-managed labels always take precedence.
+                          type: object
+                      type: object
+                    ui:
+                      description: Exposes the CM UI endpoint via Gateway.
+                      properties:
+                        enabled:
+                          description: Whether this endpoint is exposed via Gateway.
+                            Defaults to false.
+                          type: boolean
+                        fqdn:
+                          description: Explicit FQDN for this endpoint. Defaults to
+                            <prefix>.<default.fqdnSuffix>.
+                          type: string
+                        gatewayRef:
+                          description: Overrides default.gatewayRef for this endpoint.
+                          properties:
+                            name:
+                              description: Name of the Gateway.
+                              type: string
+                            namespace:
+                              description: Namespace of the Gateway. Defaults to the
+                                resource's namespace if omitted.
+                              type: string
+                          required:
+                            - name
+                          type: object
+                        listenerName:
+                          description: |-
+                            Gateway listener name; maps to the Route's parentRef.sectionName. If omitted,
+                            the Gateway implementation selects a compatible listener.
+                          type: string
+                        listenerPort:
+                          description: Gateway listener port; maps to the Route's parentRef.port.
+                          maximum: 65535
+                          minimum: 1
+                          type: integer
+                        routeAnnotations:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Annotations for this endpoint's TLSRoute (e.g. for external-dns), merged over
+                            gateway.default.routeAnnotations (these win on key conflicts).
+                          type: object
+                        routeLabels:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Labels for this endpoint's TLSRoute, merged over gateway.default.routeLabels
+                            (these win on key conflicts). Operator-managed labels always take precedence.
+                          type: object
+                      type: object
+                  type: object
                 ingressOrRouteSpec:
                   properties:
                     apiFqdnUrl:
@@ -10410,6 +11615,12 @@ spec:
                   type: string
                 resp3Default:
                   type: boolean
+                disconnectClientsOnPasswordRemoval:
+                  enum:
+                    - Enabled
+                    - Disabled
+                    - Auto
+                  type: string
                 securityContext:
                   properties:
                     readOnlyRootFilesystemPolicy:

@@ -75,6 +75,13 @@ spec:
                   description: Port number of the cluster's URL. Used for connectivity and
                     synchronization.
                   type: integer
+                replicationPort:
+                  description: External port used for Active-Active database replication when
+                    databases are exposed via the Gateway API. A single port serves all
+                    Active-Active databases in this remote cluster, distinguished by SNI.
+                  maximum: 65535
+                  minimum: 1
+                  type: integer
                 recNamespace:
                   description: Namespace of the REC that this RERC points to.
                   type: string
@@ -83,7 +90,13 @@ spec:
                   type: string
                 secretName:
                   description: 'Name of the secret containing cluster credentials.
-                    Must use the following format: "redis-enterprise-<RERC name>".'
+                    Must use the following format: "redis-enterprise-<RERC name>".
+                    The secret holds either basic-auth credentials (''username'' and
+                    ''password'' keys), or a client certificate/key pair of a cluster
+                    user with the proper permissions (''certificate''/''cert''/''tls.crt''
+                    and ''tls.key''/''key'' keys, or a TLS-type secret), optionally
+                    with a ''trusted_ca'' PEM bundle for verifying the cluster''s
+                    server certificate.'
                   type: string
               required:
                 - apiFqdnUrl

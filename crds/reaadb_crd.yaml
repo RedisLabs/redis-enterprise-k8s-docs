@@ -73,6 +73,13 @@ spec:
                         description: ID of the instance in the Active-Active database.
                         format: int64
                         type: integer
+                      replicationEndpoint:
+                        description: |-
+                          The replication endpoint this participating cluster advertises to its
+                          peers, as configured in the Active-Active database. When the database is
+                          exposed via the Gateway API this is the gateway FQDN and port; otherwise
+                          it is derived from the remote cluster's dbFqdnSuffix.
+                        type: string
                       replicationStatus:
                         description: Replication status of the participating cluster.
                         enum:
@@ -137,6 +144,14 @@ spec:
                     absent from the current spec.globalConfigurations.tags are removed
                     from all BDB tag sets. Operator-internal keys (managed_by, redb_resource,
                     global_configurations_spec, etc.) are not tracked here.'
+                  items:
+                    type: string
+                  type: array
+                managedFields:
+                  description: 'List of optional global-configuration spec fields the
+                    operator has taken ownership of after the user configured them at
+                    least once, so removing such a field resets the databases to their
+                    default instead of leaving the inherited value in place.'
                   items:
                     type: string
                   type: array
@@ -566,6 +581,62 @@ spec:
                       items:
                         type: string
                       type: array
+                    clientCertSubjectValidationType:
+                      description: |-
+                        Additional validation of client certificate subjects during mutual TLS authentication.
+                        Maps to the database's 'client_cert_subject_validation_type' setting.
+                        'Disabled' performs no subject validation; 'SanCn' requires the certificate's Subject
+                        Alternative Name (SAN) DNS entries or Common Name (CN) to match an authorizedSubjects entry;
+                        'FullSubject' requires the full certificate subject to match an entry.
+                        Applies only to client certificates validated through a CA certificate listed in
+                        clientAuthenticationCertificates; listed leaf certificates skip this validation.
+                        Required when authorizedSubjects is set. If neither field was ever set, the operator leaves
+                        the database setting unchanged; otherwise an omitted value means 'Disabled'
+                        (see status.managedFields).
+                      enum:
+                        - Disabled
+                        - SanCn
+                        - FullSubject
+                      type: string
+                    authorizedSubjects:
+                      description: |-
+                        Client certificate subjects authorized to connect when clientCertSubjectValidationType is
+                        'SanCn' or 'FullSubject', which require at least one entry. Maps to the database's
+                        'authorized_subjects' setting. Subject attributes are case-sensitive.
+                        If neither field was ever set, the operator leaves the database setting unchanged; otherwise
+                        an omitted value means an empty list (see status.managedFields).
+                      items:
+                        description: An X.509 certificate subject (distinguished name) authorized to
+                          authenticate using a client certificate.
+                        properties:
+                          C:
+                            description: Country (C) component of the certificate subject.
+                            type: string
+                          CN:
+                            description: Common Name (CN) component of the certificate subject.
+                              Required.
+                            type: string
+                          L:
+                            description: Locality (L) component of the certificate subject.
+                            type: string
+                          O:
+                            description: Organization (O) component of the certificate subject.
+                            type: string
+                          OU:
+                            description: Organizational Unit (OU) components of the certificate
+                              subject.
+                            items:
+                              type: string
+                            type: array
+                          ST:
+                            description: State or province (ST) component of the certificate
+                              subject.
+                            type: string
+                        required:
+                          - CN
+                        type: object
+                      maxItems: 64
+                      type: array
                     dataInternodeEncryption:
                       description: Internode encryption (INE) setting. An optional boolean
                         setting, overriding a similar cluster-wide policy. If set to
@@ -618,6 +689,15 @@ spec:
                       description: Is connecting with a default user allowed?  If disabled,
                         the DatabaseSecret will not be created or updated
                       type: boolean
+                    disconnectClientsOnPasswordRemoval:
+                      description: Controls whether the proxy disconnects clients of this
+                        database whose password was removed. Effective only when the
+                        cluster-level setting is "Auto" (see the RedisEnterpriseCluster
+                        field of the same name). The operator takes ownership of this BDB
+                        setting once the field is set (recorded in status.managedFields);
+                        removing the field afterwards resets the BDB to the false default.
+                        Requires Redis Enterprise 8.0 or newer.
+                      type: boolean
                     evictionPolicy:
                       description: Database eviction policy. see more https://docs.redislabs.com/latest/rs/administering/database-operations/eviction-policy/
                       type: string
@@ -625,6 +705,10 @@ spec:
                       description: Whether it is an RoF database or not. Applicable
                         only for databases of type "REDIS". Assumed to be false if left
                         blank.
+                      type: boolean
+                    replicaReadOnly:
+                      description: 'Boolean (default: false); If true, enables an Active-Passive setup where Replica Of databases only allow read operations.
+                        Only configurable during database creation and cannot be changed later.'
                       type: boolean
                     memcachedSaslSecretName:
                       description: Credentials used for binary authentication in memcached
@@ -896,6 +980,69 @@ spec:
                         on as few or as many nodes as possible. Available options are
                         "dense" or "sparse". If left unset, defaults to "dense".
                       type: string
+                    sharding:
+                      description: Sharding-related configuration. The number of shards
+                        and their placement are controlled by the existing top-level
+                        shardCount and shardsPlacement. Not supported for Active-Active
+                        databases.
+                      properties:
+                        asmScaling:
+                          description: 'Enables smooth scaling via Atomic Slot Migration:
+                            shardCount then accepts any value, in any direction, including
+                            decreasing the count. Requires autoShardsBalancing. Not
+                            supported for Active-Active or Redis-on-Flash databases.'
+                          type: boolean
+                        autoShardsBalancing:
+                          description: 'Enables RS shard balancing for this database,
+                            including background auto-rebalancing: RS may move data
+                            between shards on its own whenever their imbalance exceeds
+                            the configured thresholds, see autoShardsBalancingSettings.
+                            Requires hashingPolicy OssSharding and a database Redis
+                            version of 8.4 or above. Note: enabling this also turns
+                            on the database''s internal cluster mode (redis_cluster_enabled),
+                            which RS requires for balancing. Cluster mode stays on
+                            when balancing is disabled again - RS won''t allow disabling
+                            it once the database has shards with split slot ranges.'
+                          type: boolean
+                        autoShardsBalancingSettings:
+                          description: Optional tuning of autoShardsBalancing. Every
+                            field has a default, which is used both when the settings
+                            are absent and when an individual field is unset. The
+                            settings are ignored while autoShardsBalancing is off.
+                          properties:
+                            gracePeriodSeconds:
+                              description: The imbalance must persist for this long
+                                before a rebalance starts. Defaults to 120 when unset.
+                              type: integer
+                            shardImbalanceThreshold:
+                              anyOf:
+                                - type: integer
+                                - type: string
+                              description: Rebalance only when a shard deviates from
+                                its ideal size by at least this much. The effective
+                                trigger is the larger of this and shardImbalanceThresholdPercentage.
+                                Defaults to 300Mi when unset. Values below the Redis
+                                Enterprise minimum (50Mi) are rejected by the cluster.
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
+                            shardImbalanceThresholdPercentage:
+                              description: Rebalance only when a shard deviates from
+                                its ideal size by at least this percent. The effective
+                                trigger is the larger of this and shardImbalanceThreshold.
+                                Defaults to 20 when unset.
+                              type: integer
+                          type: object
+                        hashingPolicy:
+                          description: 'Hashing policy for a sharded database. Defaults
+                            to ShardKeyRegex (regex-based hashing)
+                            when absent. Note: once the database has shards with split
+                            slot ranges, RS won''t allow reverting from OssSharding
+                            back to ShardKeyRegex.'
+                          enum:
+                            - ShardKeyRegex
+                            - OssSharding
+                          type: string
+                      type: object
                     tlsMode:
                       description: Require SSL authenticated and encrypted connections
                         to the database. enabled - all incoming connections to the Database
